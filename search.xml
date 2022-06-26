@@ -1,29 +1,248 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
-    <title>Hello World</title>
-    <url>/hello-world/</url>
-    <content><![CDATA[<p>Welcome to <a href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo new <span class="string">&quot;My New Post&quot;</span></span><br></pre></td></tr></table></figure>
+    <title>使用Hexo在GitHub Pages上建立部落格(1)</title>
+    <url>/Hexo/%E4%BD%BF%E7%94%A8Hexo%E5%9C%A8GitHub-Pages%E4%B8%8A%E5%BB%BA%E7%AB%8B%E9%83%A8%E8%90%BD%E6%A0%BC-1/</url>
+    <content><![CDATA[<p>身為這個部落格的第一篇文章，當然就是來記錄一下建置的步驟。</p>
+<p>將介紹如何安裝和預覽。</p>
+<h2 id="安裝Hexo"><a href="#安裝Hexo" class="headerlink" title="安裝Hexo"></a>安裝Hexo</h2><p>依據<a href="https://hexo.io/zh-tw/docs/#%E5%AE%89%E8%A3%9D%E9%9C%80%E6%B1%82">Hexo官網</a>的說明，需要</p>
+<ul>
+<li>Node.js 建議10.0或以上的版本</li>
+<li>git</li>
+</ul>
+<p>這些都安裝好了之後，就可以透過npm來安裝，打開終端機，然後輸入：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">npm install -g hexo-cli</span><br></pre></td></tr></table></figure>
 
-<p>More info: <a href="https://hexo.io/docs/writing.html">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
+<p>之後就會開始安裝Hexo</p>
+<h2 id="建立專案"><a href="#建立專案" class="headerlink" title="建立專案"></a>建立專案</h2><h3 id="首次建立專案"><a href="#首次建立專案" class="headerlink" title="首次建立專案"></a>首次建立專案</h3><p>使用終端機到你想要儲存這個專案的位置，輸入指令：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">hexo init &lt;folder&gt;</span><br><span class="line">cd &lt;folder&gt;</span><br><span class="line">npm install</span><br></pre></td></tr></table></figure>
 
-<p>More info: <a href="https://hexo.io/docs/server.html">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
+<p><code>&lt;folder&gt;</code>就是Hexo專案的資料夾名稱，Hexo會在目前的目錄用這個名稱再建一個新的資料夾，把專案存到這裡面。沒有輸入的話就會在當前的資料夾內建立專案。</p>
+<p><img src="https://i.imgur.com/Tk8iAIt.jpeg" alt="圖1：以src為例"></p>
+<h3 id="資料結構說明"><a href="#資料結構說明" class="headerlink" title="資料結構說明"></a>資料結構說明</h3><p>安裝完成後，裡面會有這些檔案：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">.</span><br><span class="line">├── _config.yml</span><br><span class="line">├── package.json</span><br><span class="line">├── scaffolds</span><br><span class="line">├── source</span><br><span class="line">|   ├── _drafts</span><br><span class="line">|   └── _posts</span><br><span class="line">└── themes</span><br></pre></td></tr></table></figure>
 
-<p>More info: <a href="https://hexo.io/docs/generating.html">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
+<p><code>_config.yml</code>：Hexo的配置檔</p>
+<p><code>package.json</code>：npm的配置檔，基本上可以不用理會</p>
+<p><code>scaffolds</code>：範本資料夾，建立新文章時可依照指定的範本建立檔案</p>
+<p><code>source</code>：存放原始檔案的地方，也就是文章存放的地方</p>
+<p><code>themes</code>：存放主題的資料夾</p>
+<h2 id="預覽"><a href="#預覽" class="headerlink" title="預覽"></a>預覽</h2><p>建立好之後，當然來預覽一下。</p>
+<p>終端機到專案目錄底下，輸入以下指令</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">hexo server</span><br><span class="line">或</span><br><span class="line">hexo s</span><br></pre></td></tr></table></figure>
 
-<p>More info: <a href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>
+<p>之後就會啟動伺服器，預設會是<code>http://localhost:4000</code>，在瀏覽器上輸入這個網址就會看到。使用者個指令除了可以看到部落格的樣子外，還可以修改文章且儲存後，直接預覽變更後的樣子（修改config除外）。</p>
+<p><img src="https://i.imgur.com/zEBvgVU.jpeg" alt="圖2：預覽指令"></p>
+<p><img src="https://i.imgur.com/H64VaMo.jpeg" alt="圖3：建置完成"></p>
+<p>到這裡就大功告成，恭喜安裝Hexo並啟動成功。</p>
+<p>參考：</p>
+<p><a href="https://hexo.io/zh-tw/docs/">Hexo文件</a></p>
 ]]></content>
       <categories>
-        <category>Sports</category>
+        <category>Hexo</category>
       </categories>
       <tags>
-        <tag>Injury</tag>
-        <tag>Fight</tag>
-        <tag>Shocking</tag>
+        <tag>Hexo</tag>
+        <tag>教學</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>使用Hexo在GitHub Pages上建立部落格(2)</title>
+    <url>/Hexo/%E4%BD%BF%E7%94%A8Hexo%E5%9C%A8GitHub-Pages%E4%B8%8A%E5%BB%BA%E7%AB%8B%E9%83%A8%E8%90%BD%E6%A0%BC-2/</url>
+    <content><![CDATA[<p>Hexo配置檔(_config.yml)初次調整的說明和本部落格所調整的設置。</p>
+<p>其實官網都寫得很清楚了，主要是記錄一下我調整的位置，後續如果有其他地方想再微調可以再看<a href="https://hexo.io/zh-tw/docs/configuration">官方文件</a>。</p>
+<h2 id="Hexo配置檔說明"><a href="#Hexo配置檔說明" class="headerlink" title="Hexo配置檔說明"></a>Hexo配置檔說明</h2><blockquote>
+<p>注意：範例欄位是輸入的值，裡面有符號的話也要對，少了會報錯</p>
+</blockquote>
+<h3 id="Site"><a href="#Site" class="headerlink" title="Site"></a>Site</h3><p>網站描述的設定</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># Site</span></span><br><span class="line"><span class="attr">title:</span> <span class="string">Hexo</span></span><br><span class="line"><span class="attr">subtitle:</span> <span class="string">&#x27;&#x27;</span></span><br><span class="line"><span class="attr">description:</span> <span class="string">&#x27;&#x27;</span></span><br><span class="line"><span class="attr">keywords:</span></span><br><span class="line"><span class="attr">author:</span> <span class="string">John</span> <span class="string">Doe</span></span><br><span class="line"><span class="attr">language:</span> <span class="string">en</span></span><br><span class="line"><span class="attr">timezone:</span> <span class="string">&#x27;&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>名稱</th>
+<th>描述</th>
+<th>範例</th>
+<th>我的調整</th>
+<th>調整</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>title</td>
+<td>標題（部落格名稱）</td>
+<td>My Blog</td>
+<td>My Blog</td>
+<td>✔</td>
+</tr>
+<tr>
+<td>subtitle</td>
+<td>副標題</td>
+<td>這是我的部落格</td>
+<td>這是我的部落格</td>
+<td>✔</td>
+</tr>
+<tr>
+<td>description</td>
+<td>描述</td>
+<td>記錄各種點滴</td>
+<td>記錄各種點滴</td>
+<td>✔</td>
+</tr>
+<tr>
+<td>keywords</td>
+<td>關鍵字，可多個，會在<code>&lt;meta property=&quot;article:tag&quot; content=&quot;你設定的keywords&quot;&gt;</code>顯示。多個時請直接使用<code>,</code>分隔</td>
+<td>關鍵字1,關鍵字2,關鍵字3</td>
+<td>blog,coding,programing</td>
+<td>✔</td>
+</tr>
+<tr>
+<td>author</td>
+<td>作者</td>
+<td>Sam</td>
+<td>Sam</td>
+<td>✔</td>
+</tr>
+<tr>
+<td>language</td>
+<td>語言</td>
+<td>zh-TW</td>
+<td>zh-TW</td>
+<td>✔</td>
+</tr>
+<tr>
+<td>timezone</td>
+<td>網站的時區，沒填預設是電腦的時區</td>
+<td>‘Asia&#x2F;Taipei’</td>
+<td>‘’</td>
+<td>❌</td>
+</tr>
+</tbody></table>
+<h3 id="URL"><a href="#URL" class="headerlink" title="URL"></a>URL</h3><p>網址的設定，可想成網址路由的設定</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># URL</span></span><br><span class="line"><span class="comment">## Set your site url here. For example, if you use GitHub Page, set url as &#x27;https://username.github.io/project&#x27;</span></span><br><span class="line"><span class="attr">url:</span> <span class="string">http://example.com</span></span><br><span class="line"><span class="attr">permalink:</span> <span class="string">:year/:month/:day/:title/</span></span><br><span class="line"><span class="attr">permalink_defaults:</span></span><br><span class="line"><span class="attr">pretty_urls:</span></span><br><span class="line">  <span class="attr">trailing_index:</span> <span class="literal">true</span> <span class="comment"># Set to false to remove trailing &#x27;index.html&#x27; from permalinks</span></span><br><span class="line">  <span class="attr">trailing_html:</span> <span class="literal">true</span> <span class="comment"># Set to false to remove trailing &#x27;.html&#x27; from permalinks</span></span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>名稱</th>
+<th>描述</th>
+<th>範例</th>
+<th>我的調整</th>
+<th>調整</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>url</td>
+<td>這個網站的網址</td>
+<td><a href="https://example.com/">https://example.com</a></td>
+<td>https:&#x2F;&#x2F;你的名字.github.io</td>
+<td>✔</td>
+</tr>
+<tr>
+<td>permalink</td>
+<td>文章連結的格式，必須包在<code>:</code>和<code>/</code>之間，預設https:&#x2F;&#x2F;你的網址&#x2F;2022&#x2F;06&#x2F;26&#x2F;文章標題</td>
+<td>:year&#x2F;:month&#x2F;:day&#x2F;:title&#x2F;</td>
+<td>:title&#x2F;</td>
+<td>✔</td>
+</tr>
+<tr>
+<td>permalink_defaults</td>
+<td>permalink各區段的預設值</td>
+<td></td>
+<td></td>
+<td>❌</td>
+</tr>
+<tr>
+<td>permalink_defaults.trailing_index</td>
+<td>是否在URL的結尾保留<code>index.html</code></td>
+<td>true</td>
+<td>false</td>
+<td>✔</td>
+</tr>
+<tr>
+<td>permalink_defaults.trailing_html</td>
+<td>是否在URL的結尾保留<code>.html</code> ，對<code>index.html</code>無效</td>
+<td>true</td>
+<td>false</td>
+<td>✔</td>
+</tr>
+</tbody></table>
+<h3 id="Extensions"><a href="#Extensions" class="headerlink" title="Extensions"></a>Extensions</h3><p>擴充套件</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># Extensions</span></span><br><span class="line"><span class="comment">## Plugins: https://hexo.io/plugins/</span></span><br><span class="line"><span class="comment">## Themes: https://hexo.io/themes/</span></span><br><span class="line"><span class="attr">theme:</span> <span class="string">landscape</span></span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>名稱</th>
+<th>描述</th>
+<th>範例</th>
+<th>我的調整</th>
+<th>調整</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>theme</td>
+<td>主題，設為<code>false</code>代表關閉</td>
+<td>landscape</td>
+<td>next</td>
+<td>✔</td>
+</tr>
+</tbody></table>
+<h3 id="Deployment"><a href="#Deployment" class="headerlink" title="Deployment"></a>Deployment</h3><p>部署設定</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># Deployment</span></span><br><span class="line"><span class="comment">## Docs: https://hexo.io/docs/one-command-deployment</span></span><br><span class="line"><span class="attr">deploy:</span></span><br><span class="line">  <span class="attr">type:</span> <span class="string">&#x27;&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p>之後會部署到GitHub Pages，所以先來調整成<code>git</code>版所需的參數</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># Deployment</span></span><br><span class="line"><span class="comment">## Docs: https://hexo.io/docs/one-command-deployment</span></span><br><span class="line"><span class="attr">deploy:</span></span><br><span class="line">  <span class="attr">type:</span> <span class="string">&#x27;git&#x27;</span></span><br><span class="line">  <span class="attr">repo:</span> <span class="string">&lt;repository</span> <span class="string">url&gt;</span> <span class="comment"># https://bitbucket.org/JohnSmith/johnsmith.bitbucket.io</span></span><br><span class="line">  <span class="attr">branch:</span> [<span class="string">branch</span>]</span><br><span class="line">  <span class="attr">message:</span> [<span class="string">message</span>]</span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>名稱</th>
+<th>描述</th>
+<th>範例</th>
+<th>我的調整</th>
+<th>調整</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>type</td>
+<td>類型。有很多種，可以看文件</td>
+<td>‘git’</td>
+<td>‘git’</td>
+<td>✔</td>
+</tr>
+<tr>
+<td>repo</td>
+<td>repository的網址</td>
+<td><a href="https://bitbucket.org/JohnSmith/johnsmith.bitbucket.io">https://bitbucket.org/JohnSmith/johnsmith.bitbucket.io</a></td>
+<td><a href="https://github.com/GitHub%E7%9A%84%E5%90%8D%E7%A8%B1/GitHub%E7%9A%84%E5%90%8D%E7%A8%B1.github.io">https://github.com/GitHub的名稱/GitHub的名稱.github.io</a></td>
+<td>✔</td>
+</tr>
+<tr>
+<td>branch</td>
+<td>分支名稱</td>
+<td>gh-pages</td>
+<td>master</td>
+<td>✔</td>
+</tr>
+<tr>
+<td>message</td>
+<td>Commit的訊息，不填預設<code>Site updated: &#123;&#123; now('YYYY-MM-DD HH:mm:ss') &#125;&#125;</code></td>
+<td>init commit</td>
+<td></td>
+<td>❌</td>
+</tr>
+</tbody></table>
+<p>參考：</p>
+<p><a href="https://hexo.io/zh-tw/docs/configuration">官方文件</a></p>
+<p><a href="https://hexo.io/docs/one-command-deployment">Hexo-one-command-deployment</a></p>
+<p><a href="https://ithelp.ithome.com.tw/articles/10268369">Day 5：Hexo 安裝完成後的設定密技，並且為 Hexo 換上新佈景！</a></p>
+]]></content>
+      <categories>
+        <category>Hexo</category>
+      </categories>
+      <tags>
+        <tag>Hexo</tag>
+        <tag>教學</tag>
       </tags>
   </entry>
 </search>
