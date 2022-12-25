@@ -1,6 +1,55 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>自架部落格(1) 想自己架部落格？先裝個Hexo吧！</title>
+    <url>/Hexo/%E4%BD%BF%E7%94%A8Hexo%E5%9C%A8GitHub-Pages%E4%B8%8A%E5%BB%BA%E7%AB%8B%E9%83%A8%E8%90%BD%E6%A0%BC-1/</url>
+    <content><![CDATA[<p>身為這個部落格的第一篇文章，當然就是來記錄一下建置的步驟。</p>
+<p>至於為什麼選Hexo，其實就只是懶而已，懶得自己刻UI、懶得踩雷。UI、分類、產出靜態網站內容什麼的功能Hexo都幫你處理好，只要專注與寫作就好。</p>
+<p>當然也有看過其他的部落格套件，像是<a href="https://jekyllrb.com/">JekyII</a>, <a href="https://gohugo.io/">Hugo</a>，但是發現網路上Hexo的教學很多，那就不踩雷了，跟著他們做就好。寫部落格最重要的就是內容（雖然我的內容也不怎麼樣），其他都是其次。</p>
+<p>將介紹如何安裝和預覽。</p>
+<h2 id="主要環境"><a href="#主要環境" class="headerlink" title="主要環境"></a>主要環境</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">OS： Windows 10 專業版</span><br><span class="line">Node.js： 14.17.6</span><br></pre></td></tr></table></figure>
+
+<h2 id="安裝Hexo"><a href="#安裝Hexo" class="headerlink" title="安裝Hexo"></a>安裝Hexo</h2><p>依據<a href="https://hexo.io/zh-tw/docs/#%E5%AE%89%E8%A3%9D%E9%9C%80%E6%B1%82">Hexo官網</a>的說明，需要</p>
+<ul>
+<li>Node.js 建議10.0或以上的版本</li>
+<li>git</li>
+</ul>
+<p>這些都安裝好了之後，就可以透過npm來安裝，打開終端機，然後輸入：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">npm install -g hexo-cli</span><br></pre></td></tr></table></figure>
+
+<p>之後就會開始安裝Hexo。我安裝的是當時的最新版<code>6.2.0</code>。</p>
+<h2 id="建立專案"><a href="#建立專案" class="headerlink" title="建立專案"></a>建立專案</h2><h3 id="首次建立專案"><a href="#首次建立專案" class="headerlink" title="首次建立專案"></a>首次建立專案</h3><p>使用終端機到你想要儲存這個專案的位置，輸入指令：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">hexo init &lt;folder&gt;</span><br><span class="line">cd &lt;folder&gt;</span><br><span class="line">npm install</span><br></pre></td></tr></table></figure>
+
+<p><code>&lt;folder&gt;</code>就是Hexo專案的資料夾名稱，Hexo會在目前的目錄用這個名稱再建一個新的資料夾，把專案存到這裡面。沒有輸入的話就會在當前的資料夾內建立專案。</p>
+<p><img src="https://i.imgur.com/Tk8iAIt.jpeg" alt="圖1：以src為例"></p>
+<h3 id="資料結構說明"><a href="#資料結構說明" class="headerlink" title="資料結構說明"></a>資料結構說明</h3><p>安裝完成後，裡面會有這些檔案：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">.</span><br><span class="line">├── _config.yml</span><br><span class="line">├── package.json</span><br><span class="line">├── scaffolds</span><br><span class="line">├── source</span><br><span class="line">|   ├── _drafts</span><br><span class="line">|   └── _posts</span><br><span class="line">└── themes</span><br></pre></td></tr></table></figure>
+
+<p><code>_config.yml</code>：Hexo的配置檔</p>
+<p><code>package.json</code>：npm的配置檔，基本上可以不用理會</p>
+<p><code>scaffolds</code>：範本資料夾，建立新文章時可依照指定的範本建立檔案</p>
+<p><code>source</code>：存放原始檔案的地方，也就是文章存放的地方</p>
+<p><code>themes</code>：存放主題的資料夾</p>
+<h2 id="預覽"><a href="#預覽" class="headerlink" title="預覽"></a>預覽</h2><p>建立好之後，當然來預覽一下。</p>
+<p>終端機到專案目錄底下，輸入以下指令</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">hexo server</span><br><span class="line">或</span><br><span class="line">hexo s</span><br></pre></td></tr></table></figure>
+
+<p>之後就會啟動伺服器，預設會是<code>http://localhost:4000</code>，在瀏覽器上輸入這個網址就會看到。使用者個指令除了可以看到部落格的樣子外，還可以修改文章且儲存後，直接預覽變更後的樣子（修改config除外）。</p>
+<p><img src="https://i.imgur.com/zEBvgVU.jpeg" alt="圖2：預覽指令"></p>
+<p><img src="https://i.imgur.com/H64VaMo.jpeg" alt="圖3：建置完成"></p>
+<p>到這裡就大功告成，恭喜安裝Hexo並啟動成功。</p>
+<h2 id="參考"><a href="#參考" class="headerlink" title="參考"></a>參考</h2><p><a href="https://hexo.io/zh-tw/docs/">Hexo文件</a></p>
+]]></content>
+      <categories>
+        <category>Hexo</category>
+      </categories>
+      <tags>
+        <tag>Hexo</tag>
+        <tag>教學</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>自架部落格(2) Hexo配置檔介紹</title>
     <url>/Hexo/%E4%BD%BF%E7%94%A8Hexo%E5%9C%A8GitHub-Pages%E4%B8%8A%E5%BB%BA%E7%AB%8B%E9%83%A8%E8%90%BD%E6%A0%BC-2/</url>
     <content><![CDATA[<p>Hexo配置檔(_config.yml)初次調整的說明和本部落格所調整的設置。</p>
@@ -189,55 +238,6 @@
 <h2 id="參考"><a href="#參考" class="headerlink" title="參考"></a>參考</h2><p><a href="https://hexo.io/zh-tw/docs/configuration">官方文件</a></p>
 <p><a href="https://hexo.io/docs/one-command-deployment">Hexo-one-command-deployment</a></p>
 <p><a href="https://ithelp.ithome.com.tw/articles/10268369">Day 5：Hexo 安裝完成後的設定密技，並且為 Hexo 換上新佈景！</a></p>
-]]></content>
-      <categories>
-        <category>Hexo</category>
-      </categories>
-      <tags>
-        <tag>Hexo</tag>
-        <tag>教學</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>自架部落格(1) 想自己架部落格？先裝個Hexo吧！</title>
-    <url>/Hexo/%E4%BD%BF%E7%94%A8Hexo%E5%9C%A8GitHub-Pages%E4%B8%8A%E5%BB%BA%E7%AB%8B%E9%83%A8%E8%90%BD%E6%A0%BC-1/</url>
-    <content><![CDATA[<p>身為這個部落格的第一篇文章，當然就是來記錄一下建置的步驟。</p>
-<p>至於為什麼選Hexo，其實就只是懶而已，懶得自己刻UI、懶得踩雷。UI、分類、產出靜態網站內容什麼的功能Hexo都幫你處理好，只要專注與寫作就好。</p>
-<p>當然也有看過其他的部落格套件，像是<a href="https://jekyllrb.com/">JekyII</a>, <a href="https://gohugo.io/">Hugo</a>，但是發現網路上Hexo的教學很多，那就不踩雷了，跟著他們做就好。寫部落格最重要的就是內容（雖然我的內容也不怎麼樣），其他都是其次。</p>
-<p>將介紹如何安裝和預覽。</p>
-<h2 id="主要環境"><a href="#主要環境" class="headerlink" title="主要環境"></a>主要環境</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">OS： Windows 10 專業版</span><br><span class="line">Node.js： 14.17.6</span><br></pre></td></tr></table></figure>
-
-<h2 id="安裝Hexo"><a href="#安裝Hexo" class="headerlink" title="安裝Hexo"></a>安裝Hexo</h2><p>依據<a href="https://hexo.io/zh-tw/docs/#%E5%AE%89%E8%A3%9D%E9%9C%80%E6%B1%82">Hexo官網</a>的說明，需要</p>
-<ul>
-<li>Node.js 建議10.0或以上的版本</li>
-<li>git</li>
-</ul>
-<p>這些都安裝好了之後，就可以透過npm來安裝，打開終端機，然後輸入：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">npm install -g hexo-cli</span><br></pre></td></tr></table></figure>
-
-<p>之後就會開始安裝Hexo。我安裝的是當時的最新版<code>6.2.0</code>。</p>
-<h2 id="建立專案"><a href="#建立專案" class="headerlink" title="建立專案"></a>建立專案</h2><h3 id="首次建立專案"><a href="#首次建立專案" class="headerlink" title="首次建立專案"></a>首次建立專案</h3><p>使用終端機到你想要儲存這個專案的位置，輸入指令：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">hexo init &lt;folder&gt;</span><br><span class="line">cd &lt;folder&gt;</span><br><span class="line">npm install</span><br></pre></td></tr></table></figure>
-
-<p><code>&lt;folder&gt;</code>就是Hexo專案的資料夾名稱，Hexo會在目前的目錄用這個名稱再建一個新的資料夾，把專案存到這裡面。沒有輸入的話就會在當前的資料夾內建立專案。</p>
-<p><img src="https://i.imgur.com/Tk8iAIt.jpeg" alt="圖1：以src為例"></p>
-<h3 id="資料結構說明"><a href="#資料結構說明" class="headerlink" title="資料結構說明"></a>資料結構說明</h3><p>安裝完成後，裡面會有這些檔案：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">.</span><br><span class="line">├── _config.yml</span><br><span class="line">├── package.json</span><br><span class="line">├── scaffolds</span><br><span class="line">├── source</span><br><span class="line">|   ├── _drafts</span><br><span class="line">|   └── _posts</span><br><span class="line">└── themes</span><br></pre></td></tr></table></figure>
-
-<p><code>_config.yml</code>：Hexo的配置檔</p>
-<p><code>package.json</code>：npm的配置檔，基本上可以不用理會</p>
-<p><code>scaffolds</code>：範本資料夾，建立新文章時可依照指定的範本建立檔案</p>
-<p><code>source</code>：存放原始檔案的地方，也就是文章存放的地方</p>
-<p><code>themes</code>：存放主題的資料夾</p>
-<h2 id="預覽"><a href="#預覽" class="headerlink" title="預覽"></a>預覽</h2><p>建立好之後，當然來預覽一下。</p>
-<p>終端機到專案目錄底下，輸入以下指令</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">hexo server</span><br><span class="line">或</span><br><span class="line">hexo s</span><br></pre></td></tr></table></figure>
-
-<p>之後就會啟動伺服器，預設會是<code>http://localhost:4000</code>，在瀏覽器上輸入這個網址就會看到。使用者個指令除了可以看到部落格的樣子外，還可以修改文章且儲存後，直接預覽變更後的樣子（修改config除外）。</p>
-<p><img src="https://i.imgur.com/zEBvgVU.jpeg" alt="圖2：預覽指令"></p>
-<p><img src="https://i.imgur.com/H64VaMo.jpeg" alt="圖3：建置完成"></p>
-<p>到這裡就大功告成，恭喜安裝Hexo並啟動成功。</p>
-<h2 id="參考"><a href="#參考" class="headerlink" title="參考"></a>參考</h2><p><a href="https://hexo.io/zh-tw/docs/">Hexo文件</a></p>
 ]]></content>
       <categories>
         <category>Hexo</category>
