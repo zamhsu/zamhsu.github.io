@@ -1,260 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
-    <title>自架部落格(3) 換個跟別人一樣的NexT主題</title>
-    <url>/Hexo/%E4%BD%BF%E7%94%A8Hexo%E5%9C%A8GitHub-Pages%E4%B8%8A%E5%BB%BA%E7%AB%8B%E9%83%A8%E8%90%BD%E6%A0%BC-3/</url>
-    <content><![CDATA[<p>Hexo的主題其實也不少，也有很多有個性的主題，各位可以到Hexo的<a href="https://hexo.io/themes/">Themes</a>或是Google找找。這次我採用的是比較多人用的<a href="https://github.com/next-theme/hexo-theme-next">NexT</a>。主要原因就是看起來比較乾淨、有分類，最重要的是網路上有很多相關的教學（我就懶）。這個主題用的人很多，很容易就會看到一樣主題的，不過寫部落格主要還是文章內容，樣式就看個人吧。</p>
-<h2 id="如何安裝"><a href="#如何安裝" class="headerlink" title="如何安裝"></a>如何安裝</h2><p>NexT有提供2種方式安裝</p>
-<ol>
-<li>Hexo 5.0 或以上，可以使用npm安裝</li>
-<li>git clone他的專案</li>
-</ol>
-<p>我採用npm的方式安裝，因為我的是Hexo 6.2.0，而且後續要升級版本也方便很多。</p>
-<h3 id="npm的安裝方式（推薦）"><a href="#npm的安裝方式（推薦）" class="headerlink" title="npm的安裝方式（推薦）"></a>npm的安裝方式（推薦）</h3><p>到專案位置，輸入以下指令：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">npm install hexo-theme-next</span><br></pre></td></tr></table></figure>
-
-<p>預設安裝最新版，我當時的最新版是<code>8.12.1</code></p>
-<h3 id="git-clone的安裝方式"><a href="#git-clone的安裝方式" class="headerlink" title="git clone的安裝方式"></a>git clone的安裝方式</h3><p>到專案位置，輸入以下指令：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">git clone https://github.com/next-theme/hexo-theme-next themes/next</span><br></pre></td></tr></table></figure>
-
-<p>將NexT的原始碼複製到專案目錄底下<code>themes</code>資料夾裡的<code>next</code>資料夾，沒有<code>next</code>資料夾也沒關係，會自己建立。</p>
-<blockquote>
-<p>npm安裝的方式不需要把原始碼放到<code>themes/next</code>內</p>
-</blockquote>
-<p>安裝完後，到專案目錄底下的<code>_config.yml</code>更換主題設定為NexT</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># Extensions</span></span><br><span class="line"><span class="comment">## Plugins: https://hexo.io/plugins/</span></span><br><span class="line"><span class="comment">## Themes: https://hexo.io/themes/</span></span><br><span class="line"><span class="attr">theme:</span> <span class="string">next</span></span><br></pre></td></tr></table></figure>
-
-<p>啟動看看主題的樣子，順便測試是否安裝成功</p>
-<p><img src="https://i.imgur.com/XP6QR2V.png" alt="圖1：啟動Hexo server後的樣子"></p>
-<p><img src="https://i.imgur.com/TVUZMUg.png" alt="圖2：更換成功，顯示NexT預設的主題樣式"></p>
-<h2 id="配置檔位置異動"><a href="#配置檔位置異動" class="headerlink" title="配置檔位置異動"></a>配置檔位置異動</h2><p>安裝好主題之後，如果想要修改主題提供的配置要怎麼辦呢？</p>
-<p>首先我們先看看專案裡實際的檔案結構，會發現_config居然會有兩個：<code>_config.yml</code>和<code>_config.landscape.yml</code>。看到<code>landscape</code>這個字有沒有覺得在換主題的時候有看到？沒錯，就是Hexo預設的主題，而<code>_config.landscape.yml</code>就是這個主題的設定檔。那麼我們NexT的主題設定檔放到專案目錄底下就可以了。</p>
-<p><img src="https://i.imgur.com/eGdRJjc.png" alt="圖3：兩個_config"></p>
-<h3 id="npm安裝的做法"><a href="#npm安裝的做法" class="headerlink" title="npm安裝的做法"></a>npm安裝的做法</h3><p>到專案目錄下的這個位置<code>\node_modules\hexo-theme-next</code>，找到<code>_config.yml</code>，複製一份，然後修改名稱為<code>_config.next.yml</code>，再把它移動到專案目錄下就可以了。之後修改NexT主題相關配置都只要修改專案目錄下的這份<code>_config.next.yml</code>即可。</p>
-<h3 id="git-clone安裝的做法"><a href="#git-clone安裝的做法" class="headerlink" title="git clone安裝的做法"></a>git clone安裝的做法</h3><p>到專案目錄下的這個位置<code>\themes\next</code>，找到<code>_config.yml</code>，複製一份，然後修改名稱為<code>_config.next.yml</code>，再把它移動到專案目錄下就可以了。之後修改NexT主題相關配置都只要修改專案目錄下的這份<code>_config.next.yml</code>即可。</p>
-<p><img src="https://i.imgur.com/Nh4IHuw.png" alt="圖4：異動後的專案目錄"></p>
-<p>這樣，就把主題換成大家都在用的NexT了。</p>
-<p>參考：</p>
-<p><a href="https://github.com/next-theme/hexo-theme-next">NexT的GitHub</a></p>
-<p><a href="https://ithelp.ithome.com.tw/articles/10268369">Day 5：Hexo 安裝完成後的設定密技，並且為 Hexo 換上新佈景！</a></p>
-<p><a href="https://ithelp.ithome.com.tw/articles/10281506">Day 29：利用 NPM 來安裝 Next 佈景主題</a></p>
-]]></content>
-      <categories>
-        <category>Hexo</category>
-      </categories>
-      <tags>
-        <tag>Hexo</tag>
-        <tag>教學</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>自架部落格(5) 寫一篇文章</title>
-    <url>/Hexo/%E4%BD%BF%E7%94%A8Hexo%E5%9C%A8GitHub-Pages%E4%B8%8A%E5%BB%BA%E7%AB%8B%E9%83%A8%E8%90%BD%E6%A0%BC-5/</url>
-    <content><![CDATA[<p>寫一篇文章剛開始主要就是注意front-matter 的設定，其他就是用Markdown 寫文章了。</p>
-<p>Markdown 的工具有很多，例如直接使用Visual Studio Code、HackMD等。像我就使用Notion，不用打語法，修改樣式時搭配快捷鍵，匯出時選Markdown，然後再稍微調整一下就好，方便好用。</p>
-<h2 id="建立文章"><a href="#建立文章" class="headerlink" title="建立文章"></a>建立文章</h2><h3 id="指令"><a href="#指令" class="headerlink" title="指令"></a>指令</h3><p>要建立一篇文章的檔案，可以輸入指令依照範本產生</p>
-<p><code>layout</code>：這個是填入範本的名稱，不填的話預設是<code>post</code>，位置在專案目錄下的<code>scaffolds</code>。當然你也可以客製化自己的範本，會一些節省時間。這個可以在<code>_config.yml</code>的<code>default_layout</code>裡指定預設的範本。</p>
-<p><code>title</code>：標題名稱</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">hexo new [layout] &lt;title&gt;</span><br></pre></td></tr></table></figure>
-
-<p>建立好之後就會在<code>source/_posts</code>中產生一個同title 的<code>.md</code>檔案，裡面會有依照post範本產生的<code>front-matter</code></p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">---</span><br><span class="line">title: 剛剛輸入的標題</span><br><span class="line">date: 產生檔案的時間，格式：yyyy:MM:dd HH:mm:ss (2022-07-03 15:42:25)</span><br><span class="line">tags:</span><br><span class="line">---</span><br></pre></td></tr></table></figure>
-
-<h3 id="front-matter設定"><a href="#front-matter設定" class="headerlink" title="front-matter設定"></a>front-matter設定</h3><p>front-matter其實是 YAML 或 JSON 在檔案開頭的區塊，用來設定文章的一些設定值。</p>
-<p>這裡列出一些常用的設置，其實全部的設置也不多。</p>
-<p><code>title</code>：標題</p>
-<p><code>data</code>：建立日期</p>
-<p><code>description</code>：描述、簡介，這個和文章列表顯示的內容有關。加了這個之後，就會在文章列表的標題下面顯示這裡的內容。當然你也可以在文章內使用<code>&lt;!— more —&gt;</code>這個語法來直接顯示標記前的內容，但是進入文章後網址會有<a href="https://example.com/yourtitle%60#more%60%EF%BC%8C%E8%80%8C%E4%B8%94%E7%95%AB%E9%9D%A2%E6%9C%83%E5%BE%9E%E9%80%99%E5%80%8B%E6%A8%99%E8%A8%98%E9%96%8B%E5%A7%8B%E9%A1%AF%E7%A4%BA%E3%80%82">https://example.com/yourtitle`#more`，而且畫面會從這個標記開始顯示。</a></p>
-<p><code>categories</code>：文章的分類，有兩種分法</p>
-<p>第一種：同一個層級。</p>
-<p>-Sports</p>
-<p>-Basketball</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">categories: </span><br><span class="line">- Sports</span><br><span class="line">- Basketball</span><br></pre></td></tr></table></figure>
-
-<p>第二種：一個分類底下有多個分類。</p>
-<p>-Sports</p>
-<p>　-Baseball</p>
-<p>-MLB</p>
-<p>　-American League</p>
-<p>　　-Boston Red Sox</p>
-<p>-MLB</p>
-<p>　-American League</p>
-<p>　　-New York Yankees</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">categories: </span><br><span class="line">- [Sports, Baseball]</span><br><span class="line">- [MLB, American League, Boston Red Sox]</span><br><span class="line">- [MLB, American League, New York Yankees]</span><br></pre></td></tr></table></figure>
-
-<p><code>tags</code>：標籤。可以設定多個。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">tags:</span><br><span class="line">- Sports</span><br><span class="line">- Baseball</span><br><span class="line">- MLB</span><br></pre></td></tr></table></figure>
-
-<p><code>comments</code>：是否允許留言，預設true。</p>
-<p>前面的NexT 主題設定中，我們在menu 中加入了tags 和categories，這時候我們也要在文章中加入才有效果。</p>
-<p>參考：</p>
-<p><a href="https://israynotarray.com/hexo/20201004/3689515060/#%E9%96%B1%E8%AE%80%E5%85%A8%E6%96%87-More">(21) 試著學 Hexo - NexT 主題篇 - NexT 還有哪些設定？</a></p>
-<p><a href="https://hexo.io/docs/writing">Hexo Writing</a></p>
-<p><a href="https://hexo.io/docs/front-matter">Hexo Front-matter</a></p>
-]]></content>
-      <categories>
-        <category>Hexo</category>
-      </categories>
-      <tags>
-        <tag>Hexo</tag>
-        <tag>教學</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>自架部落格(4) NexT主題配置介紹</title>
-    <url>/Hexo/%E4%BD%BF%E7%94%A8Hexo%E5%9C%A8GitHub-Pages%E4%B8%8A%E5%BB%BA%E7%AB%8B%E9%83%A8%E8%90%BD%E6%A0%BC-4/</url>
-    <content><![CDATA[<p>這篇主要會介紹NexT可修改的配置。由於可修改的東西實在太多，所以就只挑我有修改的地方，如果要看更詳細的設定說明，可以到<a href="https://theme-next.js.org/docs/theme-settings/">官網</a>查看。</p>
-<h2 id="Core-Configuration"><a href="#Core-Configuration" class="headerlink" title="Core Configuration"></a>Core Configuration</h2><p>NexT主題的核心設定，這裡我沒修改過設定。</p>
-<p>如果需要修改網頁元件樣板，可以修改<code>custom_file_path</code>這裡的設置。</p>
-<p>需要注意的是<code>cache</code>的設定是需要NexT v6+ 才能夠使用。</p>
-<h2 id="Scheme"><a href="#Scheme" class="headerlink" title="Scheme"></a>Scheme</h2><p>修改NexT主題樣式的地方</p>
-<p>有4種scheme可以選擇，我選的是<code>Pisces</code>。</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># Schemes</span></span><br><span class="line"><span class="comment">#scheme: Muse</span></span><br><span class="line"><span class="comment">#scheme: Mist</span></span><br><span class="line"><span class="attr">scheme:</span> <span class="string">Pisces</span></span><br><span class="line"><span class="comment">#scheme: Gemini</span></span><br></pre></td></tr></table></figure>
-
-<p>他們的樣式分別是這樣：</p>
-<p>Muse</p>
-<p>這個是預設的樣式</p>
-<p><img src="https://i.imgur.com/Yk6pj2N.png" alt="圖1：Muse"></p>
-<p>Mist</p>
-<p><img src="https://i.imgur.com/em3SyOR.png" alt="圖2：Mist"></p>
-<p>Pisces</p>
-<p><img src="https://i.imgur.com/VwOHycV.png" alt="圖3：Pisces"></p>
-<p>Gemini</p>
-<p>這個和上面的Pisces 很像，不過這個多了陰影。</p>
-<p><img src="https://i.imgur.com/xq8LRbY.png" alt="圖4：Gemini"></p>
-<p>另外還有Dark Mode 可以使用，但是這個需要作業系統和瀏覽器的配合才有作用，而不是一直都啟用Dark Mode。</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># Dark Mode</span></span><br><span class="line"><span class="attr">darkmode:</span> <span class="literal">true</span></span><br></pre></td></tr></table></figure>
-
-<h2 id="Site-Information"><a href="#Site-Information" class="headerlink" title="Site Information"></a>Site Information</h2><p>修改icon、網站header裡<code>&lt;meta&gt;</code>標籤的配置和版權宣告</p>
-<p>這邊我只有修改<code>creative_commons</code>（版權宣告），讓它在sidebar 裡顯示出來。主要是創用CC 的宣告。我是使用by-nc-sa （姓名標示-非商業-相同方式分享）。除了我用的之外，NexT支援的還有以下幾種，我在下面簡單說明一下，可以依照自己的需求設定。</p>
-<p>by：姓名標示</p>
-<p>by-nc：姓名標示-非商業</p>
-<p>by-nc-nd：姓名標示-非商業-禁止修改</p>
-<p>by-nc-sa：姓名標示-非商業-相同方式分享</p>
-<p>by-nd：姓名標示-禁止修改</p>
-<p>by-sa：姓名標示-相同方式分享</p>
-<p>cc-zero：拋棄著作權</p>
-<p><a href="https://creativecommons.org/licenses/">Creative Commons 的說明</a></p>
-<p><a href="https://creativecommons.org/share-your-work/public-domain/cc0">CC0 的說明</a></p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># Creative Commons 4.0 International License.</span></span><br><span class="line"><span class="comment"># See: https://creativecommons.org/about/cclicenses/</span></span><br><span class="line"><span class="attr">creative_commons:</span></span><br><span class="line">  <span class="comment"># Available values: by | by-nc | by-nc-nd | by-nc-sa | by-nd | by-sa | cc-zero</span></span><br><span class="line">  <span class="attr">license:</span> <span class="string">by-nc-sa</span></span><br><span class="line">  <span class="comment"># Available values: big | small</span></span><br><span class="line">  <span class="attr">size:</span> <span class="string">big</span></span><br><span class="line">  <span class="attr">sidebar:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">post:</span> <span class="literal">true</span></span><br><span class="line">  <span class="comment"># You can set a language value if you prefer a translated version of CC license, e.g. deed.zh</span></span><br><span class="line">  <span class="comment"># CC licenses are available in 39 languages, you can find the specific and correct abbreviation you need on https://creativecommons.org</span></span><br><span class="line">  <span class="attr">language:</span></span><br></pre></td></tr></table></figure>
-
-<h2 id="Menu"><a href="#Menu" class="headerlink" title="Menu"></a>Menu</h2><p>設定menu要顯示什麼欄位和icon的樣式</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># Usage: `Key: /link/ || icon`</span></span><br><span class="line"><span class="comment"># Key is the name of menu item. If the translation for this item is available, the translated text will be loaded, otherwise the Key name will be used. Key is case-sensitive.</span></span><br><span class="line"><span class="comment"># Value before `||` delimiter is the target link, value after `||` delimiter is the name of Font Awesome icon.</span></span><br><span class="line"><span class="comment"># External url should start with http:// or https://</span></span><br><span class="line"><span class="attr">menu:</span></span><br><span class="line">  <span class="attr">home:</span> <span class="string">/</span> <span class="string">||</span> <span class="string">fa</span> <span class="string">fa-home</span></span><br><span class="line">  <span class="comment">#about: /about/ || fa fa-user</span></span><br><span class="line">  <span class="attr">tags:</span> <span class="string">/tags/</span> <span class="string">||</span> <span class="string">fa</span> <span class="string">fa-tags</span></span><br><span class="line">  <span class="attr">categories:</span> <span class="string">/categories/</span> <span class="string">||</span> <span class="string">fa</span> <span class="string">fa-th</span></span><br><span class="line">  <span class="attr">archives:</span> <span class="string">/archives/</span> <span class="string">||</span> <span class="string">fa</span> <span class="string">fa-archive</span></span><br><span class="line">  <span class="comment">#schedule: /schedule/ || fa fa-calendar</span></span><br><span class="line">  <span class="comment">#sitemap: /sitemap.xml || fa fa-sitemap</span></span><br><span class="line">  <span class="comment">#commonweal: /404/ || fa fa-heartbeat</span></span><br></pre></td></tr></table></figure>
-
-<p>效果：</p>
-<p><img src="https://i.imgur.com/r9RAVkh.png" alt="圖5：Menu的效果"></p>
-<p>搜尋要在下面的Search Services裡設定，這邊不會有。另外這裡需要注意除了<code>home</code>和<code>archives</code>外，其他欄位都需要自行添加頁面。這裡以<code>tags</code>和<code>categories</code>為例，需要在專案目錄下的source資料夾內建立相對應的資料夾，裡面再放一個Markdown 檔案，說明title 和type。title 可自行輸入，中英文皆可，但type 就必須和key 值一樣，例如tags 欄位就輸入tags，categories 欄位就輸入categories。</p>
-<p>資料夾結構：</p>
-<p><img src="https://i.imgur.com/YuLUwMG.png" alt="圖6：資料夾結構"></p>
-<p>tags&#x2F;index.md 的內容：</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">title:</span> <span class="string">標籤</span></span><br><span class="line"><span class="attr">date:</span> <span class="number">2022-06-25 22:29:06</span></span><br><span class="line"><span class="attr">type:</span> <span class="string">tags</span></span><br><span class="line"><span class="meta">---</span></span><br></pre></td></tr></table></figure>
-
-<p>categories&#x2F;index.md 的內容：</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">title:</span> <span class="string">分類</span></span><br><span class="line"><span class="attr">date:</span> <span class="number">2022-06-25 22:29:25</span></span><br><span class="line"><span class="attr">type:</span> <span class="string">categories</span></span><br><span class="line"><span class="meta">---</span></span><br></pre></td></tr></table></figure>
-
-<p>你沒看錯，只要這幾行就可以了，會自動幫你統計和顯示列表，不用自己輸入。</p>
-<p>詳細可看<a href="https://theme-next.js.org/docs/theme-settings/custom-pages.html">官方文件的Custom Pages篇章說明</a></p>
-<h2 id="Sidebar"><a href="#Sidebar" class="headerlink" title="Sidebar"></a>Sidebar</h2><p>設定sidebar的樣式</p>
-<p>這裡我主要調整顯示social 的設定，顯示我的GitHub 連結和改成只顯示icon</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># Social Links</span></span><br><span class="line"><span class="comment"># Usage: `Key: permalink || icon`</span></span><br><span class="line"><span class="comment"># Key is the link label showing to end users.</span></span><br><span class="line"><span class="comment"># Value before `||` delimiter is the target permalink, value after `||` delimiter is the name of Font Awesome icon.</span></span><br><span class="line"><span class="attr">social:</span></span><br><span class="line">  <span class="attr">GitHub:</span> <span class="string">https://github.com/yourname</span> <span class="string">||</span> <span class="string">fab</span> <span class="string">fa-github</span></span><br><span class="line">  <span class="comment">#E-Mail: mailto:yourname@gmail.com || fa fa-envelope</span></span><br><span class="line">  <span class="comment">#Weibo: https://weibo.com/yourname || fab fa-weibo</span></span><br><span class="line">  <span class="comment">#Google: https://plus.google.com/yourname || fab fa-google</span></span><br><span class="line">  <span class="comment">#Twitter: https://twitter.com/yourname || fab fa-twitter</span></span><br><span class="line">  <span class="comment">#FB Page: https://www.facebook.com/yourname || fab fa-facebook</span></span><br><span class="line">  <span class="comment">#StackOverflow: https://stackoverflow.com/yourname || fab fa-stack-overflow</span></span><br><span class="line">  <span class="comment">#YouTube: https://youtube.com/yourname || fab fa-youtube</span></span><br><span class="line">  <span class="comment">#Instagram: https://instagram.com/yourname || fab fa-instagram</span></span><br><span class="line">  <span class="comment">#Skype: skype:yourname?call|chat || fab fa-skype</span></span><br><span class="line"></span><br><span class="line"><span class="attr">social_icons:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">icons_only:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">transition:</span> <span class="literal">false</span></span><br></pre></td></tr></table></figure>
-
-<p>Sidebar這裡的效果在首頁和文章裡會不一樣。首頁的時候只會有<code>本站概要</code>，在文章裡的時候會多了個<code>文章目錄</code>標籤顯示文章的大綱（預設顯示這個），而另一個標籤則是<code>本站概要</code>。</p>
-<h2 id="Footer"><a href="#Footer" class="headerlink" title="Footer"></a>Footer</h2><p>設定footer的樣式</p>
-<p>這裡我只設定了愛心有動畫效果，其他都是預設值。另外，<code>copyright</code>這個欄位，如果沒有填的話會去<code>_config.yml</code>裡的<code>author</code>欄位抓。而<code>beian</code>（備案）欄位，是給海的另一邊使用者設定的。</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">footer:</span></span><br><span class="line">  <span class="comment"># Icon between year and copyright info.</span></span><br><span class="line">  <span class="attr">icon:</span></span><br><span class="line">    <span class="comment"># Icon name in Font Awesome. See: https://fontawesome.com/icons</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">fa</span> <span class="string">fa-heart</span></span><br><span class="line">    <span class="comment"># If you want to animate the icon, set it to true.</span></span><br><span class="line">    <span class="attr">animated:</span> <span class="literal">true</span></span><br><span class="line">    <span class="comment"># Change the color of icon, using Hex Code.</span></span><br><span class="line">    <span class="attr">color:</span> <span class="string">&quot;#ff0000&quot;</span></span><br></pre></td></tr></table></figure>
-
-<h2 id="Misc"><a href="#Misc" class="headerlink" title="Misc"></a>Misc</h2><p>雜項</p>
-<p>這裡我改了<code>codeblock</code>和<code>reading_progress</code>。</p>
-<p><code>codeblock</code>這個可以在hexo的<code>_config.yml</code>選擇highlight的引擎是highlight 還是prism，然後到_config.next.yml中分別設定一般和黑暗模式時的樣式。另外，NexT也有提供<a href="https://theme-next.js.org/highlight/">網站</a>來修改設定和預覽結果。</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">codeblock:</span></span><br><span class="line">  <span class="comment"># Code Highlight theme</span></span><br><span class="line">  <span class="comment"># All available themes: https://theme-next.js.org/highlight/</span></span><br><span class="line">  <span class="attr">theme:</span></span><br><span class="line">    <span class="attr">light:</span> <span class="string">default</span></span><br><span class="line">    <span class="attr">dark:</span> <span class="string">vs2015</span></span><br><span class="line">  <span class="attr">prism:</span></span><br><span class="line">    <span class="attr">light:</span> <span class="string">prism</span></span><br><span class="line">    <span class="attr">dark:</span> <span class="string">prism-dark</span></span><br><span class="line">  <span class="comment"># Add copy button on codeblock</span></span><br><span class="line">  <span class="attr">copy_button:</span></span><br><span class="line">    <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">    <span class="comment"># Available values: default | flat | mac</span></span><br><span class="line">    <span class="attr">style:</span></span><br></pre></td></tr></table></figure>
-
-<p><code>reading_progress</code>的話就是設定文章閱讀的進度條，設定是否啟用、顯示位置和顏色等。</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># Reading progress bar</span></span><br><span class="line"><span class="attr">reading_progress:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">  <span class="comment"># Available values: left | right</span></span><br><span class="line">  <span class="attr">start_at:</span> <span class="string">left</span></span><br><span class="line">  <span class="comment"># Available values: top | bottom</span></span><br><span class="line">  <span class="attr">position:</span> <span class="string">top</span></span><br><span class="line">  <span class="attr">reversed:</span> <span class="literal">false</span></span><br><span class="line">  <span class="attr">color:</span> <span class="string">&quot;#37c6c0&quot;</span></span><br><span class="line">  <span class="attr">height:</span> <span class="string">3px</span></span><br></pre></td></tr></table></figure>
-
-<h2 id="Third-Party-Plugins-amp-Services"><a href="#Third-Party-Plugins-amp-Services" class="headerlink" title="Third Party Plugins &amp; Services"></a>Third Party Plugins &amp; Services</h2><p>第三方套件</p>
-<p>這裡面的東西就很多了，用的套件其實都很常見，依照需求設定吧。這裡我啟用了fancybox。</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># FancyBox is a tool that offers a nice and elegant way to add zooming functionality for images.</span></span><br><span class="line"><span class="comment"># For more information: https://fancyapps.com/fancybox/</span></span><br><span class="line"><span class="attr">fancybox:</span> <span class="literal">true</span></span><br></pre></td></tr></table></figure>
-
-<h2 id="Statistics-and-Analytics"><a href="#Statistics-and-Analytics" class="headerlink" title="Statistics and Analytics"></a>Statistics and Analytics</h2><p>設定網站流量統計的地方，例如Google Analytics、百度統計、Cloudflare Web Analytics等。這些我不太熟悉，只有設定GA而已，就不再說明。</p>
-<h2 id="Search-Services"><a href="#Search-Services" class="headerlink" title="Search Services"></a>Search Services</h2><p>設定站內搜尋的工具</p>
-<p>可以使用Algolia 或是本地端搜尋。經費有限啊，我還是用local search 就好。</p>
-<p>不論用Algolia 還是local search，都是要額外安裝套件的。詳細設定看<a href="https://theme-next.js.org/docs/third-party-services/search-services">這裡</a>。</p>
-<p>這裡以local search 為例</p>
-<p>輸入指令安裝</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="string">npm</span> <span class="string">install</span> <span class="string">hexo-generator-searchdb</span></span><br></pre></td></tr></table></figure>
-
-<p><code>_config.next.yml</code>的設定</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># Local Search</span></span><br><span class="line"><span class="comment"># Dependencies: https://github.com/next-theme/hexo-generator-searchdb</span></span><br><span class="line"><span class="attr">local_search:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line"><span class="string">...</span></span><br><span class="line"><span class="string">...</span></span><br><span class="line"><span class="string">...</span></span><br></pre></td></tr></table></figure>
-
-<h2 id="Animation"><a href="#Animation" class="headerlink" title="Animation"></a>Animation</h2><p>動畫設定</p>
-<p>說實話，一直顯示慢慢載入動畫讓我這個沒耐心的人感到非常困擾，看到可以設定就果斷關掉。</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># Use Animate.css to animate everything.</span></span><br><span class="line"><span class="comment"># For more information: https://animate.style</span></span><br><span class="line"><span class="attr">motion:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">false</span></span><br><span class="line"><span class="string">...</span></span><br><span class="line"><span class="string">...</span></span><br><span class="line"><span class="string">...</span></span><br></pre></td></tr></table></figure>
-
-<p>配置這東西沒什麼好說的，就是依照需求看文件調整一下吧。多嘗試，多踩雷，你就會了。</p>
-<p>參考：</p>
-<p><a href="https://theme-next.js.org/docs/theme-settings/">NexT Theme Settings</a></p>
-<p><a href="https://ithelp.ithome.com.tw/articles/10269050">Day 6：設定你的 Hexo 佈景主題：Next（上）</a></p>
-<p><a href="https://ithelp.ithome.com.tw/articles/10269747">Day 7：設定你的 Hexo 佈景主題：Next（下）</a></p>
-]]></content>
-      <categories>
-        <category>Hexo</category>
-      </categories>
-      <tags>
-        <tag>Hexo</tag>
-        <tag>教學</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>自架部落格(1) 想自己架部落格？先裝個Hexo吧！</title>
-    <url>/Hexo/%E4%BD%BF%E7%94%A8Hexo%E5%9C%A8GitHub-Pages%E4%B8%8A%E5%BB%BA%E7%AB%8B%E9%83%A8%E8%90%BD%E6%A0%BC-1/</url>
-    <content><![CDATA[<p>身為這個部落格的第一篇文章，當然就是來記錄一下建置的步驟。</p>
-<p>至於為什麼選Hexo，其實就只是懶而已，懶得自己刻UI、懶得踩雷。UI、分類、產出靜態網站內容什麼的功能Hexo都幫你處理好，只要專注與寫作就好。</p>
-<p>當然也有看過其他的部落格套件，像是<a href="https://jekyllrb.com/">JekyII</a>, <a href="https://gohugo.io/">Hugo</a>，但是發現網路上Hexo的教學很多，那就不踩雷了，跟著他們做就好。寫部落格最重要的就是內容（雖然我的內容也不怎麼樣），其他都是其次。</p>
-<p>將介紹如何安裝和預覽。</p>
-<h2 id="主要環境"><a href="#主要環境" class="headerlink" title="主要環境"></a>主要環境</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">OS： Windows 10 專業版</span><br><span class="line">Node.js： 14.17.6</span><br></pre></td></tr></table></figure>
-
-<h2 id="安裝Hexo"><a href="#安裝Hexo" class="headerlink" title="安裝Hexo"></a>安裝Hexo</h2><p>依據<a href="https://hexo.io/zh-tw/docs/#%E5%AE%89%E8%A3%9D%E9%9C%80%E6%B1%82">Hexo官網</a>的說明，需要</p>
-<ul>
-<li>Node.js 建議10.0或以上的版本</li>
-<li>git</li>
-</ul>
-<p>這些都安裝好了之後，就可以透過npm來安裝，打開終端機，然後輸入：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">npm install -g hexo-cli</span><br></pre></td></tr></table></figure>
-
-<p>之後就會開始安裝Hexo。我安裝的是當時的最新版<code>6.2.0</code>。</p>
-<h2 id="建立專案"><a href="#建立專案" class="headerlink" title="建立專案"></a>建立專案</h2><h3 id="首次建立專案"><a href="#首次建立專案" class="headerlink" title="首次建立專案"></a>首次建立專案</h3><p>使用終端機到你想要儲存這個專案的位置，輸入指令：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">hexo init &lt;folder&gt;</span><br><span class="line">cd &lt;folder&gt;</span><br><span class="line">npm install</span><br></pre></td></tr></table></figure>
-
-<p><code>&lt;folder&gt;</code>就是Hexo專案的資料夾名稱，Hexo會在目前的目錄用這個名稱再建一個新的資料夾，把專案存到這裡面。沒有輸入的話就會在當前的資料夾內建立專案。</p>
-<p><img src="https://i.imgur.com/Tk8iAIt.jpeg" alt="圖1：以src為例"></p>
-<h3 id="資料結構說明"><a href="#資料結構說明" class="headerlink" title="資料結構說明"></a>資料結構說明</h3><p>安裝完成後，裡面會有這些檔案：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">.</span><br><span class="line">├── _config.yml</span><br><span class="line">├── package.json</span><br><span class="line">├── scaffolds</span><br><span class="line">├── source</span><br><span class="line">|   ├── _drafts</span><br><span class="line">|   └── _posts</span><br><span class="line">└── themes</span><br></pre></td></tr></table></figure>
-
-<p><code>_config.yml</code>：Hexo的配置檔</p>
-<p><code>package.json</code>：npm的配置檔，基本上可以不用理會</p>
-<p><code>scaffolds</code>：範本資料夾，建立新文章時可依照指定的範本建立檔案</p>
-<p><code>source</code>：存放原始檔案的地方，也就是文章存放的地方</p>
-<p><code>themes</code>：存放主題的資料夾</p>
-<h2 id="預覽"><a href="#預覽" class="headerlink" title="預覽"></a>預覽</h2><p>建立好之後，當然來預覽一下。</p>
-<p>終端機到專案目錄底下，輸入以下指令</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">hexo server</span><br><span class="line">或</span><br><span class="line">hexo s</span><br></pre></td></tr></table></figure>
-
-<p>之後就會啟動伺服器，預設會是<code>http://localhost:4000</code>，在瀏覽器上輸入這個網址就會看到。使用者個指令除了可以看到部落格的樣子外，還可以修改文章且儲存後，直接預覽變更後的樣子（修改config除外）。</p>
-<p><img src="https://i.imgur.com/zEBvgVU.jpeg" alt="圖2：預覽指令"></p>
-<p><img src="https://i.imgur.com/H64VaMo.jpeg" alt="圖3：建置完成"></p>
-<p>到這裡就大功告成，恭喜安裝Hexo並啟動成功。</p>
-<p>參考：</p>
-<p><a href="https://hexo.io/zh-tw/docs/">Hexo文件</a></p>
-]]></content>
-      <categories>
-        <category>Hexo</category>
-      </categories>
-      <tags>
-        <tag>Hexo</tag>
-        <tag>教學</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>自架部落格(2) Hexo配置檔介紹</title>
     <url>/Hexo/%E4%BD%BF%E7%94%A8Hexo%E5%9C%A8GitHub-Pages%E4%B8%8A%E5%BB%BA%E7%AB%8B%E9%83%A8%E8%90%BD%E6%A0%BC-2/</url>
     <content><![CDATA[<p>Hexo配置檔(_config.yml)初次調整的說明和本部落格所調整的設置。</p>
@@ -440,10 +186,259 @@
 <td>❌</td>
 </tr>
 </tbody></table>
-<p>參考：</p>
-<p><a href="https://hexo.io/zh-tw/docs/configuration">官方文件</a></p>
+<h2 id="參考"><a href="#參考" class="headerlink" title="參考"></a>參考</h2><p><a href="https://hexo.io/zh-tw/docs/configuration">官方文件</a></p>
 <p><a href="https://hexo.io/docs/one-command-deployment">Hexo-one-command-deployment</a></p>
 <p><a href="https://ithelp.ithome.com.tw/articles/10268369">Day 5：Hexo 安裝完成後的設定密技，並且為 Hexo 換上新佈景！</a></p>
+]]></content>
+      <categories>
+        <category>Hexo</category>
+      </categories>
+      <tags>
+        <tag>Hexo</tag>
+        <tag>教學</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>自架部落格(1) 想自己架部落格？先裝個Hexo吧！</title>
+    <url>/Hexo/%E4%BD%BF%E7%94%A8Hexo%E5%9C%A8GitHub-Pages%E4%B8%8A%E5%BB%BA%E7%AB%8B%E9%83%A8%E8%90%BD%E6%A0%BC-1/</url>
+    <content><![CDATA[<p>身為這個部落格的第一篇文章，當然就是來記錄一下建置的步驟。</p>
+<p>至於為什麼選Hexo，其實就只是懶而已，懶得自己刻UI、懶得踩雷。UI、分類、產出靜態網站內容什麼的功能Hexo都幫你處理好，只要專注與寫作就好。</p>
+<p>當然也有看過其他的部落格套件，像是<a href="https://jekyllrb.com/">JekyII</a>, <a href="https://gohugo.io/">Hugo</a>，但是發現網路上Hexo的教學很多，那就不踩雷了，跟著他們做就好。寫部落格最重要的就是內容（雖然我的內容也不怎麼樣），其他都是其次。</p>
+<p>將介紹如何安裝和預覽。</p>
+<h2 id="主要環境"><a href="#主要環境" class="headerlink" title="主要環境"></a>主要環境</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">OS： Windows 10 專業版</span><br><span class="line">Node.js： 14.17.6</span><br></pre></td></tr></table></figure>
+
+<h2 id="安裝Hexo"><a href="#安裝Hexo" class="headerlink" title="安裝Hexo"></a>安裝Hexo</h2><p>依據<a href="https://hexo.io/zh-tw/docs/#%E5%AE%89%E8%A3%9D%E9%9C%80%E6%B1%82">Hexo官網</a>的說明，需要</p>
+<ul>
+<li>Node.js 建議10.0或以上的版本</li>
+<li>git</li>
+</ul>
+<p>這些都安裝好了之後，就可以透過npm來安裝，打開終端機，然後輸入：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">npm install -g hexo-cli</span><br></pre></td></tr></table></figure>
+
+<p>之後就會開始安裝Hexo。我安裝的是當時的最新版<code>6.2.0</code>。</p>
+<h2 id="建立專案"><a href="#建立專案" class="headerlink" title="建立專案"></a>建立專案</h2><h3 id="首次建立專案"><a href="#首次建立專案" class="headerlink" title="首次建立專案"></a>首次建立專案</h3><p>使用終端機到你想要儲存這個專案的位置，輸入指令：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">hexo init &lt;folder&gt;</span><br><span class="line">cd &lt;folder&gt;</span><br><span class="line">npm install</span><br></pre></td></tr></table></figure>
+
+<p><code>&lt;folder&gt;</code>就是Hexo專案的資料夾名稱，Hexo會在目前的目錄用這個名稱再建一個新的資料夾，把專案存到這裡面。沒有輸入的話就會在當前的資料夾內建立專案。</p>
+<p><img src="https://i.imgur.com/Tk8iAIt.jpeg" alt="圖1：以src為例"></p>
+<h3 id="資料結構說明"><a href="#資料結構說明" class="headerlink" title="資料結構說明"></a>資料結構說明</h3><p>安裝完成後，裡面會有這些檔案：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">.</span><br><span class="line">├── _config.yml</span><br><span class="line">├── package.json</span><br><span class="line">├── scaffolds</span><br><span class="line">├── source</span><br><span class="line">|   ├── _drafts</span><br><span class="line">|   └── _posts</span><br><span class="line">└── themes</span><br></pre></td></tr></table></figure>
+
+<p><code>_config.yml</code>：Hexo的配置檔</p>
+<p><code>package.json</code>：npm的配置檔，基本上可以不用理會</p>
+<p><code>scaffolds</code>：範本資料夾，建立新文章時可依照指定的範本建立檔案</p>
+<p><code>source</code>：存放原始檔案的地方，也就是文章存放的地方</p>
+<p><code>themes</code>：存放主題的資料夾</p>
+<h2 id="預覽"><a href="#預覽" class="headerlink" title="預覽"></a>預覽</h2><p>建立好之後，當然來預覽一下。</p>
+<p>終端機到專案目錄底下，輸入以下指令</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">hexo server</span><br><span class="line">或</span><br><span class="line">hexo s</span><br></pre></td></tr></table></figure>
+
+<p>之後就會啟動伺服器，預設會是<code>http://localhost:4000</code>，在瀏覽器上輸入這個網址就會看到。使用者個指令除了可以看到部落格的樣子外，還可以修改文章且儲存後，直接預覽變更後的樣子（修改config除外）。</p>
+<p><img src="https://i.imgur.com/zEBvgVU.jpeg" alt="圖2：預覽指令"></p>
+<p><img src="https://i.imgur.com/H64VaMo.jpeg" alt="圖3：建置完成"></p>
+<p>到這裡就大功告成，恭喜安裝Hexo並啟動成功。</p>
+<h2 id="參考"><a href="#參考" class="headerlink" title="參考"></a>參考</h2><p><a href="https://hexo.io/zh-tw/docs/">Hexo文件</a></p>
+]]></content>
+      <categories>
+        <category>Hexo</category>
+      </categories>
+      <tags>
+        <tag>Hexo</tag>
+        <tag>教學</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>自架部落格(3) 換個跟別人一樣的NexT主題</title>
+    <url>/Hexo/%E4%BD%BF%E7%94%A8Hexo%E5%9C%A8GitHub-Pages%E4%B8%8A%E5%BB%BA%E7%AB%8B%E9%83%A8%E8%90%BD%E6%A0%BC-3/</url>
+    <content><![CDATA[<p>Hexo的主題其實也不少，也有很多有個性的主題，各位可以到Hexo的<a href="https://hexo.io/themes/">Themes</a>或是Google找找。這次我採用的是比較多人用的<a href="https://github.com/next-theme/hexo-theme-next">NexT</a>。主要原因就是看起來比較乾淨、有分類，最重要的是網路上有很多相關的教學（我就懶）。這個主題用的人很多，很容易就會看到一樣主題的，不過寫部落格主要還是文章內容，樣式就看個人吧。</p>
+<h2 id="如何安裝"><a href="#如何安裝" class="headerlink" title="如何安裝"></a>如何安裝</h2><p>NexT有提供2種方式安裝</p>
+<ol>
+<li>Hexo 5.0 或以上，可以使用npm安裝</li>
+<li>git clone他的專案</li>
+</ol>
+<p>我採用npm的方式安裝，因為我的是Hexo 6.2.0，而且後續要升級版本也方便很多。</p>
+<h3 id="npm的安裝方式（推薦）"><a href="#npm的安裝方式（推薦）" class="headerlink" title="npm的安裝方式（推薦）"></a>npm的安裝方式（推薦）</h3><p>到專案位置，輸入以下指令：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">npm install hexo-theme-next</span><br></pre></td></tr></table></figure>
+
+<p>預設安裝最新版，我當時的最新版是<code>8.12.1</code></p>
+<h3 id="git-clone的安裝方式"><a href="#git-clone的安裝方式" class="headerlink" title="git clone的安裝方式"></a>git clone的安裝方式</h3><p>到專案位置，輸入以下指令：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">git clone https://github.com/next-theme/hexo-theme-next themes/next</span><br></pre></td></tr></table></figure>
+
+<p>將NexT的原始碼複製到專案目錄底下<code>themes</code>資料夾裡的<code>next</code>資料夾，沒有<code>next</code>資料夾也沒關係，會自己建立。</p>
+<blockquote>
+<p>npm安裝的方式不需要把原始碼放到<code>themes/next</code>內</p>
+</blockquote>
+<p>安裝完後，到專案目錄底下的<code>_config.yml</code>更換主題設定為NexT</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># Extensions</span></span><br><span class="line"><span class="comment">## Plugins: https://hexo.io/plugins/</span></span><br><span class="line"><span class="comment">## Themes: https://hexo.io/themes/</span></span><br><span class="line"><span class="attr">theme:</span> <span class="string">next</span></span><br></pre></td></tr></table></figure>
+
+<p>啟動看看主題的樣子，順便測試是否安裝成功</p>
+<p><img src="https://i.imgur.com/XP6QR2V.png" alt="圖1：啟動Hexo server後的樣子"></p>
+<p><img src="https://i.imgur.com/TVUZMUg.png" alt="圖2：更換成功，顯示NexT預設的主題樣式"></p>
+<h2 id="配置檔位置異動"><a href="#配置檔位置異動" class="headerlink" title="配置檔位置異動"></a>配置檔位置異動</h2><p>安裝好主題之後，如果想要修改主題提供的配置要怎麼辦呢？</p>
+<p>首先我們先看看專案裡實際的檔案結構，會發現_config居然會有兩個：<code>_config.yml</code>和<code>_config.landscape.yml</code>。看到<code>landscape</code>這個字有沒有覺得在換主題的時候有看到？沒錯，就是Hexo預設的主題，而<code>_config.landscape.yml</code>就是這個主題的設定檔。那麼我們NexT的主題設定檔放到專案目錄底下就可以了。</p>
+<p><img src="https://i.imgur.com/eGdRJjc.png" alt="圖3：兩個_config"></p>
+<h3 id="npm安裝的做法"><a href="#npm安裝的做法" class="headerlink" title="npm安裝的做法"></a>npm安裝的做法</h3><p>到專案目錄下的這個位置<code>\node_modules\hexo-theme-next</code>，找到<code>_config.yml</code>，複製一份，然後修改名稱為<code>_config.next.yml</code>，再把它移動到專案目錄下就可以了。之後修改NexT主題相關配置都只要修改專案目錄下的這份<code>_config.next.yml</code>即可。</p>
+<h3 id="git-clone安裝的做法"><a href="#git-clone安裝的做法" class="headerlink" title="git clone安裝的做法"></a>git clone安裝的做法</h3><p>到專案目錄下的這個位置<code>\themes\next</code>，找到<code>_config.yml</code>，複製一份，然後修改名稱為<code>_config.next.yml</code>，再把它移動到專案目錄下就可以了。之後修改NexT主題相關配置都只要修改專案目錄下的這份<code>_config.next.yml</code>即可。</p>
+<p><img src="https://i.imgur.com/Nh4IHuw.png" alt="圖4：異動後的專案目錄"></p>
+<p>這樣，就把主題換成大家都在用的NexT了。</p>
+<h2 id="參考"><a href="#參考" class="headerlink" title="參考"></a>參考</h2><p><a href="https://github.com/next-theme/hexo-theme-next">NexT的GitHub</a></p>
+<p><a href="https://ithelp.ithome.com.tw/articles/10268369">Day 5：Hexo 安裝完成後的設定密技，並且為 Hexo 換上新佈景！</a></p>
+<p><a href="https://ithelp.ithome.com.tw/articles/10281506">Day 29：利用 NPM 來安裝 Next 佈景主題</a></p>
+]]></content>
+      <categories>
+        <category>Hexo</category>
+      </categories>
+      <tags>
+        <tag>Hexo</tag>
+        <tag>教學</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>自架部落格(4) NexT主題配置介紹</title>
+    <url>/Hexo/%E4%BD%BF%E7%94%A8Hexo%E5%9C%A8GitHub-Pages%E4%B8%8A%E5%BB%BA%E7%AB%8B%E9%83%A8%E8%90%BD%E6%A0%BC-4/</url>
+    <content><![CDATA[<p>這篇主要會介紹NexT可修改的配置。由於可修改的東西實在太多，所以就只挑我有修改的地方，如果要看更詳細的設定說明，可以到<a href="https://theme-next.js.org/docs/theme-settings/">官網</a>查看。</p>
+<h2 id="Core-Configuration"><a href="#Core-Configuration" class="headerlink" title="Core Configuration"></a>Core Configuration</h2><p>NexT主題的核心設定，這裡我沒修改過設定。</p>
+<p>如果需要修改網頁元件樣板，可以修改<code>custom_file_path</code>這裡的設置。</p>
+<p>需要注意的是<code>cache</code>的設定是需要NexT v6+ 才能夠使用。</p>
+<h2 id="Scheme"><a href="#Scheme" class="headerlink" title="Scheme"></a>Scheme</h2><p>修改NexT主題樣式的地方</p>
+<p>有4種scheme可以選擇，我選的是<code>Pisces</code>。</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># Schemes</span></span><br><span class="line"><span class="comment">#scheme: Muse</span></span><br><span class="line"><span class="comment">#scheme: Mist</span></span><br><span class="line"><span class="attr">scheme:</span> <span class="string">Pisces</span></span><br><span class="line"><span class="comment">#scheme: Gemini</span></span><br></pre></td></tr></table></figure>
+
+<p>他們的樣式分別是這樣：</p>
+<p>Muse</p>
+<p>這個是預設的樣式</p>
+<p><img src="https://i.imgur.com/Yk6pj2N.png" alt="圖1：Muse"></p>
+<p>Mist</p>
+<p><img src="https://i.imgur.com/em3SyOR.png" alt="圖2：Mist"></p>
+<p>Pisces</p>
+<p><img src="https://i.imgur.com/VwOHycV.png" alt="圖3：Pisces"></p>
+<p>Gemini</p>
+<p>這個和上面的Pisces 很像，不過這個多了陰影。</p>
+<p><img src="https://i.imgur.com/xq8LRbY.png" alt="圖4：Gemini"></p>
+<p>另外還有Dark Mode 可以使用，但是這個需要作業系統和瀏覽器的配合才有作用，而不是一直都啟用Dark Mode。</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># Dark Mode</span></span><br><span class="line"><span class="attr">darkmode:</span> <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="Site-Information"><a href="#Site-Information" class="headerlink" title="Site Information"></a>Site Information</h2><p>修改icon、網站header裡<code>&lt;meta&gt;</code>標籤的配置和版權宣告</p>
+<p>這邊我只有修改<code>creative_commons</code>（版權宣告），讓它在sidebar 裡顯示出來。主要是創用CC 的宣告。我是使用by-nc-sa （姓名標示-非商業-相同方式分享）。除了我用的之外，NexT支援的還有以下幾種，我在下面簡單說明一下，可以依照自己的需求設定。</p>
+<p>by：姓名標示</p>
+<p>by-nc：姓名標示-非商業</p>
+<p>by-nc-nd：姓名標示-非商業-禁止修改</p>
+<p>by-nc-sa：姓名標示-非商業-相同方式分享</p>
+<p>by-nd：姓名標示-禁止修改</p>
+<p>by-sa：姓名標示-相同方式分享</p>
+<p>cc-zero：拋棄著作權</p>
+<p><a href="https://creativecommons.org/licenses/">Creative Commons 的說明</a></p>
+<p><a href="https://creativecommons.org/share-your-work/public-domain/cc0">CC0 的說明</a></p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># Creative Commons 4.0 International License.</span></span><br><span class="line"><span class="comment"># See: https://creativecommons.org/about/cclicenses/</span></span><br><span class="line"><span class="attr">creative_commons:</span></span><br><span class="line">  <span class="comment"># Available values: by | by-nc | by-nc-nd | by-nc-sa | by-nd | by-sa | cc-zero</span></span><br><span class="line">  <span class="attr">license:</span> <span class="string">by-nc-sa</span></span><br><span class="line">  <span class="comment"># Available values: big | small</span></span><br><span class="line">  <span class="attr">size:</span> <span class="string">big</span></span><br><span class="line">  <span class="attr">sidebar:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">post:</span> <span class="literal">true</span></span><br><span class="line">  <span class="comment"># You can set a language value if you prefer a translated version of CC license, e.g. deed.zh</span></span><br><span class="line">  <span class="comment"># CC licenses are available in 39 languages, you can find the specific and correct abbreviation you need on https://creativecommons.org</span></span><br><span class="line">  <span class="attr">language:</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="Menu"><a href="#Menu" class="headerlink" title="Menu"></a>Menu</h2><p>設定menu要顯示什麼欄位和icon的樣式</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># Usage: `Key: /link/ || icon`</span></span><br><span class="line"><span class="comment"># Key is the name of menu item. If the translation for this item is available, the translated text will be loaded, otherwise the Key name will be used. Key is case-sensitive.</span></span><br><span class="line"><span class="comment"># Value before `||` delimiter is the target link, value after `||` delimiter is the name of Font Awesome icon.</span></span><br><span class="line"><span class="comment"># External url should start with http:// or https://</span></span><br><span class="line"><span class="attr">menu:</span></span><br><span class="line">  <span class="attr">home:</span> <span class="string">/</span> <span class="string">||</span> <span class="string">fa</span> <span class="string">fa-home</span></span><br><span class="line">  <span class="comment">#about: /about/ || fa fa-user</span></span><br><span class="line">  <span class="attr">tags:</span> <span class="string">/tags/</span> <span class="string">||</span> <span class="string">fa</span> <span class="string">fa-tags</span></span><br><span class="line">  <span class="attr">categories:</span> <span class="string">/categories/</span> <span class="string">||</span> <span class="string">fa</span> <span class="string">fa-th</span></span><br><span class="line">  <span class="attr">archives:</span> <span class="string">/archives/</span> <span class="string">||</span> <span class="string">fa</span> <span class="string">fa-archive</span></span><br><span class="line">  <span class="comment">#schedule: /schedule/ || fa fa-calendar</span></span><br><span class="line">  <span class="comment">#sitemap: /sitemap.xml || fa fa-sitemap</span></span><br><span class="line">  <span class="comment">#commonweal: /404/ || fa fa-heartbeat</span></span><br></pre></td></tr></table></figure>
+
+<p>效果：</p>
+<p><img src="https://i.imgur.com/r9RAVkh.png" alt="圖5：Menu的效果"></p>
+<p>搜尋要在下面的Search Services裡設定，這邊不會有。另外這裡需要注意除了<code>home</code>和<code>archives</code>外，其他欄位都需要自行添加頁面。這裡以<code>tags</code>和<code>categories</code>為例，需要在專案目錄下的source資料夾內建立相對應的資料夾，裡面再放一個Markdown 檔案，說明title 和type。title 可自行輸入，中英文皆可，但type 就必須和key 值一樣，例如tags 欄位就輸入tags，categories 欄位就輸入categories。</p>
+<p>資料夾結構：</p>
+<p><img src="https://i.imgur.com/YuLUwMG.png" alt="圖6：資料夾結構"></p>
+<p>tags&#x2F;index.md 的內容：</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">title:</span> <span class="string">標籤</span></span><br><span class="line"><span class="attr">date:</span> <span class="number">2022-06-25 22:29:06</span></span><br><span class="line"><span class="attr">type:</span> <span class="string">tags</span></span><br><span class="line"><span class="meta">---</span></span><br></pre></td></tr></table></figure>
+
+<p>categories&#x2F;index.md 的內容：</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">title:</span> <span class="string">分類</span></span><br><span class="line"><span class="attr">date:</span> <span class="number">2022-06-25 22:29:25</span></span><br><span class="line"><span class="attr">type:</span> <span class="string">categories</span></span><br><span class="line"><span class="meta">---</span></span><br></pre></td></tr></table></figure>
+
+<p>你沒看錯，只要這幾行就可以了，會自動幫你統計和顯示列表，不用自己輸入。</p>
+<p>詳細可看<a href="https://theme-next.js.org/docs/theme-settings/custom-pages.html">官方文件的Custom Pages篇章說明</a></p>
+<h2 id="Sidebar"><a href="#Sidebar" class="headerlink" title="Sidebar"></a>Sidebar</h2><p>設定sidebar的樣式</p>
+<p>這裡我主要調整顯示social 的設定，顯示我的GitHub 連結和改成只顯示icon</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># Social Links</span></span><br><span class="line"><span class="comment"># Usage: `Key: permalink || icon`</span></span><br><span class="line"><span class="comment"># Key is the link label showing to end users.</span></span><br><span class="line"><span class="comment"># Value before `||` delimiter is the target permalink, value after `||` delimiter is the name of Font Awesome icon.</span></span><br><span class="line"><span class="attr">social:</span></span><br><span class="line">  <span class="attr">GitHub:</span> <span class="string">https://github.com/yourname</span> <span class="string">||</span> <span class="string">fab</span> <span class="string">fa-github</span></span><br><span class="line">  <span class="comment">#E-Mail: mailto:yourname@gmail.com || fa fa-envelope</span></span><br><span class="line">  <span class="comment">#Weibo: https://weibo.com/yourname || fab fa-weibo</span></span><br><span class="line">  <span class="comment">#Google: https://plus.google.com/yourname || fab fa-google</span></span><br><span class="line">  <span class="comment">#Twitter: https://twitter.com/yourname || fab fa-twitter</span></span><br><span class="line">  <span class="comment">#FB Page: https://www.facebook.com/yourname || fab fa-facebook</span></span><br><span class="line">  <span class="comment">#StackOverflow: https://stackoverflow.com/yourname || fab fa-stack-overflow</span></span><br><span class="line">  <span class="comment">#YouTube: https://youtube.com/yourname || fab fa-youtube</span></span><br><span class="line">  <span class="comment">#Instagram: https://instagram.com/yourname || fab fa-instagram</span></span><br><span class="line">  <span class="comment">#Skype: skype:yourname?call|chat || fab fa-skype</span></span><br><span class="line"></span><br><span class="line"><span class="attr">social_icons:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">icons_only:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">transition:</span> <span class="literal">false</span></span><br></pre></td></tr></table></figure>
+
+<p>Sidebar這裡的效果在首頁和文章裡會不一樣。首頁的時候只會有<code>本站概要</code>，在文章裡的時候會多了個<code>文章目錄</code>標籤顯示文章的大綱（預設顯示這個），而另一個標籤則是<code>本站概要</code>。</p>
+<h2 id="Footer"><a href="#Footer" class="headerlink" title="Footer"></a>Footer</h2><p>設定footer的樣式</p>
+<p>這裡我只設定了愛心有動畫效果，其他都是預設值。另外，<code>copyright</code>這個欄位，如果沒有填的話會去<code>_config.yml</code>裡的<code>author</code>欄位抓。而<code>beian</code>（備案）欄位，是給海的另一邊使用者設定的。</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">footer:</span></span><br><span class="line">  <span class="comment"># Icon between year and copyright info.</span></span><br><span class="line">  <span class="attr">icon:</span></span><br><span class="line">    <span class="comment"># Icon name in Font Awesome. See: https://fontawesome.com/icons</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">fa</span> <span class="string">fa-heart</span></span><br><span class="line">    <span class="comment"># If you want to animate the icon, set it to true.</span></span><br><span class="line">    <span class="attr">animated:</span> <span class="literal">true</span></span><br><span class="line">    <span class="comment"># Change the color of icon, using Hex Code.</span></span><br><span class="line">    <span class="attr">color:</span> <span class="string">&quot;#ff0000&quot;</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="Misc"><a href="#Misc" class="headerlink" title="Misc"></a>Misc</h2><p>雜項</p>
+<p>這裡我改了<code>codeblock</code>和<code>reading_progress</code>。</p>
+<p><code>codeblock</code>這個可以在hexo的<code>_config.yml</code>選擇highlight的引擎是highlight 還是prism，然後到_config.next.yml中分別設定一般和黑暗模式時的樣式。另外，NexT也有提供<a href="https://theme-next.js.org/highlight/">網站</a>來修改設定和預覽結果。</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">codeblock:</span></span><br><span class="line">  <span class="comment"># Code Highlight theme</span></span><br><span class="line">  <span class="comment"># All available themes: https://theme-next.js.org/highlight/</span></span><br><span class="line">  <span class="attr">theme:</span></span><br><span class="line">    <span class="attr">light:</span> <span class="string">default</span></span><br><span class="line">    <span class="attr">dark:</span> <span class="string">vs2015</span></span><br><span class="line">  <span class="attr">prism:</span></span><br><span class="line">    <span class="attr">light:</span> <span class="string">prism</span></span><br><span class="line">    <span class="attr">dark:</span> <span class="string">prism-dark</span></span><br><span class="line">  <span class="comment"># Add copy button on codeblock</span></span><br><span class="line">  <span class="attr">copy_button:</span></span><br><span class="line">    <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">    <span class="comment"># Available values: default | flat | mac</span></span><br><span class="line">    <span class="attr">style:</span></span><br></pre></td></tr></table></figure>
+
+<p><code>reading_progress</code>的話就是設定文章閱讀的進度條，設定是否啟用、顯示位置和顏色等。</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># Reading progress bar</span></span><br><span class="line"><span class="attr">reading_progress:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">  <span class="comment"># Available values: left | right</span></span><br><span class="line">  <span class="attr">start_at:</span> <span class="string">left</span></span><br><span class="line">  <span class="comment"># Available values: top | bottom</span></span><br><span class="line">  <span class="attr">position:</span> <span class="string">top</span></span><br><span class="line">  <span class="attr">reversed:</span> <span class="literal">false</span></span><br><span class="line">  <span class="attr">color:</span> <span class="string">&quot;#37c6c0&quot;</span></span><br><span class="line">  <span class="attr">height:</span> <span class="string">3px</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="Third-Party-Plugins-amp-Services"><a href="#Third-Party-Plugins-amp-Services" class="headerlink" title="Third Party Plugins &amp; Services"></a>Third Party Plugins &amp; Services</h2><p>第三方套件</p>
+<p>這裡面的東西就很多了，用的套件其實都很常見，依照需求設定吧。這裡我啟用了fancybox。</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># FancyBox is a tool that offers a nice and elegant way to add zooming functionality for images.</span></span><br><span class="line"><span class="comment"># For more information: https://fancyapps.com/fancybox/</span></span><br><span class="line"><span class="attr">fancybox:</span> <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="Statistics-and-Analytics"><a href="#Statistics-and-Analytics" class="headerlink" title="Statistics and Analytics"></a>Statistics and Analytics</h2><p>設定網站流量統計的地方，例如Google Analytics、百度統計、Cloudflare Web Analytics等。這些我不太熟悉，只有設定GA而已，就不再說明。</p>
+<h2 id="Search-Services"><a href="#Search-Services" class="headerlink" title="Search Services"></a>Search Services</h2><p>設定站內搜尋的工具</p>
+<p>可以使用Algolia 或是本地端搜尋。經費有限啊，我還是用local search 就好。</p>
+<p>不論用Algolia 還是local search，都是要額外安裝套件的。詳細設定看<a href="https://theme-next.js.org/docs/third-party-services/search-services">這裡</a>。</p>
+<p>這裡以local search 為例</p>
+<p>輸入指令安裝</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="string">npm</span> <span class="string">install</span> <span class="string">hexo-generator-searchdb</span></span><br></pre></td></tr></table></figure>
+
+<p><code>_config.next.yml</code>的設定</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># Local Search</span></span><br><span class="line"><span class="comment"># Dependencies: https://github.com/next-theme/hexo-generator-searchdb</span></span><br><span class="line"><span class="attr">local_search:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line"><span class="string">...</span></span><br><span class="line"><span class="string">...</span></span><br><span class="line"><span class="string">...</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="Animation"><a href="#Animation" class="headerlink" title="Animation"></a>Animation</h2><p>動畫設定</p>
+<p>說實話，一直顯示慢慢載入動畫讓我這個沒耐心的人感到非常困擾，看到可以設定就果斷關掉。</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># Use Animate.css to animate everything.</span></span><br><span class="line"><span class="comment"># For more information: https://animate.style</span></span><br><span class="line"><span class="attr">motion:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">false</span></span><br><span class="line"><span class="string">...</span></span><br><span class="line"><span class="string">...</span></span><br><span class="line"><span class="string">...</span></span><br></pre></td></tr></table></figure>
+
+<p>配置這東西沒什麼好說的，就是依照需求看文件調整一下吧。多嘗試，多踩雷，你就會了。</p>
+<h2 id="參考"><a href="#參考" class="headerlink" title="參考"></a>參考</h2><p><a href="https://theme-next.js.org/docs/theme-settings/">NexT Theme Settings</a></p>
+<p><a href="https://ithelp.ithome.com.tw/articles/10269050">Day 6：設定你的 Hexo 佈景主題：Next（上）</a></p>
+<p><a href="https://ithelp.ithome.com.tw/articles/10269747">Day 7：設定你的 Hexo 佈景主題：Next（下）</a></p>
+]]></content>
+      <categories>
+        <category>Hexo</category>
+      </categories>
+      <tags>
+        <tag>Hexo</tag>
+        <tag>教學</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>自架部落格(5) 寫一篇文章</title>
+    <url>/Hexo/%E4%BD%BF%E7%94%A8Hexo%E5%9C%A8GitHub-Pages%E4%B8%8A%E5%BB%BA%E7%AB%8B%E9%83%A8%E8%90%BD%E6%A0%BC-5/</url>
+    <content><![CDATA[<p>寫一篇文章剛開始主要就是注意front-matter 的設定，其他就是用Markdown 寫文章了。</p>
+<p>Markdown 的工具有很多，例如直接使用Visual Studio Code、HackMD等。像我就使用Notion，不用打語法，修改樣式時搭配快捷鍵，匯出時選Markdown，然後再稍微調整一下就好，方便好用。</p>
+<h2 id="建立文章"><a href="#建立文章" class="headerlink" title="建立文章"></a>建立文章</h2><h3 id="指令"><a href="#指令" class="headerlink" title="指令"></a>指令</h3><p>要建立一篇文章的檔案，可以輸入指令依照範本產生</p>
+<p><code>layout</code>：這個是填入範本的名稱，不填的話預設是<code>post</code>，位置在專案目錄下的<code>scaffolds</code>。當然你也可以客製化自己的範本，會一些節省時間。這個可以在<code>_config.yml</code>的<code>default_layout</code>裡指定預設的範本。</p>
+<p><code>title</code>：標題名稱</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">hexo new [layout] &lt;title&gt;</span><br></pre></td></tr></table></figure>
+
+<p>建立好之後就會在<code>source/_posts</code>中產生一個同title 的<code>.md</code>檔案，裡面會有依照post範本產生的<code>front-matter</code></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">---</span><br><span class="line">title: 剛剛輸入的標題</span><br><span class="line">date: 產生檔案的時間，格式：yyyy:MM:dd HH:mm:ss (2022-07-03 15:42:25)</span><br><span class="line">tags:</span><br><span class="line">---</span><br></pre></td></tr></table></figure>
+
+<h3 id="front-matter設定"><a href="#front-matter設定" class="headerlink" title="front-matter設定"></a>front-matter設定</h3><p>front-matter其實是 YAML 或 JSON 在檔案開頭的區塊，用來設定文章的一些設定值。</p>
+<p>這裡列出一些常用的設置，其實全部的設置也不多。</p>
+<p><code>title</code>：標題</p>
+<p><code>data</code>：建立日期</p>
+<p><code>description</code>：描述、簡介，這個和文章列表顯示的內容有關。加了這個之後，就會在文章列表的標題下面顯示這裡的內容。當然你也可以在文章內使用<code>&lt;!— more —&gt;</code>這個語法來直接顯示標記前的內容，但是進入文章後網址會有<a href="https://example.com/yourtitle%60#more%60%EF%BC%8C%E8%80%8C%E4%B8%94%E7%95%AB%E9%9D%A2%E6%9C%83%E5%BE%9E%E9%80%99%E5%80%8B%E6%A8%99%E8%A8%98%E9%96%8B%E5%A7%8B%E9%A1%AF%E7%A4%BA%E3%80%82">https://example.com/yourtitle`#more`，而且畫面會從這個標記開始顯示。</a></p>
+<p><code>categories</code>：文章的分類，有兩種分法</p>
+<p>第一種：同一個層級。</p>
+<p>-Sports</p>
+<p>-Basketball</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">categories: </span><br><span class="line">- Sports</span><br><span class="line">- Basketball</span><br></pre></td></tr></table></figure>
+
+<p>第二種：一個分類底下有多個分類。</p>
+<p>-Sports</p>
+<p>　-Baseball</p>
+<p>-MLB</p>
+<p>　-American League</p>
+<p>　　-Boston Red Sox</p>
+<p>-MLB</p>
+<p>　-American League</p>
+<p>　　-New York Yankees</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">categories: </span><br><span class="line">- [Sports, Baseball]</span><br><span class="line">- [MLB, American League, Boston Red Sox]</span><br><span class="line">- [MLB, American League, New York Yankees]</span><br></pre></td></tr></table></figure>
+
+<p><code>tags</code>：標籤。可以設定多個。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">tags:</span><br><span class="line">- Sports</span><br><span class="line">- Baseball</span><br><span class="line">- MLB</span><br></pre></td></tr></table></figure>
+
+<p><code>comments</code>：是否允許留言，預設true。</p>
+<p>前面的NexT 主題設定中，我們在menu 中加入了tags 和categories，這時候我們也要在文章中加入才有效果。</p>
+<h2 id="參考"><a href="#參考" class="headerlink" title="參考"></a>參考</h2><p><a href="https://israynotarray.com/hexo/20201004/3689515060/#%E9%96%B1%E8%AE%80%E5%85%A8%E6%96%87-More">(21) 試著學 Hexo - NexT 主題篇 - NexT 還有哪些設定？</a></p>
+<p><a href="https://hexo.io/docs/writing">Hexo Writing</a></p>
+<p><a href="https://hexo.io/docs/front-matter">Hexo Front-matter</a></p>
 ]]></content>
       <categories>
         <category>Hexo</category>
