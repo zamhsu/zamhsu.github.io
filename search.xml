@@ -1,9 +1,106 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>使用Docker安裝Elasticsearch和Kibana</title>
+    <url>/Elasticsearch/%E4%BD%BF%E7%94%A8Docker%E5%AE%89%E8%A3%9DElasticsearch%E5%92%8CKibana/</url>
+    <content><![CDATA[<p>這次來試玩一下傳說中的Elasticsearch，主要是想要把網站記錄的Log存到這裡面來，再設定一些UI來顯示，就不用每次查網站的Log都要進資料庫用SQL查。</p>
+<p>Elasticsearch有雲端版和自己架設，雲端要付費，自架免費。對於喜歡亂玩又沒什麼錢的我，當然選擇自己架設。</p>
+<p>主要以single-node cluster為主，版本為8.0.0</p>
+<h2 id="方法一：各image逐個建立"><a href="#方法一：各image逐個建立" class="headerlink" title="方法一：各image逐個建立"></a>方法一：各image逐個建立</h2><p>建議搭配volumn（範例中未使用）</p>
+<h3 id="1-Docker建立專用network"><a href="#1-Docker建立專用network" class="headerlink" title="1. Docker建立專用network"></a>1. Docker建立專用network</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">docker network create elastic</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-安裝Elasticsearch"><a href="#2-安裝Elasticsearch" class="headerlink" title="2. 安裝Elasticsearch"></a>2. 安裝Elasticsearch</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">docker pull docker.elastic.co/elasticsearch/elasticsearch:8.1.0</span><br><span class="line">docker run -e ES_JAVA_OPTS=&quot;-Xms1g -Xmx1g&quot; --name es-node01 --net elastic -p 9200:9200 -p 9300:9300 -t docker.elastic.co/elasticsearch/elasticsearch:8.1.0</span><br></pre></td></tr></table></figure>
+
+<p>備註：<br>設定JVM使用記憶體的大小<br><code>-e ES_JAVA_OPTS=&quot;-Xms1g -Xmx1g&quot;</code><br>最大使用1G，最小使用1G</p>
+<p><a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/advanced-configuration.html#set-jvm-heap-size">https://www.elastic.co/guide/en/elasticsearch/reference/current/advanced-configuration.html#set-jvm-heap-size</a></p>
+<p>port 9200為對外使用，9300為內部node溝通使用</p>
+<p>裝好後會有帳號、密碼、enroll token（有效30分鐘）等資料，可先複製起來</p>
+<h3 id="3-安裝Kibana"><a href="#3-安裝Kibana" class="headerlink" title="3. 安裝Kibana"></a>3. 安裝Kibana</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">docker pull docker.elastic.co/kibana/kibana:8.1.0</span><br><span class="line">docker run --name kib-01 --net elastic -p 5601:5601 docker.elastic.co/kibana/kibana:8.1.0</span><br></pre></td></tr></table></figure>
+
+<h3 id="4-開啟Kibana"><a href="#4-開啟Kibana" class="headerlink" title="4. 開啟Kibana"></a>4. 開啟Kibana</h3><p>輸入<a href="http://localhost:5601/">http://localhost:5601</a> 開啟Kibana，首次開啟需要使用上面的enroll token綁定Elasticsearch，然後輸入剛剛的帳號和密碼</p>
+<h3 id="5-完成"><a href="#5-完成" class="headerlink" title="5. 完成"></a>5. 完成</h3><p>可以愉快地玩耍了</p>
+<h2 id="方法二：使用docker-compose"><a href="#方法二：使用docker-compose" class="headerlink" title="方法二：使用docker-compose"></a>方法二：使用docker-compose</h2><p>有搭配volumn</p>
+<h3 id="1-建立-env檔"><a href="#1-建立-env檔" class="headerlink" title="1. 建立.env檔"></a>1. 建立.env檔</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># Password for the &#x27;elastic&#x27; user (at least 6 characters)</span><br><span class="line">ELASTIC_PASSWORD=</span><br><span class="line"></span><br><span class="line"># Password for the &#x27;kibana_system&#x27; user (at least 6 characters)</span><br><span class="line">KIBANA_PASSWORD=</span><br><span class="line"></span><br><span class="line"># Version of Elastic products</span><br><span class="line">STACK_VERSION=8.0.0</span><br><span class="line"></span><br><span class="line"># Set the cluster name</span><br><span class="line">CLUSTER_NAME=docker-cluster</span><br><span class="line"></span><br><span class="line"># Set to &#x27;basic&#x27; or &#x27;trial&#x27; to automatically start the 30-day trial</span><br><span class="line">LICENSE=basic</span><br><span class="line">#LICENSE=trial</span><br><span class="line"></span><br><span class="line"># Port to expose Elasticsearch HTTP API to the host</span><br><span class="line">ES_PORT=9200</span><br><span class="line">#ES_PORT=127.0.0.1:9200</span><br><span class="line"></span><br><span class="line"># Port to expose Kibana to the host</span><br><span class="line">KIBANA_PORT=5601</span><br><span class="line">#KIBANA_PORT=80</span><br><span class="line"></span><br><span class="line"># Increase or decrease based on the available host memory (in bytes)</span><br><span class="line">MEM_LIMIT=1073741824</span><br><span class="line"></span><br><span class="line"># Project namespace (defaults to the current folder name if not set)</span><br><span class="line">#COMPOSE_PROJECT_NAME=myproject</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-建立docker-compose-yml"><a href="#2-建立docker-compose-yml" class="headerlink" title="2. 建立docker-compose.yml"></a>2. 建立docker-compose.yml</h3><p>此處會建立<br>三個container：<br>setup：建立憑證用，建立好之後會關閉<br>es01：Elasticsearch 1號（只建立一個節點）<br>kibana：Kibana</p>
+<p>一個network：<br>elastic-default</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">version:</span> <span class="string">&quot;2.2&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="attr">services:</span></span><br><span class="line">  <span class="attr">setup:</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">docker.elastic.co/elasticsearch/elasticsearch:$&#123;STACK_VERSION&#125;</span></span><br><span class="line">    <span class="attr">volumes:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">certs:/usr/share/elasticsearch/config/certs</span></span><br><span class="line">    <span class="attr">user:</span> <span class="string">&quot;0&quot;</span></span><br><span class="line">    <span class="attr">command:</span> <span class="string">&gt;</span></span><br><span class="line"><span class="string">      bash -c &#x27;</span></span><br><span class="line"><span class="string">        if [ x$&#123;ELASTIC_PASSWORD&#125; == x ]; then</span></span><br><span class="line"><span class="string">          echo &quot;Set the ELASTIC_PASSWORD environment variable in the .env file&quot;;</span></span><br><span class="line"><span class="string">          exit 1;</span></span><br><span class="line"><span class="string">        elif [ x$&#123;KIBANA_PASSWORD&#125; == x ]; then</span></span><br><span class="line"><span class="string">          echo &quot;Set the KIBANA_PASSWORD environment variable in the .env file&quot;;</span></span><br><span class="line"><span class="string">          exit 1;</span></span><br><span class="line"><span class="string">        fi;</span></span><br><span class="line"><span class="string">        if [ ! -f certs/ca.zip ]; then</span></span><br><span class="line"><span class="string">          echo &quot;Creating CA&quot;;</span></span><br><span class="line"><span class="string">          bin/elasticsearch-certutil ca --silent --pem -out config/certs/ca.zip;</span></span><br><span class="line"><span class="string">          unzip config/certs/ca.zip -d config/certs;</span></span><br><span class="line"><span class="string">        fi;</span></span><br><span class="line"><span class="string">        if [ ! -f certs/certs.zip ]; then</span></span><br><span class="line"><span class="string">          echo &quot;Creating certs&quot;;</span></span><br><span class="line"><span class="string">          echo -ne \\</span></span><br><span class="line"><span class="string">          &quot;instances:\\n&quot;\\</span></span><br><span class="line"><span class="string">          &quot;  - name: es01\\n&quot;\\</span></span><br><span class="line"><span class="string">          &quot;    dns:\\n&quot;\\</span></span><br><span class="line"><span class="string">          &quot;      - es01\\n&quot;\\</span></span><br><span class="line"><span class="string">          &quot;      - localhost\\n&quot;\\</span></span><br><span class="line"><span class="string">          &quot;    ip:\\n&quot;\\</span></span><br><span class="line"><span class="string">          &quot;      - 127.0.0.1\\n&quot;\\</span></span><br><span class="line"><span class="string">          &gt; config/certs/instances.yml;</span></span><br><span class="line"><span class="string">          bin/elasticsearch-certutil cert --silent --pem -out config/certs/certs.zip --in config/certs/instances.yml --ca-cert config/certs/ca/ca.crt --ca-key config/certs/ca/ca.key;</span></span><br><span class="line"><span class="string">          unzip config/certs/certs.zip -d config/certs;</span></span><br><span class="line"><span class="string">        fi;</span></span><br><span class="line"><span class="string">        echo &quot;Setting file permissions&quot;</span></span><br><span class="line"><span class="string">        chown -R root:root config/certs;</span></span><br><span class="line"><span class="string">        find . -type d -exec chmod 750 \\&#123;\\&#125; \\;;</span></span><br><span class="line"><span class="string">        find . -type f -exec chmod 640 \\&#123;\\&#125; \\;;</span></span><br><span class="line"><span class="string">        echo &quot;Waiting for Elasticsearch availability&quot;;</span></span><br><span class="line"><span class="string">        until curl -s --cacert config/certs/ca/ca.crt &lt;https://es01:9200&gt; | grep -q &quot;missing authentication credentials&quot;; do sleep 30; done;</span></span><br><span class="line"><span class="string">        echo &quot;Setting kibana_system password&quot;;</span></span><br><span class="line"><span class="string">        until curl -s -X POST --cacert config/certs/ca/ca.crt -u elastic:$&#123;ELASTIC_PASSWORD&#125; -H &quot;Content-Type: application/json&quot; &lt;https://es01:9200/_security/user/kibana_system/_password&gt; -d &quot;&#123;\\&quot;password\\&quot;:\\&quot;$&#123;KIBANA_PASSWORD&#125;\\&quot;&#125;&quot; | grep -q &quot;^&#123;&#125;&quot;; do sleep 10; done;</span></span><br><span class="line"><span class="string">        echo &quot;All done!&quot;;</span></span><br><span class="line"><span class="string">      &#x27;</span></span><br><span class="line"><span class="string"></span>    <span class="attr">healthcheck:</span></span><br><span class="line">      <span class="attr">test:</span> [<span class="string">&quot;CMD-SHELL&quot;</span>, <span class="string">&quot;[ -f config/certs/es01/es01.crt ]&quot;</span>]</span><br><span class="line">      <span class="attr">interval:</span> <span class="string">1s</span></span><br><span class="line">      <span class="attr">timeout:</span> <span class="string">5s</span></span><br><span class="line">      <span class="attr">retries:</span> <span class="number">120</span></span><br><span class="line"></span><br><span class="line">  <span class="attr">es01:</span></span><br><span class="line">    <span class="attr">depends_on:</span></span><br><span class="line">      <span class="attr">setup:</span></span><br><span class="line">        <span class="attr">condition:</span> <span class="string">service_healthy</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">docker.elastic.co/elasticsearch/elasticsearch:$&#123;STACK_VERSION&#125;</span></span><br><span class="line">    <span class="attr">volumes:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">certs:/usr/share/elasticsearch/config/certs</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">esdata01:/usr/share/elasticsearch/data</span></span><br><span class="line">    <span class="attr">ports:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">$&#123;ES_PORT&#125;:9200</span></span><br><span class="line">    <span class="attr">environment:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">node.name=es01</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">cluster.name=$&#123;CLUSTER_NAME&#125;</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">cluster.initial_master_nodes=es01</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">ELASTIC_PASSWORD=$&#123;ELASTIC_PASSWORD&#125;</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">bootstrap.memory_lock=true</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">xpack.security.enabled=true</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">xpack.security.http.ssl.enabled=true</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">xpack.security.http.ssl.key=certs/es01/es01.key</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">xpack.security.http.ssl.certificate=certs/es01/es01.crt</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">xpack.security.http.ssl.certificate_authorities=certs/ca/ca.crt</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">xpack.security.http.ssl.verification_mode=certificate</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">xpack.security.transport.ssl.enabled=true</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">xpack.security.transport.ssl.key=certs/es01/es01.key</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">xpack.security.transport.ssl.certificate=certs/es01/es01.crt</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">xpack.security.transport.ssl.certificate_authorities=certs/ca/ca.crt</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">xpack.security.transport.ssl.verification_mode=certificate</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">xpack.license.self_generated.type=$&#123;LICENSE&#125;</span></span><br><span class="line">    <span class="attr">mem_limit:</span> <span class="string">$&#123;MEM_LIMIT&#125;</span></span><br><span class="line">    <span class="attr">ulimits:</span></span><br><span class="line">      <span class="attr">memlock:</span></span><br><span class="line">        <span class="attr">soft:</span> <span class="number">-1</span></span><br><span class="line">        <span class="attr">hard:</span> <span class="number">-1</span></span><br><span class="line">    <span class="attr">healthcheck:</span></span><br><span class="line">      <span class="attr">test:</span></span><br><span class="line">        [</span><br><span class="line">          <span class="string">&quot;CMD-SHELL&quot;</span>,</span><br><span class="line">          <span class="string">&quot;curl -s --cacert config/certs/ca/ca.crt &lt;https://localhost:9200&gt; | grep -q &#x27;missing authentication credentials&#x27;&quot;</span>,</span><br><span class="line">        ]</span><br><span class="line">      <span class="attr">interval:</span> <span class="string">10s</span></span><br><span class="line">      <span class="attr">timeout:</span> <span class="string">10s</span></span><br><span class="line">      <span class="attr">retries:</span> <span class="number">120</span></span><br><span class="line"></span><br><span class="line">  <span class="attr">kibana:</span></span><br><span class="line">    <span class="attr">depends_on:</span></span><br><span class="line">      <span class="attr">es01:</span></span><br><span class="line">        <span class="attr">condition:</span> <span class="string">service_healthy</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">docker.elastic.co/kibana/kibana:$&#123;STACK_VERSION&#125;</span></span><br><span class="line">    <span class="attr">volumes:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">certs:/usr/share/kibana/config/certs</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">kibanadata:/usr/share/kibana/data</span></span><br><span class="line">    <span class="attr">ports:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">$&#123;KIBANA_PORT&#125;:5601</span></span><br><span class="line">    <span class="attr">environment:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">SERVERNAME=kibana</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">ELASTICSEARCH_HOSTS=https://es01:9200</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">ELASTICSEARCH_USERNAME=kibana_system</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">ELASTICSEARCH_PASSWORD=$&#123;KIBANA_PASSWORD&#125;</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES=config/certs/ca/ca.crt</span></span><br><span class="line">    <span class="attr">mem_limit:</span> <span class="string">$&#123;MEM_LIMIT&#125;</span></span><br><span class="line">    <span class="attr">healthcheck:</span></span><br><span class="line">      <span class="attr">test:</span></span><br><span class="line">        [</span><br><span class="line">          <span class="string">&quot;CMD-SHELL&quot;</span>,</span><br><span class="line">          <span class="string">&quot;curl -s -I &lt;http://localhost:5601&gt; | grep -q &#x27;HTTP/1.1 302 Found&#x27;&quot;</span>,</span><br><span class="line">        ]</span><br><span class="line">      <span class="attr">interval:</span> <span class="string">10s</span></span><br><span class="line">      <span class="attr">timeout:</span> <span class="string">10s</span></span><br><span class="line">      <span class="attr">retries:</span> <span class="number">120</span></span><br><span class="line"></span><br><span class="line"><span class="attr">volumes:</span></span><br><span class="line">  <span class="attr">certs:</span></span><br><span class="line">    <span class="attr">driver:</span> <span class="string">local</span></span><br><span class="line">  <span class="attr">esdata01:</span></span><br><span class="line">    <span class="attr">driver:</span> <span class="string">local</span></span><br><span class="line">  <span class="attr">kibanadata:</span></span><br><span class="line">    <span class="attr">driver:</span> <span class="string">local</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="3-開始執行"><a href="#3-開始執行" class="headerlink" title="3. 開始執行"></a>3. 開始執行</h3><p>將.env和docker-compose.yml放在同一個資料夾，然後到該資料夾執行指令</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">docker-compose up -d</span><br></pre></td></tr></table></figure>
+
+<h3 id="4-完成"><a href="#4-完成" class="headerlink" title="4. 完成"></a>4. 完成</h3><p>可以愉快地玩耍了</p>
+<h2 id="注意事項"><a href="#注意事項" class="headerlink" title="注意事項"></a>注意事項</h2><p>如果遇到<code>max virtual memory areas vm.max_map_count [65530] is too low, increase to at least [262144]</code>的錯誤，代表kernel 中<code>vm.max_map_count</code>的設定需要調整為至少<code>262144</code>。</p>
+<p>調整方法<br>Windows Docker Desktop WSL 2：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">wsl -d docker-desktop</span><br><span class="line">sysctl -w vm.max_map_count=262144</span><br></pre></td></tr></table></figure>
+
+<p>macOS Docker Desktop：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">docker-machine ssh</span><br><span class="line">sudo sysctl -w vm.max_map_count=262144</span><br></pre></td></tr></table></figure>
+
+<h2 id="參考資料"><a href="#參考資料" class="headerlink" title="參考資料"></a>參考資料</h2><p><a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html">Install Elasticsearch with Docker</a></p>
+<p><a href="https://www.elastic.co/guide/en/kibana/current/docker.html">Install Kibana with Docker</a></p>
+]]></content>
+      <categories>
+        <category>Elasticsearch</category>
+      </categories>
+      <tags>
+        <tag>Elasticsearch</tag>
+        <tag>教學</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>自架部落格(1) 想自己架部落格？先裝個Hexo吧！</title>
+    <url>/Hexo/%E4%BD%BF%E7%94%A8Hexo%E5%9C%A8GitHub-Pages%E4%B8%8A%E5%BB%BA%E7%AB%8B%E9%83%A8%E8%90%BD%E6%A0%BC-1/</url>
+    <content><![CDATA[<p>身為這個部落格的第一篇文章，當然就是來記錄一下建置的步驟。</p>
+<p>至於為什麼選Hexo，其實就只是懶而已，懶得自己刻UI、懶得踩雷。UI、分類、產出靜態網站內容什麼的功能Hexo都幫你處理好，只要專注與寫作就好。</p>
+<p>當然也有看過其他的部落格套件，像是<a href="https://jekyllrb.com/">JekyII</a>, <a href="https://gohugo.io/">Hugo</a>，但是發現網路上Hexo的教學很多，那就不踩雷了，跟著他們做就好。寫部落格最重要的就是內容（雖然我的內容也不怎麼樣），其他都是其次。</p>
+<p>將介紹如何安裝和預覽。</p>
+<h2 id="主要環境"><a href="#主要環境" class="headerlink" title="主要環境"></a>主要環境</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">OS： Windows 10 專業版</span><br><span class="line">Node.js： 14.17.6</span><br></pre></td></tr></table></figure>
+
+<h2 id="安裝Hexo"><a href="#安裝Hexo" class="headerlink" title="安裝Hexo"></a>安裝Hexo</h2><p>依據<a href="https://hexo.io/zh-tw/docs/#%E5%AE%89%E8%A3%9D%E9%9C%80%E6%B1%82">Hexo官網</a>的說明，需要</p>
+<ul>
+<li>Node.js 建議10.0或以上的版本</li>
+<li>git</li>
+</ul>
+<p>這些都安裝好了之後，就可以透過npm來安裝，打開終端機，然後輸入：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">npm install -g hexo-cli</span><br></pre></td></tr></table></figure>
+
+<p>之後就會開始安裝Hexo。我安裝的是當時的最新版<code>6.2.0</code>。</p>
+<h2 id="建立專案"><a href="#建立專案" class="headerlink" title="建立專案"></a>建立專案</h2><h3 id="首次建立專案"><a href="#首次建立專案" class="headerlink" title="首次建立專案"></a>首次建立專案</h3><p>使用終端機到你想要儲存這個專案的位置，輸入指令：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">hexo init &lt;folder&gt;</span><br><span class="line">cd &lt;folder&gt;</span><br><span class="line">npm install</span><br></pre></td></tr></table></figure>
+
+<p><code>&lt;folder&gt;</code>就是Hexo專案的資料夾名稱，Hexo會在目前的目錄用這個名稱再建一個新的資料夾，把專案存到這裡面。沒有輸入的話就會在當前的資料夾內建立專案。</p>
+<p><img src="https://i.imgur.com/Tk8iAIt.jpeg" alt="圖1：以src為例"></p>
+<h3 id="資料結構說明"><a href="#資料結構說明" class="headerlink" title="資料結構說明"></a>資料結構說明</h3><p>安裝完成後，裡面會有這些檔案：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">.</span><br><span class="line">├── _config.yml</span><br><span class="line">├── package.json</span><br><span class="line">├── scaffolds</span><br><span class="line">├── source</span><br><span class="line">|   ├── _drafts</span><br><span class="line">|   └── _posts</span><br><span class="line">└── themes</span><br></pre></td></tr></table></figure>
+
+<p><code>_config.yml</code>：Hexo的配置檔</p>
+<p><code>package.json</code>：npm的配置檔，基本上可以不用理會</p>
+<p><code>scaffolds</code>：範本資料夾，建立新文章時可依照指定的範本建立檔案</p>
+<p><code>source</code>：存放原始檔案的地方，也就是文章存放的地方</p>
+<p><code>themes</code>：存放主題的資料夾</p>
+<h2 id="預覽"><a href="#預覽" class="headerlink" title="預覽"></a>預覽</h2><p>建立好之後，當然來預覽一下。</p>
+<p>終端機到專案目錄底下，輸入以下指令</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">hexo server</span><br><span class="line">或</span><br><span class="line">hexo s</span><br></pre></td></tr></table></figure>
+
+<p>之後就會啟動伺服器，預設會是<code>http://localhost:4000</code>，在瀏覽器上輸入這個網址就會看到。使用者個指令除了可以看到部落格的樣子外，還可以修改文章且儲存後，直接預覽變更後的樣子（修改config除外）。</p>
+<p><img src="https://i.imgur.com/zEBvgVU.jpeg" alt="圖2：預覽指令"></p>
+<p><img src="https://i.imgur.com/H64VaMo.jpeg" alt="圖3：建置完成"></p>
+<p>到這裡就大功告成，恭喜安裝Hexo並啟動成功。</p>
+<h2 id="參考"><a href="#參考" class="headerlink" title="參考"></a>參考</h2><p><a href="https://hexo.io/zh-tw/docs/">Hexo文件</a></p>
+]]></content>
+      <categories>
+        <category>Hexo</category>
+      </categories>
+      <tags>
+        <tag>教學</tag>
+        <tag>Hexo</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>自架部落格(2) Hexo配置檔介紹</title>
     <url>/Hexo/%E4%BD%BF%E7%94%A8Hexo%E5%9C%A8GitHub-Pages%E4%B8%8A%E5%BB%BA%E7%AB%8B%E9%83%A8%E8%90%BD%E6%A0%BC-2/</url>
-    <content><![CDATA[<p>Hexo配置檔(_config.yml)初次調整的說明和本部落格所調整的設置。</p>
+    <content><![CDATA[<p>Hexo配置檔（_config.yml）初次調整的說明和本部落格所調整的設置。</p>
 <p>其實官網都寫得很清楚了，主要是記錄一下我調整的位置，後續如果有其他地方想再微調可以再看<a href="https://hexo.io/zh-tw/docs/configuration">官方文件</a>。</p>
 <h2 id="Hexo配置檔說明"><a href="#Hexo配置檔說明" class="headerlink" title="Hexo配置檔說明"></a>Hexo配置檔說明</h2><blockquote>
 <p>注意：範例欄位是輸入的值，裡面有符號的話也要對，少了會報錯</p>
@@ -194,57 +291,8 @@
         <category>Hexo</category>
       </categories>
       <tags>
-        <tag>Hexo</tag>
         <tag>教學</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>自架部落格(1) 想自己架部落格？先裝個Hexo吧！</title>
-    <url>/Hexo/%E4%BD%BF%E7%94%A8Hexo%E5%9C%A8GitHub-Pages%E4%B8%8A%E5%BB%BA%E7%AB%8B%E9%83%A8%E8%90%BD%E6%A0%BC-1/</url>
-    <content><![CDATA[<p>身為這個部落格的第一篇文章，當然就是來記錄一下建置的步驟。</p>
-<p>至於為什麼選Hexo，其實就只是懶而已，懶得自己刻UI、懶得踩雷。UI、分類、產出靜態網站內容什麼的功能Hexo都幫你處理好，只要專注與寫作就好。</p>
-<p>當然也有看過其他的部落格套件，像是<a href="https://jekyllrb.com/">JekyII</a>, <a href="https://gohugo.io/">Hugo</a>，但是發現網路上Hexo的教學很多，那就不踩雷了，跟著他們做就好。寫部落格最重要的就是內容（雖然我的內容也不怎麼樣），其他都是其次。</p>
-<p>將介紹如何安裝和預覽。</p>
-<h2 id="主要環境"><a href="#主要環境" class="headerlink" title="主要環境"></a>主要環境</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">OS： Windows 10 專業版</span><br><span class="line">Node.js： 14.17.6</span><br></pre></td></tr></table></figure>
-
-<h2 id="安裝Hexo"><a href="#安裝Hexo" class="headerlink" title="安裝Hexo"></a>安裝Hexo</h2><p>依據<a href="https://hexo.io/zh-tw/docs/#%E5%AE%89%E8%A3%9D%E9%9C%80%E6%B1%82">Hexo官網</a>的說明，需要</p>
-<ul>
-<li>Node.js 建議10.0或以上的版本</li>
-<li>git</li>
-</ul>
-<p>這些都安裝好了之後，就可以透過npm來安裝，打開終端機，然後輸入：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">npm install -g hexo-cli</span><br></pre></td></tr></table></figure>
-
-<p>之後就會開始安裝Hexo。我安裝的是當時的最新版<code>6.2.0</code>。</p>
-<h2 id="建立專案"><a href="#建立專案" class="headerlink" title="建立專案"></a>建立專案</h2><h3 id="首次建立專案"><a href="#首次建立專案" class="headerlink" title="首次建立專案"></a>首次建立專案</h3><p>使用終端機到你想要儲存這個專案的位置，輸入指令：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">hexo init &lt;folder&gt;</span><br><span class="line">cd &lt;folder&gt;</span><br><span class="line">npm install</span><br></pre></td></tr></table></figure>
-
-<p><code>&lt;folder&gt;</code>就是Hexo專案的資料夾名稱，Hexo會在目前的目錄用這個名稱再建一個新的資料夾，把專案存到這裡面。沒有輸入的話就會在當前的資料夾內建立專案。</p>
-<p><img src="https://i.imgur.com/Tk8iAIt.jpeg" alt="圖1：以src為例"></p>
-<h3 id="資料結構說明"><a href="#資料結構說明" class="headerlink" title="資料結構說明"></a>資料結構說明</h3><p>安裝完成後，裡面會有這些檔案：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">.</span><br><span class="line">├── _config.yml</span><br><span class="line">├── package.json</span><br><span class="line">├── scaffolds</span><br><span class="line">├── source</span><br><span class="line">|   ├── _drafts</span><br><span class="line">|   └── _posts</span><br><span class="line">└── themes</span><br></pre></td></tr></table></figure>
-
-<p><code>_config.yml</code>：Hexo的配置檔</p>
-<p><code>package.json</code>：npm的配置檔，基本上可以不用理會</p>
-<p><code>scaffolds</code>：範本資料夾，建立新文章時可依照指定的範本建立檔案</p>
-<p><code>source</code>：存放原始檔案的地方，也就是文章存放的地方</p>
-<p><code>themes</code>：存放主題的資料夾</p>
-<h2 id="預覽"><a href="#預覽" class="headerlink" title="預覽"></a>預覽</h2><p>建立好之後，當然來預覽一下。</p>
-<p>終端機到專案目錄底下，輸入以下指令</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">hexo server</span><br><span class="line">或</span><br><span class="line">hexo s</span><br></pre></td></tr></table></figure>
-
-<p>之後就會啟動伺服器，預設會是<code>http://localhost:4000</code>，在瀏覽器上輸入這個網址就會看到。使用者個指令除了可以看到部落格的樣子外，還可以修改文章且儲存後，直接預覽變更後的樣子（修改config除外）。</p>
-<p><img src="https://i.imgur.com/zEBvgVU.jpeg" alt="圖2：預覽指令"></p>
-<p><img src="https://i.imgur.com/H64VaMo.jpeg" alt="圖3：建置完成"></p>
-<p>到這裡就大功告成，恭喜安裝Hexo並啟動成功。</p>
-<h2 id="參考"><a href="#參考" class="headerlink" title="參考"></a>參考</h2><p><a href="https://hexo.io/zh-tw/docs/">Hexo文件</a></p>
-]]></content>
-      <categories>
-        <category>Hexo</category>
-      </categories>
-      <tags>
         <tag>Hexo</tag>
-        <tag>教學</tag>
       </tags>
   </entry>
   <entry>
@@ -346,8 +394,8 @@
         <category>Hexo</category>
       </categories>
       <tags>
-        <tag>Hexo</tag>
         <tag>教學</tag>
+        <tag>Hexo</tag>
       </tags>
   </entry>
   <entry>
@@ -392,8 +440,8 @@
         <category>Hexo</category>
       </categories>
       <tags>
-        <tag>Hexo</tag>
         <tag>教學</tag>
+        <tag>Hexo</tag>
       </tags>
   </entry>
   <entry>
@@ -438,8 +486,8 @@
         <category>Hexo</category>
       </categories>
       <tags>
-        <tag>Hexo</tag>
         <tag>教學</tag>
+        <tag>Hexo</tag>
       </tags>
   </entry>
   <entry>
@@ -465,7 +513,7 @@
 <h2 id="部署"><a href="#部署" class="headerlink" title="部署"></a>部署</h2><p>當註冊好和開好Repository之後，就差最後兩個步驟了。</p>
 <h3 id="設定Hexo"><a href="#設定Hexo" class="headerlink" title="設定Hexo"></a>設定Hexo</h3><p>在<a href="https://zamhsu.github.io/Hexo/%E4%BD%BF%E7%94%A8Hexo%E5%9C%A8GitHub-Pages%E4%B8%8A%E5%BB%BA%E7%AB%8B%E9%83%A8%E8%90%BD%E6%A0%BC-2/">之前的文章</a>中有提到，可以先調整好部屬到GitHub Pages的設定，我們來複習一下：</p>
 <ol>
-<li>先找到Hexo配置檔(_config.yml)</li>
+<li>先找到Hexo配置檔（_config.yml）</li>
 <li>到<code># URL</code>，設定url:為你的GitHub pages的網址</li>
 </ol>
 <figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># URL</span></span><br><span class="line"><span class="attr">url:</span> <span class="comment"># 這裡放剛剛申請好的GitHub Pages連結，如果沒有改過路徑，應該會是這樣 https://&lt;username&gt;.github.io</span></span><br></pre></td></tr></table></figure>
@@ -484,7 +532,7 @@
 <figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">hexo clean</span><br></pre></td></tr></table></figure>
 
 <p><img src="https://i.imgur.com/1aaBOks.png" alt="圖1：clean"></p>
-<p>會需要先執行clean是因為會要先清除快取檔案(db.json)和靜態檔案(publish下的檔案)，避免部署到先前的版本。</p>
+<p>會需要先執行clean是因為會要先清除快取檔案（db.json）和靜態檔案（publish下的檔案），避免部署到先前的版本。</p>
 <figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">hexo deploy</span><br></pre></td></tr></table></figure>
 
 <p><img src="https://i.imgur.com/YHLYXDM.png" alt="圖2：deploy"></p>
@@ -499,8 +547,66 @@
         <category>Hexo</category>
       </categories>
       <tags>
-        <tag>Hexo</tag>
         <tag>教學</tag>
+        <tag>Hexo</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>cron表達式</title>
+    <url>/Schedule/cron%E8%A1%A8%E9%81%94%E5%BC%8F/</url>
+    <content><![CDATA[<h1 id="cron表達式"><a href="#cron表達式" class="headerlink" title="cron表達式"></a>cron表達式</h1><p>一種排程的時間設定表達式，可以用在cron, Hangfire, Coravel。</p>
+<p>最近工作需要用到Hangfire來作為工作排程器，而裡面關於定期執行工作（recurring）的時間設定是使用cron expression。對於只用過Windows內建工作排程器的我來說可以說是相當陌生，因此來學學怎麼這種表達式的設定方式。</p>
+<h2 id="說明"><a href="#說明" class="headerlink" title="說明"></a>說明</h2><blockquote>
+<p>工具型軟體<strong>cron</strong>是一款類Unix的作業系統下的基於時間的任務管理系統。用戶們可以通過<strong>cron</strong><br>在固定時間、日期、間隔下，運行定期任務（可以是命令和腳本）。</p>
+</blockquote>
+<p>來源：<a href="https://zh.wikipedia.org/zh-tw/Cron">Cron-維基百科</a></p>
+<p>這個表達式其實內含「每次」這個概念，設定的值都是實際執行的日期和時間。</p>
+<p>表達式： <code>* * * * *</code></p>
+<p>每個之間要有空格</p>
+<table>
+<thead>
+<tr>
+<th>欄位</th>
+<th>分鐘</th>
+<th>小時</th>
+<th>日</th>
+<th>月</th>
+<th>星期</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>範圍</td>
+<td>0-59</td>
+<td>0-23</td>
+<td>1-31</td>
+<td>1-12或JAN-DEC</td>
+<td>0-6或SUN-SAT</td>
+</tr>
+</tbody></table>
+<p>除了直接輸入數字外，還可以搭配一些符號使用</p>
+<ol>
+<li><code>*</code> ：欄位的所有值。例如分鐘欄位輸入<code>*</code>，代表每分鐘（0-59）都執行。</li>
+<li><code>,</code> ：多個指定值。例如小時欄位輸入<code>9,18</code>，代表9點和18點執行。</li>
+<li><code>-</code> ：指定範圍。例如日欄位輸入<code>15-20</code>，代表一個月裡的15日至20日都執行。</li>
+<li><code>/</code> ：指定增量，<code>開始值/每次增加的量</code>。例如分鐘欄位輸入<code>1/10</code>，代表從1開始，每次10分鐘才再次執行。</li>
+</ol>
+<h2 id="練習"><a href="#練習" class="headerlink" title="練習"></a>練習</h2><ol>
+<li>每天08:00：<code>0 8 * * *</code></li>
+<li>每週一至週五22:30：<code>30 22 * * 1-5</code></li>
+<li>每週末5分鐘一次：<code>*/5 * * * 0,6</code></li>
+<li>每個雙數月1日的00:00：<code>0 0 1 */2 *</code></li>
+<li>每月的15日03:00：<code>0 3 15 * *</code></li>
+</ol>
+<p>可以到這裡驗證和練習 <a href="https://crontab.guru/">https://crontab.guru/</a></p>
+<h2 id="參考"><a href="#參考" class="headerlink" title="參考"></a>參考</h2><p><a href="https://zh.wikipedia.org/zh-tw/Cron">Cron-維基百科</a></p>
+<p><a href="https://docs.aws.amazon.com/zh_tw/lambda/latest/dg/services-cloudwatchevents-expressions.html">AWS使用 Rate 或 Cron 排定表達式</a></p>
+<p><a href="https://crontab.guru/">crontab guru</a></p>
+]]></content>
+      <categories>
+        <category>排程</category>
+      </categories>
+      <tags>
+        <tag>排程</tag>
       </tags>
   </entry>
 </search>
