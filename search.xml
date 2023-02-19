@@ -1,6 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>遷移Docker資料</title>
+    <url>/Docker/%E9%81%B7%E7%A7%BBDocker%E8%B3%87%E6%96%99/</url>
+    <content><![CDATA[<p>Windows裡使用WSL 2的Docker資料預設在C槽，不知不覺間就被塞爆了，我們來將它移到其他槽。</p>
+<p>先輸入<code>wsl -l -v</code>指令來看一下會有什麼：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">&gt; wsl -l -v</span><br><span class="line">  NAME                   STATE           VERSION</span><br><span class="line">* docker-desktop         Stopped         2</span><br><span class="line">  docker-desktop-data    Stopped         2</span><br></pre></td></tr></table></figure>
+
+<p>docker-desktop：docker的系統和資料<br>docker-desktop-data：各container, image（這個最重要，當然volumn也是）</p>
+<p>後續我們先關閉Docker，停止運行那些東東、匯出備份，最後在新的位置還原就可以了。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># 終止運行</span><br><span class="line">&gt; wsl -t docker-desktop</span><br><span class="line">&gt; wsl -t docker-desktop-data</span><br><span class="line"></span><br><span class="line"># 匯出備份</span><br><span class="line">&gt; wsl --export docker-desktop D:\wsl\docker-desktop-20230101.tar</span><br><span class="line">&gt; wsl --export docker-desktop-data D:\wsl\docker-desktop-data-20230101.tar</span><br><span class="line"></span><br><span class="line"># 註銷</span><br><span class="line">&gt; wsl --unregister docker-desktop</span><br><span class="line">&gt; wsl --unregister docker-desktop-data</span><br><span class="line"></span><br><span class="line"># 從備份匯入</span><br><span class="line">&gt; wsl --import docker-desktop D:\wsl\docker-desktop D:\wsl\docker-desktop-20230101.tar --version 2</span><br><span class="line">&gt; wsl --import docker-desktop-data D:\wsl\docker-desktop-data D:\wsl\docker-desktop-data-20230101.tar --version 2</span><br><span class="line"></span><br><span class="line"># 完成</span><br></pre></td></tr></table></figure>
+
+<p>匯出的備份檔可以留著，以防出意外還可以還原回來。這是親身經歷過，之前嘗試安裝Elastic APM，結果Docker當機，重開Docker後整個Docker就壞了，docker-desktop內的虛擬硬碟直接消失。幸好docker-desktop-data和volumn還在，保住資料，用這個辦法將現有資料掛回去。</p>
+<h2 id="參考"><a href="#參考" class="headerlink" title="參考"></a>參考</h2><ul>
+<li><a href="https://blog.csdn.net/weifengdq/article/details/121776188">WSL2迁移与硬盘读写测试</a></li>
+<li><a href="https://learn.microsoft.com/zh-tw/windows/wsl/basic-commands">WSL 的基本命令 | Microsoft Learn</a></li>
+</ul>
+]]></content>
+      <categories>
+        <category>Docker</category>
+      </categories>
+      <tags>
+        <tag>Docker</tag>
+        <tag>WSL</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>使用Docker安裝Elasticsearch和Kibana</title>
     <url>/Elasticsearch/%E4%BD%BF%E7%94%A8Docker%E5%AE%89%E8%A3%9DElasticsearch%E5%92%8CKibana/</url>
     <content><![CDATA[<p>這次來試玩一下傳說中的Elasticsearch，主要是想要把網站記錄的Log存到這裡面來，再設定一些UI來顯示，就不用每次查網站的Log都要進資料庫用SQL查。</p>
@@ -19,7 +44,7 @@
 
 <h3 id="4-開啟Kibana"><a href="#4-開啟Kibana" class="headerlink" title="4. 開啟Kibana"></a>4. 開啟Kibana</h3><p>輸入<a href="http://localhost:5601/">http://localhost:5601</a> 開啟Kibana，首次開啟需要使用上面的enroll token綁定Elasticsearch，然後輸入剛剛的帳號和密碼</p>
 <h3 id="5-完成"><a href="#5-完成" class="headerlink" title="5. 完成"></a>5. 完成</h3><p>可以愉快地玩耍了</p>
-<h2 id="方法二：使用docker-compose"><a href="#方法二：使用docker-compose" class="headerlink" title="方法二：使用docker-compose"></a>方法二：使用docker-compose</h2><p>有搭配volumn</p>
+<h2 id="方法二：使用docker-compose"><a href="#方法二：使用docker-compose" class="headerlink" title="方法二：使用docker-compose"></a>方法二：使用docker-compose</h2><p>有搭配volume</p>
 <h3 id="1-建立-env檔"><a href="#1-建立-env檔" class="headerlink" title="1. 建立.env檔"></a>1. 建立.env檔</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># Password for the &#x27;elastic&#x27; user (at least 6 characters)</span><br><span class="line">ELASTIC_PASSWORD=</span><br><span class="line"></span><br><span class="line"># Password for the &#x27;kibana_system&#x27; user (at least 6 characters)</span><br><span class="line">KIBANA_PASSWORD=</span><br><span class="line"></span><br><span class="line"># Version of Elastic products</span><br><span class="line">STACK_VERSION=8.0.0</span><br><span class="line"></span><br><span class="line"># Set the cluster name</span><br><span class="line">CLUSTER_NAME=docker-cluster</span><br><span class="line"></span><br><span class="line"># Set to &#x27;basic&#x27; or &#x27;trial&#x27; to automatically start the 30-day trial</span><br><span class="line">LICENSE=basic</span><br><span class="line">#LICENSE=trial</span><br><span class="line"></span><br><span class="line"># Port to expose Elasticsearch HTTP API to the host</span><br><span class="line">ES_PORT=9200</span><br><span class="line">#ES_PORT=127.0.0.1:9200</span><br><span class="line"></span><br><span class="line"># Port to expose Kibana to the host</span><br><span class="line">KIBANA_PORT=5601</span><br><span class="line">#KIBANA_PORT=80</span><br><span class="line"></span><br><span class="line"># Increase or decrease based on the available host memory (in bytes)</span><br><span class="line">MEM_LIMIT=1073741824</span><br><span class="line"></span><br><span class="line"># Project namespace (defaults to the current folder name if not set)</span><br><span class="line">#COMPOSE_PROJECT_NAME=myproject</span><br></pre></td></tr></table></figure>
 
 <h3 id="2-建立docker-compose-yml"><a href="#2-建立docker-compose-yml" class="headerlink" title="2. 建立docker-compose.yml"></a>2. 建立docker-compose.yml</h3><p>此處會建立<br>三個container：<br>setup：建立憑證用，建立好之後會關閉<br>es01：Elasticsearch 1號（只建立一個節點）<br>kibana：Kibana</p>
@@ -37,8 +62,10 @@
 <p>macOS Docker Desktop：</p>
 <figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">docker-machine ssh</span><br><span class="line">sudo sysctl -w vm.max_map_count=262144</span><br></pre></td></tr></table></figure>
 
-<h2 id="參考資料"><a href="#參考資料" class="headerlink" title="參考資料"></a>參考資料</h2><p><a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html">Install Elasticsearch with Docker</a></p>
-<p><a href="https://www.elastic.co/guide/en/kibana/current/docker.html">Install Kibana with Docker</a></p>
+<h2 id="參考資料"><a href="#參考資料" class="headerlink" title="參考資料"></a>參考資料</h2><ul>
+<li><a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html">Install Elasticsearch with Docker</a></li>
+<li><a href="https://www.elastic.co/guide/en/kibana/current/docker.html">Install Kibana with Docker</a></li>
+</ul>
 ]]></content>
       <categories>
         <category>Elasticsearch</category>
@@ -87,7 +114,9 @@
 <p><img src="https://i.imgur.com/zEBvgVU.jpeg" alt="圖2：預覽指令"></p>
 <p><img src="https://i.imgur.com/H64VaMo.jpeg" alt="圖3：建置完成"></p>
 <p>到這裡就大功告成，恭喜安裝Hexo並啟動成功。</p>
-<h2 id="參考"><a href="#參考" class="headerlink" title="參考"></a>參考</h2><p><a href="https://hexo.io/zh-tw/docs/">Hexo文件</a></p>
+<h2 id="參考"><a href="#參考" class="headerlink" title="參考"></a>參考</h2><ul>
+<li><a href="https://hexo.io/zh-tw/docs/">Hexo文件</a></li>
+</ul>
 ]]></content>
       <categories>
         <category>Hexo</category>
@@ -283,9 +312,59 @@
 <td>❌</td>
 </tr>
 </tbody></table>
-<h2 id="參考"><a href="#參考" class="headerlink" title="參考"></a>參考</h2><p><a href="https://hexo.io/zh-tw/docs/configuration">官方文件</a></p>
-<p><a href="https://hexo.io/docs/one-command-deployment">Hexo-one-command-deployment</a></p>
-<p><a href="https://ithelp.ithome.com.tw/articles/10268369">Day 5：Hexo 安裝完成後的設定密技，並且為 Hexo 換上新佈景！</a></p>
+<h2 id="參考"><a href="#參考" class="headerlink" title="參考"></a>參考</h2><ul>
+<li><a href="https://hexo.io/zh-tw/docs/configuration">官方文件</a></li>
+<li><a href="https://hexo.io/docs/one-command-deployment">Hexo-one-command-deployment</a></li>
+<li><a href="https://ithelp.ithome.com.tw/articles/10268369">Day 5：Hexo 安裝完成後的設定密技，並且為 Hexo 換上新佈景！</a></li>
+</ul>
+]]></content>
+      <categories>
+        <category>Hexo</category>
+      </categories>
+      <tags>
+        <tag>教學</tag>
+        <tag>Hexo</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>自架部落格(3) 換個跟別人一樣的NexT主題</title>
+    <url>/Hexo/%E4%BD%BF%E7%94%A8Hexo%E5%9C%A8GitHub-Pages%E4%B8%8A%E5%BB%BA%E7%AB%8B%E9%83%A8%E8%90%BD%E6%A0%BC-3/</url>
+    <content><![CDATA[<p>Hexo的主題其實也不少，也有很多有個性的主題，各位可以到Hexo的<a href="https://hexo.io/themes/">Themes</a>或是Google找找。這次我採用的是比較多人用的<a href="https://github.com/next-theme/hexo-theme-next">NexT</a>。主要原因就是看起來比較乾淨、有分類，最重要的是網路上有很多相關的教學（我就懶）。這個主題用的人很多，很容易就會看到一樣主題的，不過寫部落格主要還是文章內容，樣式就看個人吧。</p>
+<h2 id="如何安裝"><a href="#如何安裝" class="headerlink" title="如何安裝"></a>如何安裝</h2><p>NexT有提供2種方式安裝</p>
+<ol>
+<li>Hexo 5.0 或以上，可以使用npm安裝</li>
+<li>git clone他的專案</li>
+</ol>
+<p>我採用npm的方式安裝，因為我的是Hexo 6.2.0，而且後續要升級版本也方便很多。</p>
+<h3 id="npm的安裝方式（推薦）"><a href="#npm的安裝方式（推薦）" class="headerlink" title="npm的安裝方式（推薦）"></a>npm的安裝方式（推薦）</h3><p>到專案位置，輸入以下指令：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">npm install hexo-theme-next</span><br></pre></td></tr></table></figure>
+
+<p>預設安裝最新版，我當時的最新版是<code>8.12.1</code></p>
+<h3 id="git-clone的安裝方式"><a href="#git-clone的安裝方式" class="headerlink" title="git clone的安裝方式"></a>git clone的安裝方式</h3><p>到專案位置，輸入以下指令：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">git clone https://github.com/next-theme/hexo-theme-next themes/next</span><br></pre></td></tr></table></figure>
+
+<p>將NexT的原始碼複製到專案目錄底下<code>themes</code>資料夾裡的<code>next</code>資料夾，沒有<code>next</code>資料夾也沒關係，會自己建立。</p>
+<blockquote>
+<p>npm安裝的方式不需要把原始碼放到<code>themes/next</code>內</p>
+</blockquote>
+<p>安裝完後，到專案目錄底下的<code>_config.yml</code>更換主題設定為NexT</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># Extensions</span></span><br><span class="line"><span class="comment">## Plugins: https://hexo.io/plugins/</span></span><br><span class="line"><span class="comment">## Themes: https://hexo.io/themes/</span></span><br><span class="line"><span class="attr">theme:</span> <span class="string">next</span></span><br></pre></td></tr></table></figure>
+
+<p>啟動看看主題的樣子，順便測試是否安裝成功</p>
+<p><img src="https://i.imgur.com/XP6QR2V.png" alt="圖1：啟動Hexo server後的樣子"></p>
+<p><img src="https://i.imgur.com/TVUZMUg.png" alt="圖2：更換成功，顯示NexT預設的主題樣式"></p>
+<h2 id="配置檔位置異動"><a href="#配置檔位置異動" class="headerlink" title="配置檔位置異動"></a>配置檔位置異動</h2><p>安裝好主題之後，如果想要修改主題提供的配置要怎麼辦呢？</p>
+<p>首先我們先看看專案裡實際的檔案結構，會發現_config居然會有兩個：<code>_config.yml</code>和<code>_config.landscape.yml</code>。看到<code>landscape</code>這個字有沒有覺得在換主題的時候有看到？沒錯，就是Hexo預設的主題，而<code>_config.landscape.yml</code>就是這個主題的設定檔。那麼我們NexT的主題設定檔放到專案目錄底下就可以了。</p>
+<p><img src="https://i.imgur.com/eGdRJjc.png" alt="圖3：兩個_config"></p>
+<h3 id="npm安裝的做法"><a href="#npm安裝的做法" class="headerlink" title="npm安裝的做法"></a>npm安裝的做法</h3><p>到專案目錄下的這個位置<code>\node_modules\hexo-theme-next</code>，找到<code>_config.yml</code>，複製一份，然後修改名稱為<code>_config.next.yml</code>，再把它移動到專案目錄下就可以了。之後修改NexT主題相關配置都只要修改專案目錄下的這份<code>_config.next.yml</code>即可。</p>
+<h3 id="git-clone安裝的做法"><a href="#git-clone安裝的做法" class="headerlink" title="git clone安裝的做法"></a>git clone安裝的做法</h3><p>到專案目錄下的這個位置<code>\themes\next</code>，找到<code>_config.yml</code>，複製一份，然後修改名稱為<code>_config.next.yml</code>，再把它移動到專案目錄下就可以了。之後修改NexT主題相關配置都只要修改專案目錄下的這份<code>_config.next.yml</code>即可。</p>
+<p><img src="https://i.imgur.com/Nh4IHuw.png" alt="圖4：異動後的專案目錄"></p>
+<p>這樣，就把主題換成大家都在用的NexT了。</p>
+<h2 id="參考"><a href="#參考" class="headerlink" title="參考"></a>參考</h2><ul>
+<li><a href="https://github.com/next-theme/hexo-theme-next">NexT的GitHub</a></li>
+<li><a href="https://ithelp.ithome.com.tw/articles/10268369">Day 5：Hexo 安裝完成後的設定密技，並且為 Hexo 換上新佈景！</a></li>
+<li><a href="https://ithelp.ithome.com.tw/articles/10281506">Day 29：利用 NPM 來安裝 Next 佈景主題</a></li>
+</ul>
 ]]></content>
       <categories>
         <category>Hexo</category>
@@ -386,55 +465,11 @@
 <figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># Use Animate.css to animate everything.</span></span><br><span class="line"><span class="comment"># For more information: https://animate.style</span></span><br><span class="line"><span class="attr">motion:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">false</span></span><br><span class="line"><span class="string">...</span></span><br><span class="line"><span class="string">...</span></span><br><span class="line"><span class="string">...</span></span><br></pre></td></tr></table></figure>
 
 <p>配置這東西沒什麼好說的，就是依照需求看文件調整一下吧。多嘗試，多踩雷，你就會了。</p>
-<h2 id="參考"><a href="#參考" class="headerlink" title="參考"></a>參考</h2><p><a href="https://theme-next.js.org/docs/theme-settings/">NexT Theme Settings</a></p>
-<p><a href="https://ithelp.ithome.com.tw/articles/10269050">Day 6：設定你的 Hexo 佈景主題：Next（上）</a></p>
-<p><a href="https://ithelp.ithome.com.tw/articles/10269747">Day 7：設定你的 Hexo 佈景主題：Next（下）</a></p>
-]]></content>
-      <categories>
-        <category>Hexo</category>
-      </categories>
-      <tags>
-        <tag>教學</tag>
-        <tag>Hexo</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>自架部落格(3) 換個跟別人一樣的NexT主題</title>
-    <url>/Hexo/%E4%BD%BF%E7%94%A8Hexo%E5%9C%A8GitHub-Pages%E4%B8%8A%E5%BB%BA%E7%AB%8B%E9%83%A8%E8%90%BD%E6%A0%BC-3/</url>
-    <content><![CDATA[<p>Hexo的主題其實也不少，也有很多有個性的主題，各位可以到Hexo的<a href="https://hexo.io/themes/">Themes</a>或是Google找找。這次我採用的是比較多人用的<a href="https://github.com/next-theme/hexo-theme-next">NexT</a>。主要原因就是看起來比較乾淨、有分類，最重要的是網路上有很多相關的教學（我就懶）。這個主題用的人很多，很容易就會看到一樣主題的，不過寫部落格主要還是文章內容，樣式就看個人吧。</p>
-<h2 id="如何安裝"><a href="#如何安裝" class="headerlink" title="如何安裝"></a>如何安裝</h2><p>NexT有提供2種方式安裝</p>
-<ol>
-<li>Hexo 5.0 或以上，可以使用npm安裝</li>
-<li>git clone他的專案</li>
-</ol>
-<p>我採用npm的方式安裝，因為我的是Hexo 6.2.0，而且後續要升級版本也方便很多。</p>
-<h3 id="npm的安裝方式（推薦）"><a href="#npm的安裝方式（推薦）" class="headerlink" title="npm的安裝方式（推薦）"></a>npm的安裝方式（推薦）</h3><p>到專案位置，輸入以下指令：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">npm install hexo-theme-next</span><br></pre></td></tr></table></figure>
-
-<p>預設安裝最新版，我當時的最新版是<code>8.12.1</code></p>
-<h3 id="git-clone的安裝方式"><a href="#git-clone的安裝方式" class="headerlink" title="git clone的安裝方式"></a>git clone的安裝方式</h3><p>到專案位置，輸入以下指令：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">git clone https://github.com/next-theme/hexo-theme-next themes/next</span><br></pre></td></tr></table></figure>
-
-<p>將NexT的原始碼複製到專案目錄底下<code>themes</code>資料夾裡的<code>next</code>資料夾，沒有<code>next</code>資料夾也沒關係，會自己建立。</p>
-<blockquote>
-<p>npm安裝的方式不需要把原始碼放到<code>themes/next</code>內</p>
-</blockquote>
-<p>安裝完後，到專案目錄底下的<code>_config.yml</code>更換主題設定為NexT</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># Extensions</span></span><br><span class="line"><span class="comment">## Plugins: https://hexo.io/plugins/</span></span><br><span class="line"><span class="comment">## Themes: https://hexo.io/themes/</span></span><br><span class="line"><span class="attr">theme:</span> <span class="string">next</span></span><br></pre></td></tr></table></figure>
-
-<p>啟動看看主題的樣子，順便測試是否安裝成功</p>
-<p><img src="https://i.imgur.com/XP6QR2V.png" alt="圖1：啟動Hexo server後的樣子"></p>
-<p><img src="https://i.imgur.com/TVUZMUg.png" alt="圖2：更換成功，顯示NexT預設的主題樣式"></p>
-<h2 id="配置檔位置異動"><a href="#配置檔位置異動" class="headerlink" title="配置檔位置異動"></a>配置檔位置異動</h2><p>安裝好主題之後，如果想要修改主題提供的配置要怎麼辦呢？</p>
-<p>首先我們先看看專案裡實際的檔案結構，會發現_config居然會有兩個：<code>_config.yml</code>和<code>_config.landscape.yml</code>。看到<code>landscape</code>這個字有沒有覺得在換主題的時候有看到？沒錯，就是Hexo預設的主題，而<code>_config.landscape.yml</code>就是這個主題的設定檔。那麼我們NexT的主題設定檔放到專案目錄底下就可以了。</p>
-<p><img src="https://i.imgur.com/eGdRJjc.png" alt="圖3：兩個_config"></p>
-<h3 id="npm安裝的做法"><a href="#npm安裝的做法" class="headerlink" title="npm安裝的做法"></a>npm安裝的做法</h3><p>到專案目錄下的這個位置<code>\node_modules\hexo-theme-next</code>，找到<code>_config.yml</code>，複製一份，然後修改名稱為<code>_config.next.yml</code>，再把它移動到專案目錄下就可以了。之後修改NexT主題相關配置都只要修改專案目錄下的這份<code>_config.next.yml</code>即可。</p>
-<h3 id="git-clone安裝的做法"><a href="#git-clone安裝的做法" class="headerlink" title="git clone安裝的做法"></a>git clone安裝的做法</h3><p>到專案目錄下的這個位置<code>\themes\next</code>，找到<code>_config.yml</code>，複製一份，然後修改名稱為<code>_config.next.yml</code>，再把它移動到專案目錄下就可以了。之後修改NexT主題相關配置都只要修改專案目錄下的這份<code>_config.next.yml</code>即可。</p>
-<p><img src="https://i.imgur.com/Nh4IHuw.png" alt="圖4：異動後的專案目錄"></p>
-<p>這樣，就把主題換成大家都在用的NexT了。</p>
-<h2 id="參考"><a href="#參考" class="headerlink" title="參考"></a>參考</h2><p><a href="https://github.com/next-theme/hexo-theme-next">NexT的GitHub</a></p>
-<p><a href="https://ithelp.ithome.com.tw/articles/10268369">Day 5：Hexo 安裝完成後的設定密技，並且為 Hexo 換上新佈景！</a></p>
-<p><a href="https://ithelp.ithome.com.tw/articles/10281506">Day 29：利用 NPM 來安裝 Next 佈景主題</a></p>
+<h2 id="參考"><a href="#參考" class="headerlink" title="參考"></a>參考</h2><ul>
+<li><a href="https://theme-next.js.org/docs/theme-settings/">NexT Theme Settings</a></li>
+<li><a href="https://ithelp.ithome.com.tw/articles/10269050">Day 6：設定你的 Hexo 佈景主題：Next（上）</a></li>
+<li><a href="https://ithelp.ithome.com.tw/articles/10269747">Day 7：設定你的 Hexo 佈景主題：Next（下）</a></li>
+</ul>
 ]]></content>
       <categories>
         <category>Hexo</category>
@@ -478,9 +513,11 @@
 
 <p><code>comments</code>：是否允許留言，預設true。</p>
 <p>前面的NexT 主題設定中，我們在menu 中加入了tags 和categories，這時候我們也要在文章中加入才有效果。</p>
-<h2 id="參考"><a href="#參考" class="headerlink" title="參考"></a>參考</h2><p><a href="https://israynotarray.com/hexo/20201004/3689515060/#%E9%96%B1%E8%AE%80%E5%85%A8%E6%96%87-More">(21) 試著學 Hexo - NexT 主題篇 - NexT 還有哪些設定？</a></p>
-<p><a href="https://hexo.io/docs/writing">Hexo Writing</a></p>
-<p><a href="https://hexo.io/docs/front-matter">Hexo Front-matter</a></p>
+<h2 id="參考"><a href="#參考" class="headerlink" title="參考"></a>參考</h2><ul>
+<li><a href="https://israynotarray.com/hexo/20201004/3689515060/#%E9%96%B1%E8%AE%80%E5%85%A8%E6%96%87-More">(21) 試著學 Hexo - NexT 主題篇 - NexT 還有哪些設定？</a></li>
+<li><a href="https://hexo.io/docs/writing">Hexo Writing</a></li>
+<li><a href="https://hexo.io/docs/front-matter">Hexo Front-matter</a></li>
+</ul>
 ]]></content>
       <categories>
         <category>Hexo</category>
@@ -539,9 +576,11 @@
 <p>看到最後一行<code>INFO Deploy done: git</code> 就代表部屬成功。</p>
 <p>恭喜，經歷千辛萬苦，終於搭建好了自己的部落格，接下來就輪到你們了。</p>
 <p><img src="https://i.imgur.com/DAbqnsw.png" alt="圖3：請開始你的表演"></p>
-<h2 id="參考"><a href="#參考" class="headerlink" title="參考"></a>參考</h2><p><a href="https://hexo.io/docs/github-pages">Deployment GitHub Pages - Hexo</a></p>
-<p><a href="https://pages.github.com/">GitHub Pages</a></p>
-<p><a href="https://docs.github.com/en/pages">GitHub Pages - GitHub Docs</a></p>
+<h2 id="參考"><a href="#參考" class="headerlink" title="參考"></a>參考</h2><ul>
+<li><a href="https://hexo.io/docs/github-pages">Deployment GitHub Pages - Hexo</a></li>
+<li><a href="https://pages.github.com/">GitHub Pages</a></li>
+<li><a href="https://docs.github.com/en/pages">GitHub Pages - GitHub Docs</a></li>
+</ul>
 ]]></content>
       <categories>
         <category>Hexo</category>
@@ -598,9 +637,11 @@
 <li>每月的15日03:00：<code>0 3 15 * *</code></li>
 </ol>
 <p>可以到這裡驗證和練習 <a href="https://crontab.guru/">https://crontab.guru/</a></p>
-<h2 id="參考"><a href="#參考" class="headerlink" title="參考"></a>參考</h2><p><a href="https://zh.wikipedia.org/zh-tw/Cron">Cron-維基百科</a></p>
-<p><a href="https://docs.aws.amazon.com/zh_tw/lambda/latest/dg/services-cloudwatchevents-expressions.html">AWS使用 Rate 或 Cron 排定表達式</a></p>
-<p><a href="https://crontab.guru/">crontab guru</a></p>
+<h2 id="參考"><a href="#參考" class="headerlink" title="參考"></a>參考</h2><ul>
+<li><a href="https://zh.wikipedia.org/zh-tw/Cron">Cron-維基百科</a></li>
+<li><a href="https://docs.aws.amazon.com/zh_tw/lambda/latest/dg/services-cloudwatchevents-expressions.html">AWS使用 Rate 或 Cron 排定表達式</a></li>
+<li><a href="https://crontab.guru/">crontab guru</a></li>
+</ul>
 ]]></content>
       <categories>
         <category>排程</category>
