@@ -3,7 +3,7 @@
   <entry>
     <title>遷移Docker資料</title>
     <url>/Docker/%E9%81%B7%E7%A7%BBDocker%E8%B3%87%E6%96%99/</url>
-    <content><![CDATA[<p>Windows裡使用WSL 2的Docker資料預設在C槽，不知不覺間就被塞爆了，我們來將它移到其他槽。</p>
+    <content><![CDATA[<h2 id="起因"><a href="#起因" class="headerlink" title="起因"></a>起因</h2><p>Windows裡使用WSL 2的Docker資料預設在C槽，不知不覺間就被塞爆了，我們來將它移到其他槽。</p>
 <p>先輸入<code>wsl -l -v</code>指令來看一下會有什麼：</p>
 <figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">&gt; wsl -l -v</span><br><span class="line">  NAME                   STATE           VERSION</span><br><span class="line">* docker-desktop         Stopped         2</span><br><span class="line">  docker-desktop-data    Stopped         2</span><br></pre></td></tr></table></figure>
 
