@@ -7,11 +7,11 @@
 <p>先輸入<code>wsl -l -v</code>指令來看一下會有什麼：</p>
 <figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">&gt; wsl -l -v</span><br><span class="line">  NAME                   STATE           VERSION</span><br><span class="line">* docker-desktop         Stopped         2</span><br><span class="line">  docker-desktop-data    Stopped         2</span><br></pre></td></tr></table></figure>
 
-<p>docker-desktop：docker的系統和資料<br>docker-desktop-data：各container, image（這個最重要，當然volumn也是）</p>
+<p>docker-desktop：docker的系統和資料<br>docker-desktop-data：各container, image（這個最重要，當然volume也是）</p>
 <p>後續我們先關閉Docker，停止運行那些東東、匯出備份，最後在新的位置還原就可以了。</p>
 <figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># 終止運行</span><br><span class="line">&gt; wsl -t docker-desktop</span><br><span class="line">&gt; wsl -t docker-desktop-data</span><br><span class="line"></span><br><span class="line"># 匯出備份</span><br><span class="line">&gt; wsl --export docker-desktop D:\wsl\docker-desktop-20230101.tar</span><br><span class="line">&gt; wsl --export docker-desktop-data D:\wsl\docker-desktop-data-20230101.tar</span><br><span class="line"></span><br><span class="line"># 註銷</span><br><span class="line">&gt; wsl --unregister docker-desktop</span><br><span class="line">&gt; wsl --unregister docker-desktop-data</span><br><span class="line"></span><br><span class="line"># 從備份匯入</span><br><span class="line">&gt; wsl --import docker-desktop D:\wsl\docker-desktop D:\wsl\docker-desktop-20230101.tar --version 2</span><br><span class="line">&gt; wsl --import docker-desktop-data D:\wsl\docker-desktop-data D:\wsl\docker-desktop-data-20230101.tar --version 2</span><br><span class="line"></span><br><span class="line"># 完成</span><br></pre></td></tr></table></figure>
 
-<p>匯出的備份檔可以留著，以防出意外還可以還原回來。這是親身經歷過，之前嘗試安裝Elastic APM，結果Docker當機，重開Docker後整個Docker就壞了，docker-desktop內的虛擬硬碟直接消失。幸好docker-desktop-data和volumn還在，保住資料，用這個辦法將現有資料掛回去。</p>
+<p>匯出的備份檔可以留著，以防出意外還可以還原回來。這是親身經歷過，之前嘗試安裝Elastic APM，結果Docker當機，重開Docker後整個Docker就壞了，docker-desktop內的虛擬硬碟直接消失。幸好docker-desktop-data和volume還在，保住資料，用這個辦法將現有資料掛回去。</p>
 <h2 id="參考"><a href="#參考" class="headerlink" title="參考"></a>參考</h2><ul>
 <li><a href="https://blog.csdn.net/weifengdq/article/details/121776188">WSL2迁移与硬盘读写测试</a></li>
 <li><a href="https://learn.microsoft.com/zh-tw/windows/wsl/basic-commands">WSL 的基本命令 | Microsoft Learn</a></li>
