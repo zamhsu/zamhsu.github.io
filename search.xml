@@ -3,7 +3,7 @@
   <entry>
     <title>遷移Docker資料</title>
     <url>/Docker/%E9%81%B7%E7%A7%BBDocker%E8%B3%87%E6%96%99/</url>
-    <content><![CDATA[<h2 id="起因"><a href="#起因" class="headerlink" title="起因"></a>起因</h2><p>Windows裡使用WSL 2的Docker資料預設在C槽，不知不覺間就被塞爆了，我們來將它移到其他槽。</p>
+    <content><![CDATA[<h1 id="遷移Docker資料"><a href="#遷移Docker資料" class="headerlink" title="遷移Docker資料"></a>遷移Docker資料</h1><h2 id="起因"><a href="#起因" class="headerlink" title="起因"></a>起因</h2><p>Windows裡使用WSL 2的Docker資料預設在C槽，不知不覺間就被塞爆了，我們來將它移到其他槽。</p>
 <p>先輸入<code>wsl -l -v</code>指令來看一下會有什麼：</p>
 <figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">&gt; wsl -l -v</span><br><span class="line">  NAME                   STATE           VERSION</span><br><span class="line">* docker-desktop         Stopped         2</span><br><span class="line">  docker-desktop-data    Stopped         2</span><br></pre></td></tr></table></figure>
 
@@ -28,7 +28,7 @@
   <entry>
     <title>使用Docker安裝Elasticsearch和Kibana</title>
     <url>/Elasticsearch/%E4%BD%BF%E7%94%A8Docker%E5%AE%89%E8%A3%9DElasticsearch%E5%92%8CKibana/</url>
-    <content><![CDATA[<p>這次來試玩一下傳說中的Elasticsearch，主要是想要把網站記錄的Log存到這裡面來，再設定一些UI來顯示，就不用每次查網站的Log都要進資料庫用SQL查。</p>
+    <content><![CDATA[<h1 id="使用Docker安裝Elasticsearch和Kibana"><a href="#使用Docker安裝Elasticsearch和Kibana" class="headerlink" title="使用Docker安裝Elasticsearch和Kibana"></a>使用Docker安裝Elasticsearch和Kibana</h1><p>這次來試玩一下傳說中的Elasticsearch，主要是想要把網站記錄的Log存到這裡面來，再設定一些UI來顯示，就不用每次查網站的Log都要進資料庫用SQL查。</p>
 <p>Elasticsearch有雲端版和自己架設，雲端要付費，自架免費。對於喜歡亂玩又沒什麼錢的我，當然選擇自己架設。</p>
 <p>主要以single-node cluster為主，版本為8.0.0</p>
 <h2 id="方法一：各image逐個建立"><a href="#方法一：各image逐個建立" class="headerlink" title="方法一：各image逐個建立"></a>方法一：各image逐個建立</h2><p>建議搭配volumn（範例中未使用）</p>
@@ -78,7 +78,7 @@
   <entry>
     <title>自架部落格(1) 想自己架部落格？先裝個Hexo吧！</title>
     <url>/Hexo/%E4%BD%BF%E7%94%A8Hexo%E5%9C%A8GitHub-Pages%E4%B8%8A%E5%BB%BA%E7%AB%8B%E9%83%A8%E8%90%BD%E6%A0%BC-1/</url>
-    <content><![CDATA[<p>身為這個部落格的第一篇文章，當然就是來記錄一下建置的步驟。</p>
+    <content><![CDATA[<h1 id="自架部落格-1-想自己架部落格？先裝個Hexo吧！"><a href="#自架部落格-1-想自己架部落格？先裝個Hexo吧！" class="headerlink" title="自架部落格(1) 想自己架部落格？先裝個Hexo吧！"></a>自架部落格(1) 想自己架部落格？先裝個Hexo吧！</h1><p>身為這個部落格的第一篇文章，當然就是來記錄一下建置的步驟。</p>
 <p>至於為什麼選Hexo，其實就只是懶而已，懶得自己刻UI、懶得踩雷。UI、分類、產出靜態網站內容什麼的功能Hexo都幫你處理好，只要專注與寫作就好。</p>
 <p>當然也有看過其他的部落格套件，像是<a href="https://jekyllrb.com/">JekyII</a>, <a href="https://gohugo.io/">Hugo</a>，但是發現網路上Hexo的教學很多，那就不踩雷了，跟著他們做就好。寫部落格最重要的就是內容（雖然我的內容也不怎麼樣），其他都是其次。</p>
 <p>將介紹如何安裝和預覽。</p>
@@ -129,7 +129,7 @@
   <entry>
     <title>自架部落格(2) Hexo配置檔介紹</title>
     <url>/Hexo/%E4%BD%BF%E7%94%A8Hexo%E5%9C%A8GitHub-Pages%E4%B8%8A%E5%BB%BA%E7%AB%8B%E9%83%A8%E8%90%BD%E6%A0%BC-2/</url>
-    <content><![CDATA[<p>Hexo配置檔（_config.yml）初次調整的說明和本部落格所調整的設置。</p>
+    <content><![CDATA[<h1 id="自架部落格-2-Hexo配置檔介紹"><a href="#自架部落格-2-Hexo配置檔介紹" class="headerlink" title="自架部落格(2) Hexo配置檔介紹"></a>自架部落格(2) Hexo配置檔介紹</h1><p>Hexo配置檔（_config.yml）初次調整的說明和本部落格所調整的設置。</p>
 <p>其實官網都寫得很清楚了，主要是記錄一下我調整的位置，後續如果有其他地方想再微調可以再看<a href="https://hexo.io/zh-tw/docs/configuration">官方文件</a>。</p>
 <h2 id="Hexo配置檔說明"><a href="#Hexo配置檔說明" class="headerlink" title="Hexo配置檔說明"></a>Hexo配置檔說明</h2><blockquote>
 <p>注意：範例欄位是輸入的值，裡面有符號的話也要對，少了會報錯</p>
@@ -329,7 +329,7 @@
   <entry>
     <title>自架部落格(3) 換個跟別人一樣的NexT主題</title>
     <url>/Hexo/%E4%BD%BF%E7%94%A8Hexo%E5%9C%A8GitHub-Pages%E4%B8%8A%E5%BB%BA%E7%AB%8B%E9%83%A8%E8%90%BD%E6%A0%BC-3/</url>
-    <content><![CDATA[<p>Hexo的主題其實也不少，也有很多有個性的主題，各位可以到Hexo的<a href="https://hexo.io/themes/">Themes</a>或是Google找找。這次我採用的是比較多人用的<a href="https://github.com/next-theme/hexo-theme-next">NexT</a>。主要原因就是看起來比較乾淨、有分類，最重要的是網路上有很多相關的教學（我就懶）。這個主題用的人很多，很容易就會看到一樣主題的，不過寫部落格主要還是文章內容，樣式就看個人吧。</p>
+    <content><![CDATA[<h1 id="自架部落格-3-換個跟別人一樣的NexT主題"><a href="#自架部落格-3-換個跟別人一樣的NexT主題" class="headerlink" title="自架部落格(3) 換個跟別人一樣的NexT主題"></a>自架部落格(3) 換個跟別人一樣的NexT主題</h1><p>Hexo的主題其實也不少，也有很多有個性的主題，各位可以到Hexo的<a href="https://hexo.io/themes/">Themes</a>或是Google找找。這次我採用的是比較多人用的<a href="https://github.com/next-theme/hexo-theme-next">NexT</a>。主要原因就是看起來比較乾淨、有分類，最重要的是網路上有很多相關的教學（我就懶）。這個主題用的人很多，很容易就會看到一樣主題的，不過寫部落格主要還是文章內容，樣式就看個人吧。</p>
 <h2 id="如何安裝"><a href="#如何安裝" class="headerlink" title="如何安裝"></a>如何安裝</h2><p>NexT有提供2種方式安裝</p>
 <ol>
 <li>Hexo 5.0 或以上，可以使用npm安裝</li>
@@ -377,7 +377,7 @@
   <entry>
     <title>自架部落格(4) NexT主題配置介紹</title>
     <url>/Hexo/%E4%BD%BF%E7%94%A8Hexo%E5%9C%A8GitHub-Pages%E4%B8%8A%E5%BB%BA%E7%AB%8B%E9%83%A8%E8%90%BD%E6%A0%BC-4/</url>
-    <content><![CDATA[<p>這篇主要會介紹NexT可修改的配置。由於可修改的東西實在太多，所以就只挑我有修改的地方，如果要看更詳細的設定說明，可以到<a href="https://theme-next.js.org/docs/theme-settings/">官網</a>查看。</p>
+    <content><![CDATA[<h1 id="自架部落格-4-NexT主題配置介紹"><a href="#自架部落格-4-NexT主題配置介紹" class="headerlink" title="自架部落格(4) NexT主題配置介紹"></a>自架部落格(4) NexT主題配置介紹</h1><p>這篇主要會介紹NexT可修改的配置。由於可修改的東西實在太多，所以就只挑我有修改的地方，如果要看更詳細的設定說明，可以到<a href="https://theme-next.js.org/docs/theme-settings/">官網</a>查看。</p>
 <h2 id="Core-Configuration"><a href="#Core-Configuration" class="headerlink" title="Core Configuration"></a>Core Configuration</h2><p>NexT主題的核心設定，這裡我沒修改過設定。</p>
 <p>如果需要修改網頁元件樣板，可以修改<code>custom_file_path</code>這裡的設置。</p>
 <p>需要注意的是<code>cache</code>的設定是需要NexT v6+ 才能夠使用。</p>
@@ -482,7 +482,7 @@
   <entry>
     <title>自架部落格(5) 寫一篇文章</title>
     <url>/Hexo/%E4%BD%BF%E7%94%A8Hexo%E5%9C%A8GitHub-Pages%E4%B8%8A%E5%BB%BA%E7%AB%8B%E9%83%A8%E8%90%BD%E6%A0%BC-5/</url>
-    <content><![CDATA[<p>寫一篇文章剛開始主要就是注意front-matter 的設定，其他就是用Markdown 寫文章了。</p>
+    <content><![CDATA[<h1 id="自架部落格-5-寫一篇文章"><a href="#自架部落格-5-寫一篇文章" class="headerlink" title="自架部落格(5) 寫一篇文章"></a>自架部落格(5) 寫一篇文章</h1><p>寫一篇文章剛開始主要就是注意front-matter 的設定，其他就是用Markdown 寫文章了。</p>
 <p>Markdown 的工具有很多，例如直接使用Visual Studio Code、HackMD等。像我就使用Notion，不用打語法，修改樣式時搭配快捷鍵，匯出時選Markdown，然後再稍微調整一下就好，方便好用。</p>
 <h2 id="建立文章"><a href="#建立文章" class="headerlink" title="建立文章"></a>建立文章</h2><h3 id="指令"><a href="#指令" class="headerlink" title="指令"></a>指令</h3><p>要建立一篇文章的檔案，可以輸入指令依照範本產生</p>
 <p><code>layout</code>：這個是填入範本的名稱，不填的話預設是<code>post</code>，位置在專案目錄下的<code>scaffolds</code>。當然你也可以客製化自己的範本，會一些節省時間。這個可以在<code>_config.yml</code>的<code>default_layout</code>裡指定預設的範本。</p>
@@ -530,7 +530,7 @@
   <entry>
     <title>自架部落格(6) 發佈到GitHub Pages上</title>
     <url>/Hexo/%E4%BD%BF%E7%94%A8Hexo%E5%9C%A8GitHub-Pages%E4%B8%8A%E5%BB%BA%E7%AB%8B%E9%83%A8%E8%90%BD%E6%A0%BC-6/</url>
-    <content><![CDATA[<p>發佈到GitHub Pages其實很簡單，而且還可以順便看看GitHub Action是在做什麼。</p>
+    <content><![CDATA[<h1 id="自架部落格-6-發佈到GitHub-Pages上"><a href="#自架部落格-6-發佈到GitHub-Pages上" class="headerlink" title="自架部落格(6) 發佈到GitHub Pages上"></a>自架部落格(6) 發佈到GitHub Pages上</h1><p>發佈到GitHub Pages其實很簡單，而且還可以順便看看GitHub Action是在做什麼。</p>
 <h2 id="建立GitHub-Pages"><a href="#建立GitHub-Pages" class="headerlink" title="建立GitHub Pages"></a>建立GitHub Pages</h2><p>GitHub Pages官網上的說明其實都說得很清楚，而且每一個步驟都說得很清楚，我就在這簡單說明一下流程和一些注意事項。</p>
 <p>GitHub Pages官網：<a href="https://pages.github.com/">https://pages.github.com/</a></p>
 <p>說明文件：<a href="https://docs.github.com/en/pages">https://docs.github.com/en/pages</a></p>
@@ -593,7 +593,7 @@
   <entry>
     <title>cron表達式</title>
     <url>/Schedule/cron%E8%A1%A8%E9%81%94%E5%BC%8F/</url>
-    <content><![CDATA[<p>一種排程的時間設定表達式，可以用在cron, Hangfire, Coravel。</p>
+    <content><![CDATA[<h1 id="cron表達式"><a href="#cron表達式" class="headerlink" title="cron表達式"></a>cron表達式</h1><p>一種排程的時間設定表達式，可以用在cron, Hangfire, Coravel。</p>
 <p>最近工作需要用到Hangfire來作為工作排程器，而裡面關於定期執行工作（recurring）的時間設定是使用cron expression。對於只用過Windows內建工作排程器的我來說可以說是相當陌生，因此來學學怎麼這種表達式的設定方式。</p>
 <h2 id="說明"><a href="#說明" class="headerlink" title="說明"></a>說明</h2><blockquote>
 <p>工具型軟體<strong>cron</strong>是一款類Unix的作業系統下的基於時間的任務管理系統。用戶們可以通過<strong>cron</strong><br>在固定時間、日期、間隔下，運行定期任務（可以是命令和腳本）。</p>
@@ -653,7 +653,7 @@
   <entry>
     <title>在單元測試使用指定appsettings.json或IOptions</title>
     <url>/UnitTest/%E5%9C%A8%E5%96%AE%E5%85%83%E6%B8%AC%E8%A9%A6%E4%BD%BF%E7%94%A8%E6%8C%87%E5%AE%9Aappsettings-json%E6%88%96IOptions/</url>
-    <content><![CDATA[<p>有時候寫到WebService的單元測試時，需要注入IConfiguration時該怎麼處理？<br>想要使用單元測試專用的appsettings.json要怎麼讀取？<br>甚至要注入IOptions時又要怎麼處理？<br>這篇文章就來告訴你該怎麼做。</p>
+    <content><![CDATA[<h1 id="在單元測試使用指定appsettings-json或IOptions"><a href="#在單元測試使用指定appsettings-json或IOptions" class="headerlink" title="在單元測試使用指定appsettings.json或IOptions"></a>在單元測試使用指定appsettings.json或IOptions</h1><p>有時候寫到WebService的單元測試時，需要注入IConfiguration時該怎麼處理？<br>想要使用單元測試專用的appsettings.json要怎麼讀取？<br>甚至要注入IOptions時又要怎麼處理？<br>這篇文章就來告訴你該怎麼做。</p>
 <h2 id="前置作業"><a href="#前置作業" class="headerlink" title="前置作業"></a>前置作業</h2><p>首先先在測試專案建立一個appsettings.Test.json，命名可以依照需求改變，裡面的內容依照需求自行加入，或者直接把WebService專案裡的appsettings.json整個複製過來再改內容。</p>
 <p>然後將它的<code>CopyToOutputDirectory</code>設為<code>Alaways</code>。這點很重要，不然這個檔案不會出現在編譯後的資料夾中，執行時找不到檔案會報錯。</p>
 <p>appsettings.Test.json</p>

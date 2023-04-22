@@ -29,7 +29,7 @@
 <meta property="og:description" content="一種排程的時間設定表達式，可以用在cron, Hangfire, Coravel。">
 <meta property="og:locale" content="zh_TW">
 <meta property="article:published_time" content="2023-01-02T08:36:37.000Z">
-<meta property="article:modified_time" content="2023-04-22T10:28:04.022Z">
+<meta property="article:modified_time" content="2023-04-22T10:43:22.480Z">
 <meta property="article:author" content="zamhsu">
 <meta property="article:tag" content="排程">
 <meta name="twitter:card" content="summary">
@@ -148,7 +148,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
-            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%AA%AA%E6%98%8E"><span class="nav-number">1.</span> <span class="nav-text">說明</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%B7%B4%E7%BF%92"><span class="nav-number">2.</span> <span class="nav-text">練習</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%83%E8%80%83"><span class="nav-number">3.</span> <span class="nav-text">參考</span></a></li></ol></div>
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#cron%E8%A1%A8%E9%81%94%E5%BC%8F"><span class="nav-number">1.</span> <span class="nav-text">cron表達式</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%AA%AA%E6%98%8E"><span class="nav-number">1.1.</span> <span class="nav-text">說明</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%B7%B4%E7%BF%92"><span class="nav-number">1.2.</span> <span class="nav-text">練習</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%83%E8%80%83"><span class="nav-number">1.3.</span> <span class="nav-text">參考</span></a></li></ol></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -258,7 +258,7 @@
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">更新於</span>
-      <time title="修改時間：2023-04-22 18:28:04" itemprop="dateModified" datetime="2023-04-22T18:28:04+08:00">2023-04-22</time>
+      <time title="修改時間：2023-04-22 18:43:22" itemprop="dateModified" datetime="2023-04-22T18:43:22+08:00">2023-04-22</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -281,7 +281,7 @@
     
     
     <div class="post-body" itemprop="articleBody">
-        <p>一種排程的時間設定表達式，可以用在cron, Hangfire, Coravel。</p>
+        <h1 id="cron表達式"><a href="#cron表達式" class="headerlink" title="cron表達式"></a>cron表達式</h1><p>一種排程的時間設定表達式，可以用在cron, Hangfire, Coravel。</p>
 <p>最近工作需要用到Hangfire來作為工作排程器，而裡面關於定期執行工作（recurring）的時間設定是使用cron expression。對於只用過Windows內建工作排程器的我來說可以說是相當陌生，因此來學學怎麼這種表達式的設定方式。</p>
 <h2 id="說明"><a href="#說明" class="headerlink" title="說明"></a>說明</h2><blockquote>
 <p>工具型軟體<strong>cron</strong>是一款類Unix的作業系統下的基於時間的任務管理系統。用戶們可以通過<strong>cron</strong><br>在固定時間、日期、間隔下，運行定期任務（可以是命令和腳本）。</p>
