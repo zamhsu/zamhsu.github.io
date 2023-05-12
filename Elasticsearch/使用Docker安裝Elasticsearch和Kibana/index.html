@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 6.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/GrayCat_32_32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/GrayCat_16_16.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" integrity="sha256-DfWjNxDkM94fVBWx1H5BMMp0Zq7luBlV8QRcSES7s+0=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.css" integrity="sha256-Vzbj7sDDS/woiFS3uNKo8eIuni59rjyNGtXfstRzStA=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"zamhsu.github.io","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.12.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":{"enable":true,"style":null},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜尋...","empty":"我們無法找到任何有關 ${query} 的搜索結果","hits_time":"${hits} 找到 ${time} 個結果","hits":"找到 ${hits} 個結果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="這次來試玩一下傳說中的 Elasticsearch，主要是想要把網站記錄的 Log 存到這裡面來，再設定一些 UI 來顯示，就不用每次查網站的 Log 都要進資料庫用SQL查。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="使用 Docker 安裝 Elasticsearch 和 Kibana">
+<meta property="og:url" content="https://zamhsu.github.io/Elasticsearch/%E4%BD%BF%E7%94%A8Docker%E5%AE%89%E8%A3%9DElasticsearch%E5%92%8CKibana/">
+<meta property="og:site_name" content="灰貓遊樂場">
+<meta property="og:description" content="這次來試玩一下傳說中的 Elasticsearch，主要是想要把網站記錄的 Log 存到這裡面來，再設定一些 UI 來顯示，就不用每次查網站的 Log 都要進資料庫用SQL查。">
+<meta property="og:locale" content="zh_TW">
+<meta property="article:published_time" content="2023-01-02T08:28:22.000Z">
+<meta property="article:modified_time" content="2023-05-12T16:27:07.112Z">
+<meta property="article:author" content="zamhsu">
+<meta property="article:tag" content="Elasticsearch">
+<meta property="article:tag" content="教學">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://zamhsu.github.io/Elasticsearch/%E4%BD%BF%E7%94%A8Docker%E5%AE%89%E8%A3%9DElasticsearch%E5%92%8CKibana/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-TW","comments":true,"permalink":"https://zamhsu.github.io/Elasticsearch/%E4%BD%BF%E7%94%A8Docker%E5%AE%89%E8%A3%9DElasticsearch%E5%92%8CKibana/","path":"Elasticsearch/使用Docker安裝Elasticsearch和Kibana/","title":"使用 Docker 安裝 Elasticsearch 和 Kibana"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>使用 Docker 安裝 Elasticsearch 和 Kibana | 灰貓遊樂場</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-0GCE5PM3VG"></script>
+  <script class="next-config" data-name="google_analytics" type="application/json">{"tracking_id":"G-0GCE5PM3VG","only_pageview":false}</script>
+  <script src="/js/third-party/analytics/google-analytics.js"></script>
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切換導航欄" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">灰貓遊樂場</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">蹦蹦跳跳頑皮小灰貓</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首頁</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>標籤</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分類</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>歸檔</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜尋
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜尋..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目錄
+        </li>
+        <li class="sidebar-nav-overview">
+          本站概要
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%96%B9%E6%B3%95%E4%B8%80%EF%BC%9A%E5%90%84-image-%E9%80%90%E5%80%8B%E5%BB%BA%E7%AB%8B"><span class="nav-number">1.</span> <span class="nav-text">方法一：各 image 逐個建立</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-Docker-%E5%BB%BA%E7%AB%8B%E5%B0%88%E7%94%A8-network"><span class="nav-number">1.1.</span> <span class="nav-text">1. Docker 建立專用 network</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E5%AE%89%E8%A3%9D-Elasticsearch"><span class="nav-number">1.2.</span> <span class="nav-text">2. 安裝 Elasticsearch</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E5%AE%89%E8%A3%9D-Kibana"><span class="nav-number">1.3.</span> <span class="nav-text">3. 安裝 Kibana</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-%E9%96%8B%E5%95%9F-Kibana"><span class="nav-number">1.4.</span> <span class="nav-text">4. 開啟 Kibana</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-%E5%AE%8C%E6%88%90"><span class="nav-number">1.5.</span> <span class="nav-text">5. 完成</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%96%B9%E6%B3%95%E4%BA%8C%EF%BC%9A%E4%BD%BF%E7%94%A8-docker-compose"><span class="nav-number">2.</span> <span class="nav-text">方法二：使用 docker-compose</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E5%BB%BA%E7%AB%8B-env-%E6%AA%94"><span class="nav-number">2.1.</span> <span class="nav-text">1. 建立 .env 檔</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E5%BB%BA%E7%AB%8B-docker-compose-yml"><span class="nav-number">2.2.</span> <span class="nav-text">2. 建立 docker-compose.yml</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E9%96%8B%E5%A7%8B%E5%9F%B7%E8%A1%8C"><span class="nav-number">2.3.</span> <span class="nav-text">3. 開始執行</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-%E5%AE%8C%E6%88%90"><span class="nav-number">2.4.</span> <span class="nav-text">4. 完成</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B3%A8%E6%84%8F%E4%BA%8B%E9%A0%85"><span class="nav-number">3.</span> <span class="nav-text">注意事項</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%83%E8%80%83%E8%B3%87%E6%96%99"><span class="nav-number">4.</span> <span class="nav-text">參考資料</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zamhsu"
+      src="/images/GrayCat.png">
+  <p class="site-author-name" itemprop="name">zamhsu</p>
+  <div class="site-description" itemprop="description">小灰貓四處玩樂的筆記</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">12</span>
+          <span class="site-state-item-name">文章</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">分類</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">標籤</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zamhsu" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zamhsu" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+  <div class="cc-license site-overview-item animated" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="https://cdnjs.cloudflare.com/ajax/libs/creativecommons-vocabulary/2020.11.3/assets/license_badges/big/by_nc_sa.svg" alt="Creative Commons"></a>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="回到頂端">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-TW">
+    <link itemprop="mainEntityOfPage" href="https://zamhsu.github.io/Elasticsearch/%E4%BD%BF%E7%94%A8Docker%E5%AE%89%E8%A3%9DElasticsearch%E5%92%8CKibana/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/GrayCat.png">
+      <meta itemprop="name" content="zamhsu">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="灰貓遊樂場">
+      <meta itemprop="description" content="小灰貓四處玩樂的筆記">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="使用 Docker 安裝 Elasticsearch 和 Kibana | 灰貓遊樂場">
+      <meta itemprop="description" content="這次來試玩一下傳說中的 Elasticsearch，主要是想要把網站記錄的 Log 存到這裡面來，再設定一些 UI 來顯示，就不用每次查網站的 Log 都要進資料庫用SQL查。">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          使用 Docker 安裝 Elasticsearch 和 Kibana
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">發表於</span>
+
+      <time title="創建時間：2023-01-02 16:28:22" itemprop="dateCreated datePublished" datetime="2023-01-02T16:28:22+08:00">2023-01-02</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新於</span>
+      <time title="修改時間：2023-05-13 00:27:07" itemprop="dateModified" datetime="2023-05-13T00:27:07+08:00">2023-05-13</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分類於</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Elasticsearch/" itemprop="url" rel="index"><span itemprop="name">Elasticsearch</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+            <div class="post-description">這次來試玩一下傳說中的 Elasticsearch，主要是想要把網站記錄的 Log 存到這裡面來，再設定一些 UI 來顯示，就不用每次查網站的 Log 都要進資料庫用SQL查。</div>
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>這次來試玩一下傳說中的 Elasticsearch，主要是想要把網站記錄的 Log 存到這裡面來，再設定一些 UI 來顯示，就不用每次查網站的 Log 都要進資料庫用 SQL 查。</p>
+<p>Elasticsearch 有雲端版和自己架設，雲端要付費，自架免費。對於喜歡亂玩又沒什麼錢的我，當然選擇自己架設。</p>
+<p>主要以 single-node cluster 為主，版本為 8.0.0</p>
+<h2 id="方法一：各-image-逐個建立"><a href="#方法一：各-image-逐個建立" class="headerlink" title="方法一：各 image 逐個建立"></a>方法一：各 image 逐個建立</h2><p>建議搭配 volumn（範例中未使用）</p>
+<h3 id="1-Docker-建立專用-network"><a href="#1-Docker-建立專用-network" class="headerlink" title="1. Docker 建立專用 network"></a>1. Docker 建立專用 network</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker network create elastic</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-安裝-Elasticsearch"><a href="#2-安裝-Elasticsearch" class="headerlink" title="2. 安裝 Elasticsearch"></a>2. 安裝 Elasticsearch</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">docker pull docker.elastic.co/elasticsearch/elasticsearch:8.1.0</span><br><span class="line">docker run -e ES_JAVA_OPTS=&quot;-Xms1g -Xmx1g&quot; --name es-node01 --net elastic -p 9200:9200 -p 9300:9300 -t docker.elastic.co/elasticsearch/elasticsearch:8.1.0</span><br></pre></td></tr></table></figure>
+
+<p>備註：<br>設定 JVM 使用記憶體的大小<br><code>-e ES_JAVA_OPTS=&quot;-Xms1g -Xmx1g&quot;</code><br>最大使用 1G，最小使用 1G</p>
+<p><a target="_blank" rel="noopener" href="https://www.elastic.co/guide/en/elasticsearch/reference/current/advanced-configuration.html#set-jvm-heap-size">https://www.elastic.co/guide/en/elasticsearch/reference/current/advanced-configuration.html#set-jvm-heap-size</a></p>
+<p>port 9200 為對外使用，9300 為內部 node 溝通使用</p>
+<p>裝好後會有帳號、密碼、enroll token（有效30分鐘）等資料，可先複製起來</p>
+<h3 id="3-安裝-Kibana"><a href="#3-安裝-Kibana" class="headerlink" title="3. 安裝 Kibana"></a>3. 安裝 Kibana</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">docker pull docker.elastic.co/kibana/kibana:8.1.0</span><br><span class="line">docker run --name kib-01 --net elastic -p 5601:5601 docker.elastic.co/kibana/kibana:8.1.0</span><br></pre></td></tr></table></figure>
+
+<h3 id="4-開啟-Kibana"><a href="#4-開啟-Kibana" class="headerlink" title="4. 開啟 Kibana"></a>4. 開啟 Kibana</h3><p>輸入 <a target="_blank" rel="noopener" href="http://localhost:5601/">http://localhost:5601</a> 開啟 Kibana，首次開啟需要使用上面的 enroll token 綁定 Elasticsearch，然後輸入剛剛的帳號和密碼</p>
+<h3 id="5-完成"><a href="#5-完成" class="headerlink" title="5. 完成"></a>5. 完成</h3><p>可以愉快地玩耍了</p>
+<h2 id="方法二：使用-docker-compose"><a href="#方法二：使用-docker-compose" class="headerlink" title="方法二：使用 docker-compose"></a>方法二：使用 docker-compose</h2><p>有搭配volume</p>
+<h3 id="1-建立-env-檔"><a href="#1-建立-env-檔" class="headerlink" title="1. 建立 .env 檔"></a>1. 建立 .env 檔</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"># Password for the &#x27;elastic&#x27; user (at least 6 characters)</span><br><span class="line">ELASTIC_PASSWORD=</span><br><span class="line"></span><br><span class="line"># Password for the &#x27;kibana_system&#x27; user (at least 6 characters)</span><br><span class="line">KIBANA_PASSWORD=</span><br><span class="line"></span><br><span class="line"># Version of Elastic products</span><br><span class="line">STACK_VERSION=8.0.0</span><br><span class="line"></span><br><span class="line"># Set the cluster name</span><br><span class="line">CLUSTER_NAME=docker-cluster</span><br><span class="line"></span><br><span class="line"># Set to &#x27;basic&#x27; or &#x27;trial&#x27; to automatically start the 30-day trial</span><br><span class="line">LICENSE=basic</span><br><span class="line">#LICENSE=trial</span><br><span class="line"></span><br><span class="line"># Port to expose Elasticsearch HTTP API to the host</span><br><span class="line">ES_PORT=9200</span><br><span class="line">#ES_PORT=127.0.0.1:9200</span><br><span class="line"></span><br><span class="line"># Port to expose Kibana to the host</span><br><span class="line">KIBANA_PORT=5601</span><br><span class="line">#KIBANA_PORT=80</span><br><span class="line"></span><br><span class="line"># Increase or decrease based on the available host memory (in bytes)</span><br><span class="line">MEM_LIMIT=1073741824</span><br><span class="line"></span><br><span class="line"># Project namespace (defaults to the current folder name if not set)</span><br><span class="line">#COMPOSE_PROJECT_NAME=myproject</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-建立-docker-compose-yml"><a href="#2-建立-docker-compose-yml" class="headerlink" title="2. 建立 docker-compose.yml"></a>2. 建立 docker-compose.yml</h3><p>此處會建立<br>三個 container：<br>setup：建立憑證用，建立好之後會關閉<br>es01：Elasticsearch 1號（只建立一個節點）<br>kibana：Kibana</p>
+<p>一個 network：<br>elastic-default</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">version:</span> <span class="string">&quot;2.2&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="attr">services:</span></span><br><span class="line">  <span class="attr">setup:</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">docker.elastic.co/elasticsearch/elasticsearch:$&#123;STACK_VERSION&#125;</span></span><br><span class="line">    <span class="attr">volumes:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">certs:/usr/share/elasticsearch/config/certs</span></span><br><span class="line">    <span class="attr">user:</span> <span class="string">&quot;0&quot;</span></span><br><span class="line">    <span class="attr">command:</span> <span class="string">&gt;</span></span><br><span class="line"><span class="string">      bash -c &#x27;</span></span><br><span class="line"><span class="string">        if [ x$&#123;ELASTIC_PASSWORD&#125; == x ]; then</span></span><br><span class="line"><span class="string">          echo &quot;Set the ELASTIC_PASSWORD environment variable in the .env file&quot;;</span></span><br><span class="line"><span class="string">          exit 1;</span></span><br><span class="line"><span class="string">        elif [ x$&#123;KIBANA_PASSWORD&#125; == x ]; then</span></span><br><span class="line"><span class="string">          echo &quot;Set the KIBANA_PASSWORD environment variable in the .env file&quot;;</span></span><br><span class="line"><span class="string">          exit 1;</span></span><br><span class="line"><span class="string">        fi;</span></span><br><span class="line"><span class="string">        if [ ! -f certs/ca.zip ]; then</span></span><br><span class="line"><span class="string">          echo &quot;Creating CA&quot;;</span></span><br><span class="line"><span class="string">          bin/elasticsearch-certutil ca --silent --pem -out config/certs/ca.zip;</span></span><br><span class="line"><span class="string">          unzip config/certs/ca.zip -d config/certs;</span></span><br><span class="line"><span class="string">        fi;</span></span><br><span class="line"><span class="string">        if [ ! -f certs/certs.zip ]; then</span></span><br><span class="line"><span class="string">          echo &quot;Creating certs&quot;;</span></span><br><span class="line"><span class="string">          echo -ne \</span></span><br><span class="line"><span class="string">          &quot;instances:\n&quot;\</span></span><br><span class="line"><span class="string">          &quot;  - name: es01\n&quot;\</span></span><br><span class="line"><span class="string">          &quot;    dns:\n&quot;\</span></span><br><span class="line"><span class="string">          &quot;      - es01\n&quot;\</span></span><br><span class="line"><span class="string">          &quot;      - localhost\n&quot;\</span></span><br><span class="line"><span class="string">          &quot;    ip:\n&quot;\</span></span><br><span class="line"><span class="string">          &quot;      - 127.0.0.1\n&quot;\</span></span><br><span class="line"><span class="string">          &gt; config/certs/instances.yml;</span></span><br><span class="line"><span class="string">          bin/elasticsearch-certutil cert --silent --pem -out config/certs/certs.zip --in config/certs/instances.yml --ca-cert config/certs/ca/ca.crt --ca-key config/certs/ca/ca.key;</span></span><br><span class="line"><span class="string">          unzip config/certs/certs.zip -d config/certs;</span></span><br><span class="line"><span class="string">        fi;</span></span><br><span class="line"><span class="string">        echo &quot;Setting file permissions&quot;</span></span><br><span class="line"><span class="string">        chown -R root:root config/certs;</span></span><br><span class="line"><span class="string">        find . -type d -exec chmod 750 \&#123;\&#125; \;;</span></span><br><span class="line"><span class="string">        find . -type f -exec chmod 640 \&#123;\&#125; \;;</span></span><br><span class="line"><span class="string">        echo &quot;Waiting for Elasticsearch availability&quot;;</span></span><br><span class="line"><span class="string">        until curl -s --cacert config/certs/ca/ca.crt &lt;https://es01:9200&gt; | grep -q &quot;missing authentication credentials&quot;; do sleep 30; done;</span></span><br><span class="line"><span class="string">        echo &quot;Setting kibana_system password&quot;;</span></span><br><span class="line"><span class="string">        until curl -s -X POST --cacert config/certs/ca/ca.crt -u elastic:$&#123;ELASTIC_PASSWORD&#125; -H &quot;Content-Type: application/json&quot; &lt;https://es01:9200/_security/user/kibana_system/_password&gt; -d &quot;&#123;\&quot;password\&quot;:\&quot;$&#123;KIBANA_PASSWORD&#125;\&quot;&#125;&quot; | grep -q &quot;^&#123;&#125;&quot;; do sleep 10; done;</span></span><br><span class="line"><span class="string">        echo &quot;All done!&quot;;</span></span><br><span class="line"><span class="string">      &#x27;</span></span><br><span class="line"><span class="string"></span>    <span class="attr">healthcheck:</span></span><br><span class="line">      <span class="attr">test:</span> [<span class="string">&quot;CMD-SHELL&quot;</span>, <span class="string">&quot;[ -f config/certs/es01/es01.crt ]&quot;</span>]</span><br><span class="line">      <span class="attr">interval:</span> <span class="string">1s</span></span><br><span class="line">      <span class="attr">timeout:</span> <span class="string">5s</span></span><br><span class="line">      <span class="attr">retries:</span> <span class="number">120</span></span><br><span class="line"></span><br><span class="line">  <span class="attr">es01:</span></span><br><span class="line">    <span class="attr">depends_on:</span></span><br><span class="line">      <span class="attr">setup:</span></span><br><span class="line">        <span class="attr">condition:</span> <span class="string">service_healthy</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">docker.elastic.co/elasticsearch/elasticsearch:$&#123;STACK_VERSION&#125;</span></span><br><span class="line">    <span class="attr">volumes:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">certs:/usr/share/elasticsearch/config/certs</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">esdata01:/usr/share/elasticsearch/data</span></span><br><span class="line">    <span class="attr">ports:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">$&#123;ES_PORT&#125;:9200</span></span><br><span class="line">    <span class="attr">environment:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">node.name=es01</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">cluster.name=$&#123;CLUSTER_NAME&#125;</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">cluster.initial_master_nodes=es01</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">ELASTIC_PASSWORD=$&#123;ELASTIC_PASSWORD&#125;</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">bootstrap.memory_lock=true</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">xpack.security.enabled=true</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">xpack.security.http.ssl.enabled=true</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">xpack.security.http.ssl.key=certs/es01/es01.key</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">xpack.security.http.ssl.certificate=certs/es01/es01.crt</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">xpack.security.http.ssl.certificate_authorities=certs/ca/ca.crt</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">xpack.security.http.ssl.verification_mode=certificate</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">xpack.security.transport.ssl.enabled=true</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">xpack.security.transport.ssl.key=certs/es01/es01.key</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">xpack.security.transport.ssl.certificate=certs/es01/es01.crt</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">xpack.security.transport.ssl.certificate_authorities=certs/ca/ca.crt</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">xpack.security.transport.ssl.verification_mode=certificate</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">xpack.license.self_generated.type=$&#123;LICENSE&#125;</span></span><br><span class="line">    <span class="attr">mem_limit:</span> <span class="string">$&#123;MEM_LIMIT&#125;</span></span><br><span class="line">    <span class="attr">ulimits:</span></span><br><span class="line">      <span class="attr">memlock:</span></span><br><span class="line">        <span class="attr">soft:</span> <span class="number">-1</span></span><br><span class="line">        <span class="attr">hard:</span> <span class="number">-1</span></span><br><span class="line">    <span class="attr">healthcheck:</span></span><br><span class="line">      <span class="attr">test:</span></span><br><span class="line">        [</span><br><span class="line">          <span class="string">&quot;CMD-SHELL&quot;</span>,</span><br><span class="line">          <span class="string">&quot;curl -s --cacert config/certs/ca/ca.crt &lt;https://localhost:9200&gt; | grep -q &#x27;missing authentication credentials&#x27;&quot;</span>,</span><br><span class="line">        ]</span><br><span class="line">      <span class="attr">interval:</span> <span class="string">10s</span></span><br><span class="line">      <span class="attr">timeout:</span> <span class="string">10s</span></span><br><span class="line">      <span class="attr">retries:</span> <span class="number">120</span></span><br><span class="line"></span><br><span class="line">  <span class="attr">kibana:</span></span><br><span class="line">    <span class="attr">depends_on:</span></span><br><span class="line">      <span class="attr">es01:</span></span><br><span class="line">        <span class="attr">condition:</span> <span class="string">service_healthy</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">docker.elastic.co/kibana/kibana:$&#123;STACK_VERSION&#125;</span></span><br><span class="line">    <span class="attr">volumes:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">certs:/usr/share/kibana/config/certs</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">kibanadata:/usr/share/kibana/data</span></span><br><span class="line">    <span class="attr">ports:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">$&#123;KIBANA_PORT&#125;:5601</span></span><br><span class="line">    <span class="attr">environment:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">SERVERNAME=kibana</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">ELASTICSEARCH_HOSTS=https://es01:9200</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">ELASTICSEARCH_USERNAME=kibana_system</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">ELASTICSEARCH_PASSWORD=$&#123;KIBANA_PASSWORD&#125;</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES=config/certs/ca/ca.crt</span></span><br><span class="line">    <span class="attr">mem_limit:</span> <span class="string">$&#123;MEM_LIMIT&#125;</span></span><br><span class="line">    <span class="attr">healthcheck:</span></span><br><span class="line">      <span class="attr">test:</span></span><br><span class="line">        [</span><br><span class="line">          <span class="string">&quot;CMD-SHELL&quot;</span>,</span><br><span class="line">          <span class="string">&quot;curl -s -I &lt;http://localhost:5601&gt; | grep -q &#x27;HTTP/1.1 302 Found&#x27;&quot;</span>,</span><br><span class="line">        ]</span><br><span class="line">      <span class="attr">interval:</span> <span class="string">10s</span></span><br><span class="line">      <span class="attr">timeout:</span> <span class="string">10s</span></span><br><span class="line">      <span class="attr">retries:</span> <span class="number">120</span></span><br><span class="line"></span><br><span class="line"><span class="attr">volumes:</span></span><br><span class="line">  <span class="attr">certs:</span></span><br><span class="line">    <span class="attr">driver:</span> <span class="string">local</span></span><br><span class="line">  <span class="attr">esdata01:</span></span><br><span class="line">    <span class="attr">driver:</span> <span class="string">local</span></span><br><span class="line">  <span class="attr">kibanadata:</span></span><br><span class="line">    <span class="attr">driver:</span> <span class="string">local</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="3-開始執行"><a href="#3-開始執行" class="headerlink" title="3. 開始執行"></a>3. 開始執行</h3><p>將 .env 和 docker-compose.yml 放在同一個資料夾，然後到該資料夾執行指令</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker-compose up -d</span><br></pre></td></tr></table></figure>
+
+<h3 id="4-完成"><a href="#4-完成" class="headerlink" title="4. 完成"></a>4. 完成</h3><p>可以愉快地玩耍了</p>
+<h2 id="注意事項"><a href="#注意事項" class="headerlink" title="注意事項"></a>注意事項</h2><p>如果遇到 <code>max virtual memory areas vm.max_map_count [65530] is too low, increase to at least [262144]</code> 的錯誤，代表 kernel 中 <code>vm.max_map_count</code> 的設定需要調整為至少 <code>262144</code>。</p>
+<p>調整方法<br>Windows Docker Desktop WSL 2：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">wsl -d docker-desktop</span><br><span class="line">sysctl -w vm.max_map_count=262144</span><br></pre></td></tr></table></figure>
+
+<p>macOS Docker Desktop：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">docker-machine ssh</span><br><span class="line">sudo sysctl -w vm.max_map_count=262144</span><br></pre></td></tr></table></figure>
+
+<h2 id="參考資料"><a href="#參考資料" class="headerlink" title="參考資料"></a>參考資料</h2><ul>
+<li><a target="_blank" rel="noopener" href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html">Install Elasticsearch with Docker</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.elastic.co/guide/en/kibana/current/docker.html">Install Kibana with Docker</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          
+
+<div class="post-copyright">
+<ul>
+  <li class="post-copyright-author">
+      <strong>作者： </strong>zamhsu
+  </li>
+  <li class="post-copyright-link">
+      <strong>文章連結：</strong>
+      <a href="https://zamhsu.github.io/Elasticsearch/%E4%BD%BF%E7%94%A8Docker%E5%AE%89%E8%A3%9DElasticsearch%E5%92%8CKibana/" title="使用 Docker 安裝 Elasticsearch 和 Kibana">https://zamhsu.github.io/Elasticsearch/使用Docker安裝Elasticsearch和Kibana/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版權聲明： </strong>本網誌所有文章除特別聲明外，均採用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 許可協議。轉載請註明出處！
+  </li>
+</ul>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/Elasticsearch/" rel="tag"># Elasticsearch</a>
+              <a href="/tags/%E6%95%99%E5%AD%B8/" rel="tag"># 教學</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/Hexo/%E4%BD%BF%E7%94%A8Hexo%E5%9C%A8GitHub-Pages%E4%B8%8A%E5%BB%BA%E7%AB%8B%E9%83%A8%E8%90%BD%E6%A0%BC-6/" rel="prev" title="自架部落格(6) 發佈到 GitHub Pages 上">
+                  <i class="fa fa-chevron-left"></i> 自架部落格(6) 發佈到 GitHub Pages 上
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/Schedule/cron%E8%A1%A8%E9%81%94%E5%BC%8F/" rel="next" title="CRON 表達式">
+                  CRON 表達式 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 2022 – 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zamhsu</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/pisces/" rel="noopener" target="_blank">NexT.Pisces</a> 強力驅動
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.js" integrity="sha256-yt2kYMy0w8AbtF89WXb2P1rfjcP/HTHLT7097U8Y5b8=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/next-boot.js"></script>
+
+  
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.0/search.js" integrity="sha256-vXZMYLEqsROAXkEw93GGIvaB2ab+QW6w3+1ahD9nXXA=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+  <script src="/js/third-party/fancybox.js"></script>
+
+
+  
+
+
+
+
+
+</body>
+</html>

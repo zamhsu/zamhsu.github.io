@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 6.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/GrayCat_32_32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/GrayCat_16_16.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" integrity="sha256-DfWjNxDkM94fVBWx1H5BMMp0Zq7luBlV8QRcSES7s+0=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.css" integrity="sha256-Vzbj7sDDS/woiFS3uNKo8eIuni59rjyNGtXfstRzStA=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"zamhsu.github.io","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.12.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":{"enable":true,"style":null},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜尋...","empty":"我們無法找到任何有關 ${query} 的搜索結果","hits_time":"${hits} 找到 ${time} 個結果","hits":"找到 ${hits} 個結果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="外行人使用 Grafana Tempo 在本機建置APM服務。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="自架 Grafana Tempo (1) 介紹">
+<meta property="og:url" content="https://zamhsu.github.io/APM/%E8%87%AA%E6%9E%B6Grafana_Tempo-1/">
+<meta property="og:site_name" content="灰貓遊樂場">
+<meta property="og:description" content="外行人使用 Grafana Tempo 在本機建置APM服務。">
+<meta property="og:locale" content="zh_TW">
+<meta property="og:image" content="https://i.imgur.com/WeRghZ7.png">
+<meta property="article:published_time" content="2023-05-01T10:56:59.000Z">
+<meta property="article:modified_time" content="2023-05-12T16:27:07.111Z">
+<meta property="article:author" content="zamhsu">
+<meta property="article:tag" content="教學">
+<meta property="article:tag" content="APM">
+<meta property="article:tag" content="Grafana Tempo">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://i.imgur.com/WeRghZ7.png">
+
+
+<link rel="canonical" href="https://zamhsu.github.io/APM/%E8%87%AA%E6%9E%B6Grafana_Tempo-1/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-TW","comments":true,"permalink":"https://zamhsu.github.io/APM/%E8%87%AA%E6%9E%B6Grafana_Tempo-1/","path":"APM/自架Grafana_Tempo-1/","title":"自架 Grafana Tempo (1) 介紹"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>自架 Grafana Tempo (1) 介紹 | 灰貓遊樂場</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-0GCE5PM3VG"></script>
+  <script class="next-config" data-name="google_analytics" type="application/json">{"tracking_id":"G-0GCE5PM3VG","only_pageview":false}</script>
+  <script src="/js/third-party/analytics/google-analytics.js"></script>
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切換導航欄" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">灰貓遊樂場</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">蹦蹦跳跳頑皮小灰貓</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首頁</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>標籤</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分類</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>歸檔</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜尋
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜尋..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目錄
+        </li>
+        <li class="sidebar-nav-overview">
+          本站概要
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%B5%B7%E5%9B%A0"><span class="nav-number">1.</span> <span class="nav-text">起因</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%94%A8%E9%80%94"><span class="nav-number">2.</span> <span class="nav-text">用途</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9E%B6%E6%A7%8B"><span class="nav-number">3.</span> <span class="nav-text">架構</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#OpenTelemetry"><span class="nav-number">3.1.</span> <span class="nav-text">OpenTelemetry</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Grafana-Agent"><span class="nav-number">3.2.</span> <span class="nav-text">Grafana Agent</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Grafana-Tempo"><span class="nav-number">3.3.</span> <span class="nav-text">Grafana Tempo</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Grafana"><span class="nav-number">3.4.</span> <span class="nav-text">Grafana</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BE%85%E5%AD%B8%E6%8A%80%E8%83%BD"><span class="nav-number">4.</span> <span class="nav-text">待學技能</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%87%B6%E5%BE%97%E7%9C%8B%E6%88%91%E7%9A%84%E6%96%87%E7%AB%A0"><span class="nav-number">5.</span> <span class="nav-text">懶得看我的文章</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%9B%B8%E9%97%9C%E8%B3%87%E6%96%99"><span class="nav-number">6.</span> <span class="nav-text">相關資料</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zamhsu"
+      src="/images/GrayCat.png">
+  <p class="site-author-name" itemprop="name">zamhsu</p>
+  <div class="site-description" itemprop="description">小灰貓四處玩樂的筆記</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">12</span>
+          <span class="site-state-item-name">文章</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">分類</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">標籤</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zamhsu" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zamhsu" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+  <div class="cc-license site-overview-item animated" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="https://cdnjs.cloudflare.com/ajax/libs/creativecommons-vocabulary/2020.11.3/assets/license_badges/big/by_nc_sa.svg" alt="Creative Commons"></a>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="回到頂端">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-TW">
+    <link itemprop="mainEntityOfPage" href="https://zamhsu.github.io/APM/%E8%87%AA%E6%9E%B6Grafana_Tempo-1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/GrayCat.png">
+      <meta itemprop="name" content="zamhsu">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="灰貓遊樂場">
+      <meta itemprop="description" content="小灰貓四處玩樂的筆記">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="自架 Grafana Tempo (1) 介紹 | 灰貓遊樂場">
+      <meta itemprop="description" content="外行人使用 Grafana Tempo 在本機建置APM服務。">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          自架 Grafana Tempo (1) 介紹
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">發表於</span>
+
+      <time title="創建時間：2023-05-01 18:56:59" itemprop="dateCreated datePublished" datetime="2023-05-01T18:56:59+08:00">2023-05-01</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新於</span>
+      <time title="修改時間：2023-05-13 00:27:07" itemprop="dateModified" datetime="2023-05-13T00:27:07+08:00">2023-05-13</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分類於</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/APM/" itemprop="url" rel="index"><span itemprop="name">APM</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+            <div class="post-description">外行人使用 Grafana Tempo 在本機建置APM服務。</div>
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>外行人使用 Grafana Tempo 在本機建置APM服務。</p>
+<h2 id="起因"><a href="#起因" class="headerlink" title="起因"></a>起因</h2><p>其實原因很簡單，就只是想玩玩看如何建置APM服務，看看那精美的圖表，「嘗試」看自己的服務哪邊可以再優化（我這菜鳥能看得出來和成功改善就要偷笑了），另一方面其實是想看有沒有辦法取代 CoreProfiler。因為這工具算是比較簡易、好裝好用，但是只能存在記憶體裡，會為了節省記憶體使用量而減少紀錄留存的筆數，變成看不到以前的紀錄，也沒辦法統計某時段內服務的效能等問題。原本是想用 Elastic APM，後來想到之前裝過 Elasticsearch 時覺得有點麻煩，不想再試了，所以 Google 搜一搜就看到了這個 - Grafana Tempo。</p>
+<p>這裡面的知識量很多，我只能提供目前所知道的粗淺內容，每一項服務&#x2F;工具的水都很深，短時間內無法參透，如果有什麼問題歡迎隨時糾正。</p>
+<h2 id="用途"><a href="#用途" class="headerlink" title="用途"></a>用途</h2><p>用來查詢一個服務的執行時間，以及每個執行步驟的執行時間、呼叫了哪個API，來找出效能瓶頸。</p>
+<h2 id="架構"><a href="#架構" class="headerlink" title="架構"></a>架構</h2><p><img src="https://i.imgur.com/WeRghZ7.png" alt="圖1：架構。資料來源：https://grafana.com/docs/tempo/latest/getting-started/"></p>
+<p>功能分別是：</p>
+<p>遙測 -&gt; pipeline (資料處理) -&gt; 服務後端 -&gt; 視覺化</p>
+<h3 id="OpenTelemetry"><a href="#OpenTelemetry" class="headerlink" title="OpenTelemetry"></a>OpenTelemetry</h3><p>應用程式端的遙測工具，專門用來蒐集應用程式的各項數據，例如 logs, metrics 和 traces，讓服務可以被觀測。你沒聽錯，這個工具提供這三項數據，簡單省事，但是格式需要符合它的規範。蒐集完後會透過OTLP協議發送到目的地，裡面有提供 gRPC 或 HTTP 的方式傳送。</p>
+<p>.Net 有套件支援，還可以自動遙測 WebApi, SqlClient, HttpClient 和 Redis，意思是這些不用自己埋點遙測。埋點時使用 System.Diagnostics 裡面的 Activity，這裡面內容很多，good luck。</p>
+<h3 id="Grafana-Agent"><a href="#Grafana-Agent" class="headerlink" title="Grafana Agent"></a>Grafana Agent</h3><p>類似中轉站，可以緩衝接收到資料、過濾不要記錄的資料等各種資料處理後，再轉送到APM的伺服器。它有支援多個資料來源，例如 Jaeger, Kafka, OpenCensus, OTLP 和 Zipkin。當然也是可以不經過 pipeline 處理，直接送到 Tempo，但是資料量大或服務多的時候還是建議要使用。</p>
+<p>其他選擇：</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://github.com/open-telemetry/opentelemetry-collector">OpenTelemetry Collector</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.jaegertracing.io/docs/latest/deployment/">Jaeger Agent</a></li>
+</ul>
+<p>選擇原因：最初 OpenTelemetry Collector 裝了之後不知道為什麼一直收不到資料，懶得除錯就換了 Grafana Agent。結果發現換了也不行，除錯後發現設定有誤，現在看來用 OpenTelemetry Collector 也是沒問題。</p>
+<h3 id="Grafana-Tempo"><a href="#Grafana-Tempo" class="headerlink" title="Grafana Tempo"></a>Grafana Tempo</h3><p>Grafana 旗下的一款分散式 tracing 後端工具，主要負責搜尋、儲存資料，內建 TempoDB。這裡面的設定比較複雜，如果以嘗試的角度來用，先以範例的設定檔來配置就好。目前只知道它的資料儲存會先在 <code>wal</code> 建立一份，到一定大小或時間後會搬到 <code>wal/data</code> 裡，同時會寫一份到指定路徑中儲存。裡面的資料到一定的時間後會被壓縮，以節省空間。</p>
+<h3 id="Grafana"><a href="#Grafana" class="headerlink" title="Grafana"></a>Grafana</h3><p>視覺化工具，設定資料來源後就可以搜尋資料和建立報表。需要學習怎麼建立報表和搜尋的語法，內容也是很多，簡單用的話可以先不學語法和建報表，用裡面搜尋後的結果報表就足夠了，但有些功能還是 beta 版。內建的報表像是各服務的關聯圖（包含流量、時間）、指定時間範圍內的平均回應時間，當然還有最重要的服務追蹤。</p>
+<h2 id="待學技能"><a href="#待學技能" class="headerlink" title="待學技能"></a>待學技能</h2><p>看了這麼多，應該會知道裡面需要學什麼，簡直像掉進了無底洞一樣，快逃啊…</p>
+<ul>
+<li>OpenTelemetry</li>
+<li>System.Diagnostics 埋點</li>
+<li>Tempo 資料儲存的方式</li>
+<li>Grafana 查詢語法</li>
+<li>Grafana 製作報表</li>
+<li>Agent, Tempo, Grafana 的設定</li>
+</ul>
+<h2 id="懶得看我的文章"><a href="#懶得看我的文章" class="headerlink" title="懶得看我的文章"></a>懶得看我的文章</h2><p>那就直接去看我 GitHub 的 Repository 吧：<a target="_blank" rel="noopener" href="https://github.com/zamhsu/GrafanaTempo">zamhsu&#x2F;GrafanaTempo</a></p>
+<h2 id="相關資料"><a href="#相關資料" class="headerlink" title="相關資料"></a>相關資料</h2><ul>
+<li><a target="_blank" rel="noopener" href="https://opentelemetry.io/">Opentelemetry</a></li>
+<li><a target="_blank" rel="noopener" href="https://grafana.com/docs/agent/latest/">Grafana Agent</a></li>
+<li><a target="_blank" rel="noopener" href="https://grafana.com/oss/tempo/">Grafana Tempo</a></li>
+<li><a target="_blank" rel="noopener" href="https://grafana.com/grafana/">Grafana</a></li>
+<li><a target="_blank" rel="noopener" href="https://learn.microsoft.com/zh-tw/dotnet/api/system.diagnostics">System.Diagnostics</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/grafana/tempo/tree/main/example">Grafana Tempo Example - Github</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          
+
+<div class="post-copyright">
+<ul>
+  <li class="post-copyright-author">
+      <strong>作者： </strong>zamhsu
+  </li>
+  <li class="post-copyright-link">
+      <strong>文章連結：</strong>
+      <a href="https://zamhsu.github.io/APM/%E8%87%AA%E6%9E%B6Grafana_Tempo-1/" title="自架 Grafana Tempo (1) 介紹">https://zamhsu.github.io/APM/自架Grafana_Tempo-1/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版權聲明： </strong>本網誌所有文章除特別聲明外，均採用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 許可協議。轉載請註明出處！
+  </li>
+</ul>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/%E6%95%99%E5%AD%B8/" rel="tag"># 教學</a>
+              <a href="/tags/APM/" rel="tag"># APM</a>
+              <a href="/tags/Grafana-Tempo/" rel="tag"># Grafana Tempo</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/UnitTest/%E5%9C%A8%E5%96%AE%E5%85%83%E6%B8%AC%E8%A9%A6%E4%BD%BF%E7%94%A8%E6%8C%87%E5%AE%9Aappsettings-json%E6%88%96IOptions/" rel="prev" title="在單元測試使用指定 appsettings.json 或 IOptions">
+                  <i class="fa fa-chevron-left"></i> 在單元測試使用指定 appsettings.json 或 IOptions
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/APM/%E8%87%AA%E6%9E%B6Grafana-Tempo-2/" rel="next" title="自架 Grafana Tempo (2) 配置 Agent, Tempo, Grafana">
+                  自架 Grafana Tempo (2) 配置 Agent, Tempo, Grafana <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 2022 – 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zamhsu</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/pisces/" rel="noopener" target="_blank">NexT.Pisces</a> 強力驅動
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.js" integrity="sha256-yt2kYMy0w8AbtF89WXb2P1rfjcP/HTHLT7097U8Y5b8=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/next-boot.js"></script>
+
+  
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.0/search.js" integrity="sha256-vXZMYLEqsROAXkEw93GGIvaB2ab+QW6w3+1ahD9nXXA=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+  <script src="/js/third-party/fancybox.js"></script>
+
+
+  
+
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 6.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/GrayCat_32_32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/GrayCat_16_16.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" integrity="sha256-DfWjNxDkM94fVBWx1H5BMMp0Zq7luBlV8QRcSES7s+0=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.css" integrity="sha256-Vzbj7sDDS/woiFS3uNKo8eIuni59rjyNGtXfstRzStA=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"zamhsu.github.io","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.12.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":{"enable":true,"style":null},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜尋...","empty":"我們無法找到任何有關 ${query} 的搜索結果","hits_time":"${hits} 找到 ${time} 個結果","hits":"找到 ${hits} 個結果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="上一篇已經簡單介紹了這幾個服務的功能，這篇就使用 docker compose 來架設這幾個服務，並且修改一些小地方以符合我們想要的設定。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="自架 Grafana Tempo (2) 配置 Agent, Tempo, Grafana">
+<meta property="og:url" content="https://zamhsu.github.io/APM/%E8%87%AA%E6%9E%B6Grafana-Tempo-2/">
+<meta property="og:site_name" content="灰貓遊樂場">
+<meta property="og:description" content="上一篇已經簡單介紹了這幾個服務的功能，這篇就使用 docker compose 來架設這幾個服務，並且修改一些小地方以符合我們想要的設定。">
+<meta property="og:locale" content="zh_TW">
+<meta property="og:image" content="https://i.imgur.com/nY16ftW.png">
+<meta property="article:published_time" content="2023-05-01T11:07:54.000Z">
+<meta property="article:modified_time" content="2023-05-12T17:00:44.613Z">
+<meta property="article:author" content="zamhsu">
+<meta property="article:tag" content="教學">
+<meta property="article:tag" content="APM">
+<meta property="article:tag" content="Grafana Tempo">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://i.imgur.com/nY16ftW.png">
+
+
+<link rel="canonical" href="https://zamhsu.github.io/APM/%E8%87%AA%E6%9E%B6Grafana-Tempo-2/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-TW","comments":true,"permalink":"https://zamhsu.github.io/APM/%E8%87%AA%E6%9E%B6Grafana-Tempo-2/","path":"APM/自架Grafana-Tempo-2/","title":"自架 Grafana Tempo (2) 配置 Agent, Tempo, Grafana"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>自架 Grafana Tempo (2) 配置 Agent, Tempo, Grafana | 灰貓遊樂場</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-0GCE5PM3VG"></script>
+  <script class="next-config" data-name="google_analytics" type="application/json">{"tracking_id":"G-0GCE5PM3VG","only_pageview":false}</script>
+  <script src="/js/third-party/analytics/google-analytics.js"></script>
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切換導航欄" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">灰貓遊樂場</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">蹦蹦跳跳頑皮小灰貓</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首頁</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>標籤</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分類</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>歸檔</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜尋
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜尋..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目錄
+        </li>
+        <li class="sidebar-nav-overview">
+          本站概要
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%89%E8%A3%9D"><span class="nav-number">1.</span> <span class="nav-text">安裝</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BF%AE%E6%94%B9%E8%A8%AD%E5%AE%9A"><span class="nav-number">2.</span> <span class="nav-text">修改設定</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Agent"><span class="nav-number">2.1.</span> <span class="nav-text">Agent</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Tempo"><span class="nav-number">2.2.</span> <span class="nav-text">Tempo</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Grafana"><span class="nav-number">2.3.</span> <span class="nav-text">Grafana</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Grafana-Feature-Toggles"><span class="nav-number">2.3.1.</span> <span class="nav-text">Grafana Feature Toggles</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Service-Graph"><span class="nav-number">2.3.2.</span> <span class="nav-text">Service Graph</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#docker-compose"><span class="nav-number">2.4.</span> <span class="nav-text">docker compose</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#k6-tracing"><span class="nav-number">2.4.1.</span> <span class="nav-text">k6-tracing</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#agent"><span class="nav-number">2.4.2.</span> <span class="nav-text">agent</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Tempo-1"><span class="nav-number">2.4.3.</span> <span class="nav-text">Tempo</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Grafana-1"><span class="nav-number">2.4.4.</span> <span class="nav-text">Grafana</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%95%9F%E5%8B%95"><span class="nav-number">3.</span> <span class="nav-text">啟動</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%87%B6%E5%BE%97%E7%9C%8B%E6%88%91%E7%9A%84%E6%96%87%E7%AB%A0"><span class="nav-number">4.</span> <span class="nav-text">懶得看我的文章</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%83%E8%80%83"><span class="nav-number">5.</span> <span class="nav-text">參考</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zamhsu"
+      src="/images/GrayCat.png">
+  <p class="site-author-name" itemprop="name">zamhsu</p>
+  <div class="site-description" itemprop="description">小灰貓四處玩樂的筆記</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">12</span>
+          <span class="site-state-item-name">文章</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">分類</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">標籤</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zamhsu" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zamhsu" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+  <div class="cc-license site-overview-item animated" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="https://cdnjs.cloudflare.com/ajax/libs/creativecommons-vocabulary/2020.11.3/assets/license_badges/big/by_nc_sa.svg" alt="Creative Commons"></a>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="回到頂端">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-TW">
+    <link itemprop="mainEntityOfPage" href="https://zamhsu.github.io/APM/%E8%87%AA%E6%9E%B6Grafana-Tempo-2/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/GrayCat.png">
+      <meta itemprop="name" content="zamhsu">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="灰貓遊樂場">
+      <meta itemprop="description" content="小灰貓四處玩樂的筆記">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="自架 Grafana Tempo (2) 配置 Agent, Tempo, Grafana | 灰貓遊樂場">
+      <meta itemprop="description" content="上一篇已經簡單介紹了這幾個服務的功能，這篇就使用 docker compose 來架設這幾個服務，並且修改一些小地方以符合我們想要的設定。">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          自架 Grafana Tempo (2) 配置 Agent, Tempo, Grafana
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">發表於</span>
+
+      <time title="創建時間：2023-05-01 19:07:54" itemprop="dateCreated datePublished" datetime="2023-05-01T19:07:54+08:00">2023-05-01</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新於</span>
+      <time title="修改時間：2023-05-13 01:00:44" itemprop="dateModified" datetime="2023-05-13T01:00:44+08:00">2023-05-13</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分類於</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/APM/" itemprop="url" rel="index"><span itemprop="name">APM</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+            <div class="post-description">上一篇已經簡單介紹了這幾個服務的功能，這篇就使用 docker compose 來架設這幾個服務，並且修改一些小地方以符合我們想要的設定。</div>
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>上一篇已經簡單介紹了這幾個服務的功能，這篇就使用 docker compose 來架設這幾個服務，並且修改一些小地方以符合我們想要的設定。</p>
+<p>接下來的內容各服務會用以下版本作為範例：</p>
+<ul>
+<li>Grafana Agent: 0.29.0</li>
+<li>Grafana Tempo: 1.5.x</li>
+<li>Grafana: 9.3.2</li>
+<li>Grafana Prometheus: 2.40.7</li>
+</ul>
+<blockquote>
+<p>官方 GitHub 上的範例會比較新，會跟我的範例可能會有所很大的差異，畢竟 Grafana 的更新速度很快，一不留神就不知道該了什麼東東…</p>
+</blockquote>
+<h2 id="安裝"><a href="#安裝" class="headerlink" title="安裝"></a>安裝</h2><p>以 Grafana Tempo 官方 GitHub 上 docker compose local 版為範例 （記得要選 local 資料夾內的 docker compose）。版本我提供 1.5.0 版，如果覺得差異太多，可自行修改分支。<br><a target="_blank" rel="noopener" href="https://github.com/grafana/tempo/tree/v1.5.0/example/docker-compose">Grafana Tempo (v1.5.0) docker-compose - GitHub</a></p>
+<h2 id="修改設定"><a href="#修改設定" class="headerlink" title="修改設定"></a>修改設定</h2><p>由於官方範例只是 demo，有很多設定被改成暫時性而已，資料來源也是從範例傳入，而不是由自己的服務傳入，所以我們來改造一下成可以作為服務的設定。我會這麼說是因為裡面的設定非常多，需要再詳細規畫和設定過才會比較合適。</p>
+<h3 id="Agent"><a href="#Agent" class="headerlink" title="Agent"></a>Agent</h3><p>這裡我們加一些特殊功能，開啟 Grafana 的 service graph 和過濾一些經常被作為 health check 網址，例如 metrics。過濾的寫法可能需要注意，在搜尋寫法的時候可能會搜到<a target="_blank" rel="noopener" href="https://grafana.com/blog/2022/05/11/an-introduction-to-trace-sampling-with-grafana-tempo-and-grafana-agent/">官方部落格裡面的介紹</a>，但實際經過測試後，還是要依照 <a target="_blank" rel="noopener" href="https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/processor/tailsamplingprocessor">OpenTelemetry tail sampling processor</a> 的寫法才行。</p>
+<p>agent.yaml</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># ...略...</span></span><br><span class="line"><span class="attr">traces:</span></span><br><span class="line">  <span class="attr">configs:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">default</span></span><br><span class="line">    <span class="comment"># ...略...</span></span><br><span class="line">    <span class="attr">remote_write:</span> <span class="comment"># 資料往外傳送的位置</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">endpoint:</span> <span class="string">tempo:4317</span></span><br><span class="line">        <span class="attr">insecure:</span> <span class="literal">true</span></span><br><span class="line">    <span class="attr">service_graphs:</span> <span class="comment"># 啟用 service graph</span></span><br><span class="line">      <span class="attr">enabled:</span> <span class="literal">true</span></span><br><span class="line">    <span class="attr">tail_sampling:</span> <span class="comment"># 過濾不想要接收資料的規則</span></span><br><span class="line">      <span class="attr">policies:</span></span><br><span class="line">        [</span><br><span class="line">          &#123;</span><br><span class="line">            <span class="attr">name:</span> <span class="string">healthcheck-filter</span>,</span><br><span class="line">            <span class="attr">type:</span> <span class="string">string_attribute</span>,</span><br><span class="line">            <span class="attr">string_attribute:</span> </span><br><span class="line">            &#123;</span><br><span class="line">              <span class="attr">key:</span> <span class="string">http.url</span>, </span><br><span class="line">              <span class="attr">values:</span> [<span class="string">&#x27;^\/(?:metrics|healthcheck)$&#x27;</span>], </span><br><span class="line">              <span class="attr">enabled_regex_matching:</span> <span class="literal">true</span>, </span><br><span class="line">              <span class="attr">invert_match:</span> <span class="literal">true</span></span><br><span class="line">            &#125;</span><br><span class="line">          &#125;</span><br><span class="line">        ]</span><br></pre></td></tr></table></figure>
+
+<h3 id="Tempo"><a href="#Tempo" class="headerlink" title="Tempo"></a>Tempo</h3><p>Tempo 的設定我們也要稍微修改一下，我們只要接收 otlp 的資料、設定資料保留的時間還有資料可以查詢的時間。範例內的資料是儲存在本地端，就是這個 yaml 檔的位置，我們先維持不動，當然也支援儲存到其他地方，例如 S3。</p>
+<p>tempo.yaml</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 只接收otlp的資料</span></span><br><span class="line"><span class="attr">distributor:</span></span><br><span class="line">  <span class="attr">receivers:</span></span><br><span class="line">    <span class="attr">otlp:</span></span><br><span class="line">      <span class="attr">protocols:</span></span><br><span class="line">        <span class="attr">http:</span></span><br><span class="line">        <span class="attr">grpc:</span></span><br><span class="line">        </span><br><span class="line"><span class="comment"># 設定資料保留時間</span></span><br><span class="line"><span class="attr">compactor:</span></span><br><span class="line">  <span class="attr">compaction:</span></span><br><span class="line">    <span class="comment"># ...略...</span></span><br><span class="line">    <span class="attr">block_retention:</span> <span class="string">720h</span> <span class="comment"># 資料保留時間，預設14天(336h)</span></span><br><span class="line">    <span class="comment"># ...略...</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 設定資料可被搜尋的最大範圍</span></span><br><span class="line"><span class="attr">query_frontend:</span></span><br><span class="line">  <span class="attr">search:</span> </span><br><span class="line">    <span class="attr">max_duration:</span> <span class="string">30d</span> <span class="comment"># 查詢日期範圍限制，預設 1h1m0s，0=無限制</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="Grafana"><a href="#Grafana" class="headerlink" title="Grafana"></a>Grafana</h3><p>Grafana 我們可以加入一些圖表功能 (Tempo APM Table, Service Graph)，讓 Tempo 的 Exporter 不只有看追蹤資料而已。不過這個功能在 Grafana 9.3.2 版本還是在測試版，需要手動把功能打開。</p>
+<p><img src="https://i.imgur.com/nY16ftW.png" alt="圖1：Service Graph。原始圖片來源：https://grafana.com/docs/tempo/latest/metrics-generator/service-graph-view/"></p>
+<h4 id="Grafana-Feature-Toggles"><a href="#Grafana-Feature-Toggles" class="headerlink" title="Grafana Feature Toggles"></a>Grafana Feature Toggles</h4><p>因為這個功能還在測試階段，需要手動把功能性的開關打開。這項操作需要修改 docker-compose.yaml，後面會在說明修改的位置。</p>
+<h4 id="Service-Graph"><a href="#Service-Graph" class="headerlink" title="Service Graph"></a>Service Graph</h4><p>這個功能在上面 agent 的設定裡就先設定好了，不用再改。</p>
+<p>agent.yaml</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">service_graphs:</span> <span class="comment"># 啟用 service graph</span></span><br><span class="line">  <span class="attr">enabled:</span> <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="docker-compose"><a href="#docker-compose" class="headerlink" title="docker compose"></a>docker compose</h3><p>接下來修改 docker compose 的設定，列出來的建議修改，其他的可以維持不動。</p>
+<h4 id="k6-tracing"><a href="#k6-tracing" class="headerlink" title="k6-tracing"></a>k6-tracing</h4><p>這裡面就是透過 docker compose 來設定自動餵入資料，我們需要把它刪除（當然不刪也是可以，但是會看到一堆那些資料）。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 刪除開始</span></span><br><span class="line"><span class="comment"># Generate fake traces...</span></span><br><span class="line">  <span class="attr">k6-tracing:</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">ghcr.io/grafana/xk6-client-tracing:v0.0.2</span></span><br><span class="line">    <span class="attr">environment:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">ENDPOINT=agent:4317</span></span><br><span class="line">    <span class="attr">restart:</span> <span class="string">always</span></span><br><span class="line">    <span class="attr">depends_on:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">tempo</span></span><br><span class="line"><span class="comment"># 刪除結束</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="agent"><a href="#agent" class="headerlink" title="agent"></a>agent</h4><p>將資料全部導到 agent 再傳到 Tempo，所以我們把 agent 的 port 打開並且對應到外部。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">agent:</span></span><br><span class="line">  <span class="attr">image:</span> <span class="string">grafana/agent:v0.29.0</span></span><br><span class="line">  <span class="attr">volumes:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">./agent/agent.yaml:/etc/agent.yaml</span></span><br><span class="line">  <span class="attr">entrypoint:</span></span><br><span class="line">   <span class="bullet">-</span> <span class="string">/bin/agent</span></span><br><span class="line">   <span class="bullet">-</span> <span class="string">-config.file=/etc/agent.yaml</span></span><br><span class="line">  <span class="comment"># 把 port 打開，並對應到外部</span></span><br><span class="line">  <span class="attr">ports:</span></span><br><span class="line">   <span class="bullet">-</span> <span class="string">&quot;4317:4317&quot;</span>   <span class="comment"># otlp grpc</span></span><br><span class="line">   <span class="bullet">-</span> <span class="string">&quot;4318:4318&quot;</span>   <span class="comment"># otlp http</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="Tempo-1"><a href="#Tempo-1" class="headerlink" title="Tempo"></a>Tempo</h4><p>Tempo 我們只要開 Tempo（建議對外）和 otlp 的 port。之前我們設定<code>agent.yaml</code>裡，會把資料送到這裡的 4317 port。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">tempo:</span></span><br><span class="line">  <span class="attr">image:</span> <span class="string">grafana/tempo:main-81aa300-arm64</span></span><br><span class="line">  <span class="attr">command:</span> [ <span class="string">&quot;-config.file=/etc/tempo.yaml&quot;</span> ]</span><br><span class="line">  <span class="attr">volumes:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">./tempo/tempo.yaml:/etc/tempo.yaml</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">./tempo-data:/tmp/tempo</span></span><br><span class="line">  <span class="attr">ports:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">&quot;3200:3200&quot;</span>    <span class="comment"># tempo</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">&quot;4317&quot;</span>         <span class="comment"># otlp grpc</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">&quot;4318&quot;</span>         <span class="comment"># otlp http</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="Grafana-1"><a href="#Grafana-1" class="headerlink" title="Grafana"></a>Grafana</h4><p>我們只要加入這個參數 <code>GF_FEATURE_TOGGLES_ENABLE</code> 就能修改要啟用實驗性或測試中的功能，後面有多個的話，用 <code>,</code> 隔開即可。其餘的設定不變。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">grafana:</span></span><br><span class="line">  <span class="attr">image:</span> <span class="string">grafana/grafana:9.3.2</span></span><br><span class="line">  <span class="attr">environment:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">GF_AUTH_ANONYMOUS_ENABLED=true</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">GF_AUTH_ANONYMOUS_ORG_ROLE=Admin</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">GF_AUTH_DISABLE_LOGIN_FORM=true</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">GF_FEATURE_TOGGLES_ENABLE=tempoApmTable</span> <span class="comment"># 加入這行</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="啟動"><a href="#啟動" class="headerlink" title="啟動"></a>啟動</h2><p>大功告成，最後就到 <code>docker-compose.yaml</code> 路徑底下，輸入指令 <code>docker-compose up -d</code> 就 OK 啦。</p>
+<p>好啦，休息一下，待會再戰，接下來就準備把追蹤資料送進去。</p>
+<h2 id="懶得看我的文章"><a href="#懶得看我的文章" class="headerlink" title="懶得看我的文章"></a>懶得看我的文章</h2><p>那就直接去看我 GitHub 的 Repository 吧：<a target="_blank" rel="noopener" href="https://github.com/zamhsu/GrafanaTempo">zamhsu&#x2F;GrafanaTempo</a></p>
+<h2 id="參考"><a href="#參考" class="headerlink" title="參考"></a>參考</h2><ul>
+<li><a target="_blank" rel="noopener" href="https://grafana.com/docs/tempo/latest/getting-started/tempo-in-grafana/">Tempo in Grafana</a></li>
+<li><a target="_blank" rel="noopener" href="https://grafana.com/blog/2020/11/17/tracing-with-the-grafana-cloud-agent-and-grafana-tempo/">Tracing with the Grafana Cloud Agent and Grafana Tempo</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/grafana/tempo/tree/v1.5.0/example/docker-compose">Grafana Tempo v1.5.0 docker-compose example</a></li>
+<li><a target="_blank" rel="noopener" href="https://grafana.com/docs/tempo/latest/configuration/">Grafana Tempo confiduration</a></li>
+<li><a target="_blank" rel="noopener" href="https://ithelp.ithome.com.tw/articles/10303680">一起閱讀Grafana Tempo - Configuration Section 1 - 淺談DevOps與Observability系列</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          
+
+<div class="post-copyright">
+<ul>
+  <li class="post-copyright-author">
+      <strong>作者： </strong>zamhsu
+  </li>
+  <li class="post-copyright-link">
+      <strong>文章連結：</strong>
+      <a href="https://zamhsu.github.io/APM/%E8%87%AA%E6%9E%B6Grafana-Tempo-2/" title="自架 Grafana Tempo (2) 配置 Agent, Tempo, Grafana">https://zamhsu.github.io/APM/自架Grafana-Tempo-2/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版權聲明： </strong>本網誌所有文章除特別聲明外，均採用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 許可協議。轉載請註明出處！
+  </li>
+</ul>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/%E6%95%99%E5%AD%B8/" rel="tag"># 教學</a>
+              <a href="/tags/APM/" rel="tag"># APM</a>
+              <a href="/tags/Grafana-Tempo/" rel="tag"># Grafana Tempo</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/APM/%E8%87%AA%E6%9E%B6Grafana_Tempo-1/" rel="prev" title="自架 Grafana Tempo (1) 介紹">
+                  <i class="fa fa-chevron-left"></i> 自架 Grafana Tempo (1) 介紹
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 2022 – 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zamhsu</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/pisces/" rel="noopener" target="_blank">NexT.Pisces</a> 強力驅動
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.js" integrity="sha256-yt2kYMy0w8AbtF89WXb2P1rfjcP/HTHLT7097U8Y5b8=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/next-boot.js"></script>
+
+  
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.0/search.js" integrity="sha256-vXZMYLEqsROAXkEw93GGIvaB2ab+QW6w3+1ahD9nXXA=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+  <script src="/js/third-party/fancybox.js"></script>
+
+
+  
+
+
+
+
+
+</body>
+</html>
