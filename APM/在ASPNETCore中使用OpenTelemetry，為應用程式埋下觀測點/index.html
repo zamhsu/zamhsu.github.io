@@ -30,7 +30,7 @@
 <meta property="og:image" content="https://i.imgur.com/0V9ErsQ.png">
 <meta property="og:image" content="https://i.imgur.com/Qjgde7k.png">
 <meta property="article:published_time" content="2023-07-09T08:10:22.000Z">
-<meta property="article:modified_time" content="2023-07-09T08:26:42.506Z">
+<meta property="article:modified_time" content="2023-07-09T15:22:15.223Z">
 <meta property="article:author" content="zamhsu">
 <meta property="article:tag" content="APM">
 <meta property="article:tag" content="Tracing">
@@ -256,7 +256,7 @@
       <span class="post-meta-item-text">發表於</span>
       
 
-      <time title="創建時間：2023-07-09 16:10:22 / 修改時間：16:26:42" itemprop="dateCreated datePublished" datetime="2023-07-09T16:10:22+08:00">2023-07-09</time>
+      <time title="創建時間：2023-07-09 16:10:22 / 修改時間：23:22:15" itemprop="dateCreated datePublished" datetime="2023-07-09T16:10:22+08:00">2023-07-09</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -283,7 +283,7 @@
 <h2 id="為什麼選擇-OpenTelemetry"><a href="#為什麼選擇-OpenTelemetry" class="headerlink" title="為什麼選擇 OpenTelemetry"></a>為什麼選擇 OpenTelemetry</h2><p>OpenTelemetry 是一個可以採集 trace, metric, log 三樣遙測資料的整合工具，支援多種程式語言，同時又是 CNCF 裡的項目。以往想要導入 APM 的工具時，基本上就只能使用那家工具所開發的套件，日後想要換工具，就會遇到服務內部的程式碼都要改用相對應套件的情況，亦增加了更換工具的成本。現在的話，只要裝 OpenTelemetry 這一套，就可以隨意更換後面的 APM 工具，不會因為更換套件的成本很高而被特定的工具綁住。OpenTelemetry Protocol 目前已經有很多 APM 工具支援它的格式，例如 Grafana、Elastic APM。</p>
 <p>當然，OpenTelemetry 也不是說有其他 APM 工具支援就完美無缺的，要看支援程度高不高，有機率出現搭配自家套件才能讓整套工具更好用、有一好沒兩好的情況，這點就要自行評估。Grafana Tempo 對於 OpenTelemetry Protocol 格式的支援度很高，欄位的對應也一致，但是對於用追蹤的資料來製作統計資料，這點就難度很高，甚至沒辦法製作，當然跟我對 Grafana 製作圖表很不熟也有關係。後續也有嘗試使用 Elastic APM 搭配 OpenTelemetry（送到 OTel Collector 再轉到 Elastic Agent），也試過搭配 Elastic 自家的套件 Elastic.Apm（直送 Elastic Agent），結果兩者的資料在 Elastic APM 上發揮的效果，還是自家套件較能完整發揮。</p>
 <h2 id="運作流程"><a href="#運作流程" class="headerlink" title="運作流程"></a>運作流程</h2><p><img src="https://i.imgur.com/0V9ErsQ.png" alt="圖1：運作流程"></p>
-<p>應用程式 -&gt; C# Activity -&gt; OpenTelemetry 套件 -&gt; OpenTelemetry Protocol -&gt; 收集器(OpenTelemetry Collector、各家的 agent) -&gt; APM 工具</p>
+<p>整個運作流程也很簡單，.NET 的應用程式裡使用 <code>System.Diagnostics</code> 函式庫產生追蹤資料（手動埋點），然後交由 OpenTelemetry 套件接手處理自動側錄、輸出的目的地等設定。處理完成後，再透過 OpenTelemetry Protocol 來傳到採集器（OpenTelemetry Collector 或是其他採集器），之後採集器再送到 APM 工具內，交由我們查看。</p>
 <h2 id="OpenTelemetry-套件"><a href="#OpenTelemetry-套件" class="headerlink" title="OpenTelemetry 套件"></a>OpenTelemetry 套件</h2><p>這裡提供一些我常用的套件，GitHub 裡也有很多<a target="_blank" rel="noopener" href="https://github.com/open-telemetry/opentelemetry-dotnet">官方</a>和<a target="_blank" rel="noopener" href="https://github.com/open-telemetry/opentelemetry-dotnet-contrib">協作者（contribute）</a>所建立的套件，可依需求選用（裡面地雷還不少，有的會互相衝突）。各套件的使用說明都在 GitHub 裡，沒有額外的網站說明。另外，有一些套件目前還在預覽版，記得要先允許使用預覽版的套件，這樣才能看到。</p>
 <blockquote>
 <p>套件版本可能較舊，若使用新版本，可能用法會不同，建議搭配官方文件。</p>
