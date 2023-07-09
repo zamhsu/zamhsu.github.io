@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 6.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/GrayCat_32_32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/GrayCat_16_16.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" integrity="sha256-DfWjNxDkM94fVBWx1H5BMMp0Zq7luBlV8QRcSES7s+0=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.css" integrity="sha256-Vzbj7sDDS/woiFS3uNKo8eIuni59rjyNGtXfstRzStA=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"zamhsu.github.io","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.12.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":{"enable":true,"style":null},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜尋...","empty":"我們無法找到任何有關 ${query} 的搜索結果","hits_time":"${hits} 找到 ${time} 個結果","hits":"找到 ${hits} 個結果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="這篇文章主要會說明為什麼選擇使用 OpenTelemetry 作為處理追蹤資料的套件，還有如何利用 .NET System.Diagnostics 函式庫來產生追蹤資料，並交由 OpenTelemetry 來接手處理後續流程的方式。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="在 ASP .NET Core 中使用 OpenTelemetry，為應用程式埋下觀測點">
+<meta property="og:url" content="https://zamhsu.github.io/APM/%E5%9C%A8ASPNETCore%E4%B8%AD%E4%BD%BF%E7%94%A8OpenTelemetry%EF%BC%8C%E7%82%BA%E6%87%89%E7%94%A8%E7%A8%8B%E5%BC%8F%E5%9F%8B%E4%B8%8B%E8%A7%80%E6%B8%AC%E9%BB%9E/">
+<meta property="og:site_name" content="灰貓遊樂場">
+<meta property="og:description" content="這篇文章主要會說明為什麼選擇使用 OpenTelemetry 作為處理追蹤資料的套件，還有如何利用 .NET System.Diagnostics 函式庫來產生追蹤資料，並交由 OpenTelemetry 來接手處理後續流程的方式。">
+<meta property="og:locale" content="zh_TW">
+<meta property="og:image" content="https://i.imgur.com/0V9ErsQ.png">
+<meta property="og:image" content="https://i.imgur.com/Qjgde7k.png">
+<meta property="article:published_time" content="2023-07-09T08:10:22.000Z">
+<meta property="article:modified_time" content="2023-07-09T08:26:42.506Z">
+<meta property="article:author" content="zamhsu">
+<meta property="article:tag" content="APM">
+<meta property="article:tag" content="Tracing">
+<meta property="article:tag" content="OpenTelemetry">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://i.imgur.com/0V9ErsQ.png">
+
+
+<link rel="canonical" href="https://zamhsu.github.io/APM/%E5%9C%A8ASPNETCore%E4%B8%AD%E4%BD%BF%E7%94%A8OpenTelemetry%EF%BC%8C%E7%82%BA%E6%87%89%E7%94%A8%E7%A8%8B%E5%BC%8F%E5%9F%8B%E4%B8%8B%E8%A7%80%E6%B8%AC%E9%BB%9E/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-TW","comments":true,"permalink":"https://zamhsu.github.io/APM/%E5%9C%A8ASPNETCore%E4%B8%AD%E4%BD%BF%E7%94%A8OpenTelemetry%EF%BC%8C%E7%82%BA%E6%87%89%E7%94%A8%E7%A8%8B%E5%BC%8F%E5%9F%8B%E4%B8%8B%E8%A7%80%E6%B8%AC%E9%BB%9E/","path":"APM/在ASPNETCore中使用OpenTelemetry，為應用程式埋下觀測點/","title":"在 ASP .NET Core 中使用 OpenTelemetry，為應用程式埋下觀測點"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>在 ASP .NET Core 中使用 OpenTelemetry，為應用程式埋下觀測點 | 灰貓遊樂場</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-0GCE5PM3VG"></script>
+  <script class="next-config" data-name="google_analytics" type="application/json">{"tracking_id":"G-0GCE5PM3VG","only_pageview":false}</script>
+  <script src="/js/third-party/analytics/google-analytics.js"></script>
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切換導航欄" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">灰貓遊樂場</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">蹦蹦跳跳頑皮小灰貓</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首頁</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>標籤</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分類</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>歸檔</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜尋
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜尋..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目錄
+        </li>
+        <li class="sidebar-nav-overview">
+          本站概要
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%82%BA%E4%BB%80%E9%BA%BC%E9%81%B8%E6%93%87-OpenTelemetry"><span class="nav-number">1.</span> <span class="nav-text">為什麼選擇 OpenTelemetry</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%81%8B%E4%BD%9C%E6%B5%81%E7%A8%8B"><span class="nav-number">2.</span> <span class="nav-text">運作流程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#OpenTelemetry-%E5%A5%97%E4%BB%B6"><span class="nav-number">3.</span> <span class="nav-text">OpenTelemetry 套件</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A0%B8%E5%BF%83"><span class="nav-number">3.1.</span> <span class="nav-text">核心</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Exporter"><span class="nav-number">3.2.</span> <span class="nav-text">Exporter</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Instrumentation"><span class="nav-number">3.3.</span> <span class="nav-text">Instrumentation</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AF%A6%E4%BD%9C"><span class="nav-number">4.</span> <span class="nav-text">實作</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9F%8B%E9%BB%9E"><span class="nav-number">4.1.</span> <span class="nav-text">埋點</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%96%B9%E6%B3%95%E4%B8%80%EF%BC%9A%E6%89%8B%E5%8B%95%E7%82%BA%E6%AF%8F%E5%80%8B%E6%96%B9%E6%B3%95%E5%9F%8B%E9%BB%9E"><span class="nav-number">4.1.1.</span> <span class="nav-text">方法一：手動為每個方法埋點</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%96%B9%E6%B3%95%E4%BA%8C%EF%BC%9A%E4%BD%BF%E7%94%A8-AOP-%E5%A5%97%E4%BB%B6"><span class="nav-number">4.1.2.</span> <span class="nav-text">方法二：使用 AOP 套件</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%A8%AD%E5%AE%9A-OpenTelemetry"><span class="nav-number">4.2.</span> <span class="nav-text">設定 OpenTelemetry</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%80%E5%BE%8C"><span class="nav-number">5.</span> <span class="nav-text">最後</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%83%E8%80%83"><span class="nav-number">6.</span> <span class="nav-text">參考</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BB%B6%E4%BC%B8%E9%96%B1%E8%AE%80"><span class="nav-number">7.</span> <span class="nav-text">延伸閱讀</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zamhsu"
+      src="/images/GrayCat.png">
+  <p class="site-author-name" itemprop="name">zamhsu</p>
+  <div class="site-description" itemprop="description">小灰貓四處玩樂的筆記</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">13</span>
+          <span class="site-state-item-name">文章</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">分類</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">11</span>
+        <span class="site-state-item-name">標籤</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zamhsu" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zamhsu" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+  <div class="cc-license site-overview-item animated" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="https://cdnjs.cloudflare.com/ajax/libs/creativecommons-vocabulary/2020.11.3/assets/license_badges/big/by_nc_sa.svg" alt="Creative Commons"></a>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="回到頂端">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-TW">
+    <link itemprop="mainEntityOfPage" href="https://zamhsu.github.io/APM/%E5%9C%A8ASPNETCore%E4%B8%AD%E4%BD%BF%E7%94%A8OpenTelemetry%EF%BC%8C%E7%82%BA%E6%87%89%E7%94%A8%E7%A8%8B%E5%BC%8F%E5%9F%8B%E4%B8%8B%E8%A7%80%E6%B8%AC%E9%BB%9E/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/GrayCat.png">
+      <meta itemprop="name" content="zamhsu">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="灰貓遊樂場">
+      <meta itemprop="description" content="小灰貓四處玩樂的筆記">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="在 ASP .NET Core 中使用 OpenTelemetry，為應用程式埋下觀測點 | 灰貓遊樂場">
+      <meta itemprop="description" content="這篇文章主要會說明為什麼選擇使用 OpenTelemetry 作為處理追蹤資料的套件，還有如何利用 .NET System.Diagnostics 函式庫來產生追蹤資料，並交由 OpenTelemetry 來接手處理後續流程的方式。">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          在 ASP .NET Core 中使用 OpenTelemetry，為應用程式埋下觀測點
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">發表於</span>
+      
+
+      <time title="創建時間：2023-07-09 16:10:22 / 修改時間：16:26:42" itemprop="dateCreated datePublished" datetime="2023-07-09T16:10:22+08:00">2023-07-09</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分類於</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/APM/" itemprop="url" rel="index"><span itemprop="name">APM</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+            <div class="post-description">這篇文章主要會說明為什麼選擇使用 OpenTelemetry 作為處理追蹤資料的套件，還有如何利用 .NET System.Diagnostics 函式庫來產生追蹤資料，並交由 OpenTelemetry 來接手處理後續流程的方式。</div>
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>這篇文章主要會說明為什麼選擇使用 OpenTelemetry 作為處理追蹤資料的套件，還有如何利用 .NET <code>System.Diagnostics</code> 函式庫來產生追蹤資料，並交由 OpenTelemetry 來接手處理後續流程的方式。</p>
+<h2 id="為什麼選擇-OpenTelemetry"><a href="#為什麼選擇-OpenTelemetry" class="headerlink" title="為什麼選擇 OpenTelemetry"></a>為什麼選擇 OpenTelemetry</h2><p>OpenTelemetry 是一個可以採集 trace, metric, log 三樣遙測資料的整合工具，支援多種程式語言，同時又是 CNCF 裡的項目。以往想要導入 APM 的工具時，基本上就只能使用那家工具所開發的套件，日後想要換工具，就會遇到服務內部的程式碼都要改用相對應套件的情況，亦增加了更換工具的成本。現在的話，只要裝 OpenTelemetry 這一套，就可以隨意更換後面的 APM 工具，不會因為更換套件的成本很高而被特定的工具綁住。OpenTelemetry Protocol 目前已經有很多 APM 工具支援它的格式，例如 Grafana、Elastic APM。</p>
+<p>當然，OpenTelemetry 也不是說有其他 APM 工具支援就完美無缺的，要看支援程度高不高，有機率出現搭配自家套件才能讓整套工具更好用、有一好沒兩好的情況，這點就要自行評估。Grafana Tempo 對於 OpenTelemetry Protocol 格式的支援度很高，欄位的對應也一致，但是對於用追蹤的資料來製作統計資料，這點就難度很高，甚至沒辦法製作，當然跟我對 Grafana 製作圖表很不熟也有關係。後續也有嘗試使用 Elastic APM 搭配 OpenTelemetry（送到 OTel Collector 再轉到 Elastic Agent），也試過搭配 Elastic 自家的套件 Elastic.Apm（直送 Elastic Agent），結果兩者的資料在 Elastic APM 上發揮的效果，還是自家套件較能完整發揮。</p>
+<h2 id="運作流程"><a href="#運作流程" class="headerlink" title="運作流程"></a>運作流程</h2><p><img src="https://i.imgur.com/0V9ErsQ.png" alt="圖1：運作流程"></p>
+<p>應用程式 -&gt; C# Activity -&gt; OpenTelemetry 套件 -&gt; OpenTelemetry Protocol -&gt; 收集器(OpenTelemetry Collector、各家的 agent) -&gt; APM 工具</p>
+<h2 id="OpenTelemetry-套件"><a href="#OpenTelemetry-套件" class="headerlink" title="OpenTelemetry 套件"></a>OpenTelemetry 套件</h2><p>這裡提供一些我常用的套件，GitHub 裡也有很多<a target="_blank" rel="noopener" href="https://github.com/open-telemetry/opentelemetry-dotnet">官方</a>和<a target="_blank" rel="noopener" href="https://github.com/open-telemetry/opentelemetry-dotnet-contrib">協作者（contribute）</a>所建立的套件，可依需求選用（裡面地雷還不少，有的會互相衝突）。各套件的使用說明都在 GitHub 裡，沒有額外的網站說明。另外，有一些套件目前還在預覽版，記得要先允許使用預覽版的套件，這樣才能看到。</p>
+<blockquote>
+<p>套件版本可能較舊，若使用新版本，可能用法會不同，建議搭配官方文件。</p>
+</blockquote>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">OpenTelemetry 1.4.0</span><br><span class="line">OpenTelemetry.Exporter.Console 1.4.0</span><br><span class="line">OpenTelemetry.Exporter.OpenTelemetryProtocol 1.4.0</span><br><span class="line">OpenTelemetry.Extensions.Hosting 1.4.0</span><br><span class="line">OpenTelemetry.Instrumentation.AspNetCore 1.0.0-rc9.14</span><br><span class="line">OpenTelemetry.Instrumentation.Http 1.0.0-rc9.14</span><br><span class="line">OpenTelemetry.Instrumentation.SqlClient 1.0.0-rc9.14</span><br></pre></td></tr></table></figure>
+
+<p>接下來用函式庫的類型來分類，簡單說明一下各套件的用途：</p>
+<h3 id="核心"><a href="#核心" class="headerlink" title="核心"></a>核心</h3><p>沒了它，接下來的內容可以不用看了。</p>
+<table>
+<thead>
+<tr>
+<th>套件</th>
+<th>說明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a target="_blank" rel="noopener" href="https://github.com/open-telemetry/opentelemetry-dotnet/tree/main/src/OpenTelemetry">OpenTelemetry</a></td>
+<td>OpenTelemetry 的核心套件</td>
+</tr>
+<tr>
+<td><a target="_blank" rel="noopener" href="https://github.com/open-telemetry/opentelemetry-dotnet/tree/main/src/OpenTelemetry.Extensions.Hosting">OpenTelemetry.Extensions.Hosting</a></td>
+<td>提供 tracing 和 metrics 自動開始和停止側錄的擴充方法，簡化 OpenTelemetry SDK 的生命週期</td>
+</tr>
+</tbody></table>
+<h3 id="Exporter"><a href="#Exporter" class="headerlink" title="Exporter"></a>Exporter</h3><p>將資料輸出到指定位置，有很多輸出的位置，也可以同時使用多個，例如：Console, InMemory, Jaeger, OpenTelemetry Protocol 等。</p>
+<table>
+<thead>
+<tr>
+<th>套件</th>
+<th>說明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a target="_blank" rel="noopener" href="https://github.com/open-telemetry/opentelemetry-dotnet/tree/main/src/OpenTelemetry.Exporter.Console">OpenTelemetry.Exporter.Console</a></td>
+<td>將 <code>System.Diagnostics.Activity</code> 產生的資料輸出到 Console，方便在開發的時候「人工」觀測和解析</td>
+</tr>
+<tr>
+<td><a target="_blank" rel="noopener" href="https://github.com/open-telemetry/opentelemetry-dotnet/tree/main/src/OpenTelemetry.Exporter.OpenTelemetryProtocol">OpenTelemetry.Exporter.OpenTelemetryProtocol</a></td>
+<td>將 <code>System.Diagnostics.Activity</code> 產生的資料轉成 OpenTelemetry Protocol 格式並輸出到指定位置，通常是送到 collector 或是 agent。提供 gRPC 和 HTTP 的方式傳送</td>
+</tr>
+</tbody></table>
+<h3 id="Instrumentation"><a href="#Instrumentation" class="headerlink" title="Instrumentation"></a>Instrumentation</h3><p>自動側錄的工具，不同的工具會自動側錄它注重的資料，例如 HTTP 就會注重 HTTP 動詞、status code、url、query string 等，這個就交由各位自行在 Console 或是追蹤資料中觀察。需要注意的是，這些套件和 <a target="_blank" rel="noopener" href="https://github.com/open-telemetry/opentelemetry-dotnet-instrumentation">OpenTelemetry .NET Automatic Instrumentation</a> 不同，這個需要安裝在主機上，然後就能自動側錄主機上的所有服務，基本上不需要修改服務的程式碼，有興趣的可以自行研究（這東東也是個坑）。</p>
+<table>
+<thead>
+<tr>
+<th>套件</th>
+<th>說明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a target="_blank" rel="noopener" href="https://github.com/open-telemetry/opentelemetry-dotnet/tree/main/src/OpenTelemetry.Instrumentation.AspNetCore">OpenTelemetry.Instrumentation.AspNetCore</a></td>
+<td>自動側錄 ASP .NET Core 專案的資料，需要注意，它只會側錄這個專案，其他的一概不理</td>
+</tr>
+<tr>
+<td><a target="_blank" rel="noopener" href="https://github.com/open-telemetry/opentelemetry-dotnet/tree/main/src/OpenTelemetry.Instrumentation.Http">OpenTelemetry.Instrumentation.Http</a></td>
+<td>自動側錄 HttpClient 這個物件的資料</td>
+</tr>
+<tr>
+<td><a target="_blank" rel="noopener" href="https://github.com/open-telemetry/opentelemetry-dotnet/tree/main/src/OpenTelemetry.Instrumentation.SqlClient">OpenTelemetry.Instrumentation.SqlClient</a></td>
+<td>自動側錄 SqlClient 這個物件的資料，同時支援 <code>Microsoft.Data.SqlClient</code> 和 <code>System.Data.SqlClient</code>，可以側錄 SQL 語句</td>
+</tr>
+</tbody></table>
+<h2 id="實作"><a href="#實作" class="headerlink" title="實作"></a>實作</h2><p>OpenTelemetry 會搭配 .NET 提供的 <code>System.Diagnostics</code> 函式庫來取得追蹤資料，之後 OpenTelemetry 就會依照設定開始介入處理。在實作的時候可以選擇埋點或不埋點，不埋點只要在<code>Program.cs</code>中調整好配置就能直接使用，可以直接看<code>設定 OpenTelemetry</code>的章節。想要埋點，看比較詳細的流程，可以看完<code>埋點</code>。關於 .NET OpenTelemetry 的詳細使用說明就不贅述了，可以參考下面的文件：</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://opentelemetry.io/docs/instrumentation/net/">.NET | OpenTelemetry</a></li>
+<li><a target="_blank" rel="noopener" href="https://learn.microsoft.com/zh-tw/dotnet/core/diagnostics/distributed-tracing-instrumentation-walkthroughs">新增分散式追蹤檢測 - .NET | Microsoft Learn</a></li>
+<li><a target="_blank" rel="noopener" href="https://learn.microsoft.com/zh-tw/dotnet/api/system.diagnostics">System.Diagnostics 命名空間 | Microsoft Learn</a></li>
+<li><a target="_blank" rel="noopener" href="https://marcus116.blogspot.com/2022/01/opentelemetry-in-asp-net.html.html">[OpenTelemetry] 現代化監控使用 OpenTelemetry 實現 : 在 .NET 如何使用 OpenTelemetry ~ m@rcus 學習筆記</a></li>
+</ul>
+<h3 id="埋點"><a href="#埋點" class="headerlink" title="埋點"></a>埋點</h3><p>一開始只要埋得廣就可以了，讓各個有相依到的服務都能串聯起來，之後有必要時再來針對性地埋點，而且埋得愈多資料量愈大，後續可能就會衍生出空間和查詢效能的問題。</p>
+<p>提供名詞的對照，這樣比較好理解在 .NET 裡的物件對應到什麼：</p>
+<table>
+<thead>
+<tr>
+<th>OpenTelemetry</th>
+<th>.NET</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Tracer</td>
+<td>ActivitySource</td>
+</tr>
+<tr>
+<td>Span</td>
+<td>Activity</td>
+</tr>
+</tbody></table>
+<p>注意事項：</p>
+<ul>
+<li>ActivitySource：建議只建立一次，儲存在靜態變數中，同一個元件中都使用同一個 ActivitySource。如果想要獨立控制的話，請再建立一個新的 ActivitySource。ActivitySource 是一個用來建立和啟動 Activity 的物件。</li>
+<li>Activity：在開始和停止的範圍內，操作要記錄的內容。</li>
+</ul>
+<p>下面提供兩種記錄的方式，任君選擇。</p>
+<h4 id="方法一：手動為每個方法埋點"><a href="#方法一：手動為每個方法埋點" class="headerlink" title="方法一：手動為每個方法埋點"></a>方法一：手動為每個方法埋點</h4><p>比較繁雜，但是操作空間大，能夠輕鬆微調自定義的標籤。</p>
+<ol>
+<li>建立 ActivitySource</li>
+</ol>
+<p>Instrumentation.cs</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">namespace</span> <span class="title">OtelSample.Service</span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">class</span> <span class="title">Instrumentation</span>()</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">// 通常一個元件建立一個專用的 ActivitySource。</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">readonly</span> ActivitySource ServiceActivitySource = <span class="keyword">new</span> ActivitySource(<span class="string">&quot;OtelSample.Service&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>Activity 開始記錄</li>
+</ol>
+<p>TestService.cs</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">namespace</span> <span class="title">OtelSample.Service</span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">TestService</span>()</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">GetData</span>()</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">// 記錄 using 範圍內的資料。進入 using 就開始記錄，離開就停止。</span></span><br><span class="line">        <span class="keyword">using</span> (<span class="keyword">var</span> activity = Instrumentation.ServiceActivitySource.Start(<span class="string">&quot;OtelSample.Service.TestService.GetData&quot;</span>))</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="comment">// do something</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="方法二：使用-AOP-套件"><a href="#方法二：使用-AOP-套件" class="headerlink" title="方法二：使用 AOP 套件"></a>方法二：使用 AOP 套件</h4><p>這種方式在類別或是方法上掛上自己寫好的 attribute 後，就能自動為目標方法在執行前或執行後做一些事，概念和 MVC 中的 Filter 一樣。AOP 的概念網路上的文章很多，搜尋一下就有。有興趣想看怎麼實作一個 AOP 框架和原理的話，可以看看蔣金楠的<a target="_blank" rel="noopener" href="https://www.cnblogs.com/artech/p/dora-aop-6x.html">全新升级的AOP框架Dora.Interception[6]: 框架设计和实现原理</a>。</p>
+<p>.NET 有很多 AOP 套件可以選用，例如：</p>
+<ul>
+<li>Castle DynamicProxy（<a target="_blank" rel="noopener" href="http://www.castleproject.org/projects/dynamicproxy/">官方文件</a>，<a target="_blank" rel="noopener" href="https://github.com/castleproject/Core">GitHub</a>）</li>
+<li>Aspect Injector（無官方文件，<a target="_blank" rel="noopener" href="https://github.com/pamidur/aspect-injector">GitHub</a>）</li>
+<li>Dora.Interception（<a target="_blank" rel="noopener" href="https://www.cnblogs.com/artech/p/dora-aop.html">官方文件</a>，<a target="_blank" rel="noopener" href="https://github.com/jiangjinnan/dora">GitHub</a>）</li>
+</ul>
+<p>範例中將使用 Aspect Injector，詳細用法可以看 GitHub，或者看 <a target="_blank" rel="noopener" href="https://dotblogs.com.tw/supershowwei/2020/07/20/101750">[料理佳餚] C# 一個 Open Source 的 Compile-time AOP 框架 - AspectInjector - 軟體廚房</a>，就不在這介紹用法。同時，也會將這個 attribute 設為共用元件，讓多個元件都能使用，所以會使用反射的方式來取得元件、類別、方法等名稱。</p>
+<ol>
+<li><p>安裝 Aspect Injector 套件</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">AspectInjector 2.8.1</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>建立 ActivitySource</p>
+</li>
+</ol>
+<p>將這個類別作為取得各元件 ActivitySource 的集中處。先用元件名稱查詢有無這個名稱的 AcitvitySource，有就繼續沿用，沒有則新增一個並存下來。</p>
+<p>Instrumentation.cs</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">namespace</span> <span class="title">OtelSample.Common</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">class</span> <span class="title">Instrumentation</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">readonly</span> List&lt;ActivitySource&gt; ActivitySources = <span class="keyword">new</span> List&lt;ActivitySource&gt;();</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> Activity <span class="title">StartActivity</span>(<span class="params"><span class="built_in">string</span> componentName, <span class="built_in">string</span> activityName</span>)</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">var</span> activitySource = GetActivitySource(componentName);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">var</span> activity = activitySource.StartActivity(activityName);</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">return</span> activity;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">static</span> ActivitySource <span class="title">GetActivitySource</span>(<span class="params"><span class="built_in">string</span> activityName</span>)</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">var</span> activitySource = ActivitySources.FirstOrDefault(q =&gt; q.Name.Contains(activityName));</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (activitySource <span class="keyword">is</span> <span class="literal">null</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            activitySource = <span class="keyword">new</span> ActivitySource(activityName);</span><br><span class="line">            ActivitySources.Add(activitySource);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> activitySource;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ol start="3">
+<li>定義攔截器和 Advice</li>
+</ol>
+<p>我們只需要記錄 public 的方法，並使用 Around 類型來包覆整個方法。</p>
+<p>TracingAspect.cs</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">namespace</span> <span class="title">OtelSample.Common</span>;</span><br><span class="line"></span><br><span class="line">[<span class="meta">Aspect(Scope.PerInstance)</span>]</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">TracingAspect</span></span><br><span class="line">&#123;</span><br><span class="line">    [<span class="meta">Advice(Kind.Around, Targets = Target.Method | Target.Public)</span>]</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="built_in">object</span> <span class="title">Around</span>(<span class="params"></span></span></span><br><span class="line"><span class="params"><span class="function">        [Argument(Source.Type</span>)] Type type, </span></span><br><span class="line"><span class="function">        [<span class="title">Argument</span>(<span class="params">Source.Name</span>)] <span class="built_in">string</span> name, </span></span><br><span class="line"><span class="function">        [<span class="title">Argument</span>(<span class="params">Source.Arguments</span>)] <span class="built_in">object</span>[] arguments, </span></span><br><span class="line"><span class="function">        [<span class="title">Argument</span>(<span class="params">Source.Target</span>)] Func&lt;<span class="built_in">object</span>[], <span class="built_in">object</span>&gt; target)</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">var</span> componentName = Assembly.GetCallingAssembly().GetName().Name;</span><br><span class="line">        <span class="keyword">var</span> className = type.Name;</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">using</span> <span class="keyword">var</span> activity = Instrumentation.StartActivity(componentName, <span class="string">$&quot;<span class="subst">&#123;componentName&#125;</span>.<span class="subst">&#123;className&#125;</span>.<span class="subst">&#123;name&#125;</span>&quot;</span>);</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">return</span> target(arguments);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ol start="4">
+<li>建立 attribute</li>
+</ol>
+<p>TracingAttribute.cs</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">namespace</span> <span class="title">OtelSample.Common</span>;</span><br><span class="line"></span><br><span class="line">[<span class="meta">Injection(typeof(TracingAspect))</span>]</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">TracingAttribute</span> : <span class="title">Attribute</span></span><br><span class="line">&#123;</span><br><span class="line">    </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ol start="5">
+<li>掛載 attribute</li>
+</ol>
+<p>TestService.cs</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">namespace</span> <span class="title">OtelSample.Service</span>;</span><br><span class="line"></span><br><span class="line">[<span class="meta">Tracing</span>]</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">TestService</span>()</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">GetData</span>()</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">// do something</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="設定-OpenTelemetry"><a href="#設定-OpenTelemetry" class="headerlink" title="設定 OpenTelemetry"></a>設定 OpenTelemetry</h3><p>程式都埋好點之後（或不埋點），接下來就可以交由 OpenTelemetry 來處理了。</p>
+<p>Program.cs</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 反射取得服務相關的類別庫名稱</span></span><br><span class="line"><span class="keyword">var</span> serviceName = Assembly.GetEntryAssembly()?.GetName().Name;</span><br><span class="line"><span class="keyword">var</span> serviceVersion = Assembly.GetEntryAssembly()?.GetName().Version?.ToString();</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> componentPrefix = <span class="string">&quot;OtelSample&quot;</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> assemblies = AppDomain.CurrentDomain.GetAssemblies().Where(q =&gt; q.GetName().Name.StartsWith(componentPrefix));</span><br><span class="line"><span class="keyword">var</span> sources = assemblies.Select(q =&gt; q.GetName().Name);</span><br><span class="line"></span><br><span class="line"><span class="comment">// tracing</span></span><br><span class="line">builder.Services.AddOpenTelemetry()</span><br><span class="line">    .WithTracing(tracerProviderBuilder =&gt;</span><br><span class="line">        tracerProviderBuilder</span><br><span class="line">            .SetResourceBuilder(</span><br><span class="line">                ResourceBuilder.CreateDefault()</span><br><span class="line">                    .AddService(serviceName, serviceVersion: serviceVersion))</span><br><span class="line">            .AddSource(sources.ToArray())</span><br><span class="line">            .AddAspNetCoreInstrumentation(options =&gt;</span><br><span class="line">            &#123;</span><br><span class="line">                options.RecordException = <span class="literal">true</span>;</span><br><span class="line">            &#125;)</span><br><span class="line">            .AddHttpClientInstrumentation(options =&gt;</span><br><span class="line">            &#123;</span><br><span class="line">                options.RecordException = <span class="literal">true</span>;</span><br><span class="line">            &#125;)</span><br><span class="line">            .AddSqlClientInstrumentation(options =&gt;</span><br><span class="line">            &#123;</span><br><span class="line">                options.RecordException = <span class="literal">true</span>;</span><br><span class="line">                options.SetDbStatementForText = <span class="literal">true</span>; <span class="comment">// 記錄 SQL 語法，EF 或 Dapper 都可以被記錄</span></span><br><span class="line">            &#125;)</span><br><span class="line">            .AddOtlpExporter(cfg =&gt;</span><br><span class="line">            &#123;</span><br><span class="line">                cfg.Endpoint = <span class="keyword">new</span> Uri(<span class="string">&quot;http://localhost:4317&quot;</span>);</span><br><span class="line">                cfg.Protocol = OtlpExportProtocol.Grpc;</span><br><span class="line">            &#125;)</span><br><span class="line">            .AddConsoleExporter());</span><br></pre></td></tr></table></figure>
+
+<h2 id="最後"><a href="#最後" class="headerlink" title="最後"></a>最後</h2><p>呼叫幾次 API，再看看你的 APM 工具，享受精美的圖表。<br><img src="https://i.imgur.com/Qjgde7k.png" alt="圖2：Tracing 甘特圖"></p>
+<p>實作時遇到什麼問題，或覺得範例寫得不完整，可以去看我 GitHub 的 Repository：<a target="_blank" rel="noopener" href="https://github.com/zamhsu/Otel-WebApiSample">zamhsu&#x2F;Otel-WebApiSample</a></p>
+<h2 id="參考"><a href="#參考" class="headerlink" title="參考"></a>參考</h2><ul>
+<li><a target="_blank" rel="noopener" href="https://opentelemetry.io/docs/instrumentation/net/">.NET | OpenTelemetry</a></li>
+<li><a target="_blank" rel="noopener" href="https://learn.microsoft.com/zh-tw/dotnet/core/diagnostics/distributed-tracing-instrumentation-walkthroughs">新增分散式追蹤檢測 - .NET | Microsoft Learn</a></li>
+<li><a target="_blank" rel="noopener" href="https://learn.microsoft.com/zh-tw/dotnet/api/system.diagnostics">System.Diagnostics 命名空間 | Microsoft Learn</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/open-telemetry/opentelemetry-dotnet">opentelemetry-dotnet - GitHub</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/open-telemetry/opentelemetry-dotnet-contrib">opentelemetry-dotnet-contrib - GitHub</a></li>
+<li><a target="_blank" rel="noopener" href="https://marcus116.blogspot.com/2022/01/opentelemetry-in-asp-net.html.html">[OpenTelemetry] 現代化監控使用 OpenTelemetry 實現 : 在 .NET 如何使用 OpenTelemetry ~ m@rcus 學習筆記</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/pamidur/aspect-injector">aspect-injector - GitHub</a></li>
+</ul>
+<h2 id="延伸閱讀"><a href="#延伸閱讀" class="headerlink" title="延伸閱讀"></a>延伸閱讀</h2><ul>
+<li><a target="_blank" rel="noopener" href="https://marcus116.blogspot.com/2023/03/free-opentelemetry.html">[Free] 電子書 : OpenTelemetry 可觀測性的未來 ~ m@rcus 學習筆記</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          
+
+<div class="post-copyright">
+<ul>
+  <li class="post-copyright-author">
+      <strong>作者： </strong>zamhsu
+  </li>
+  <li class="post-copyright-link">
+      <strong>文章連結：</strong>
+      <a href="https://zamhsu.github.io/APM/%E5%9C%A8ASPNETCore%E4%B8%AD%E4%BD%BF%E7%94%A8OpenTelemetry%EF%BC%8C%E7%82%BA%E6%87%89%E7%94%A8%E7%A8%8B%E5%BC%8F%E5%9F%8B%E4%B8%8B%E8%A7%80%E6%B8%AC%E9%BB%9E/" title="在 ASP .NET Core 中使用 OpenTelemetry，為應用程式埋下觀測點">https://zamhsu.github.io/APM/在ASPNETCore中使用OpenTelemetry，為應用程式埋下觀測點/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版權聲明： </strong>本網誌所有文章除特別聲明外，均採用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 許可協議。轉載請註明出處！
+  </li>
+</ul>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/APM/" rel="tag"># APM</a>
+              <a href="/tags/Tracing/" rel="tag"># Tracing</a>
+              <a href="/tags/OpenTelemetry/" rel="tag"># OpenTelemetry</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/APM/%E8%87%AA%E6%9E%B6Grafana-Tempo-2/" rel="prev" title="自架 Grafana Tempo (2) 配置 Agent, Tempo, Grafana">
+                  <i class="fa fa-chevron-left"></i> 自架 Grafana Tempo (2) 配置 Agent, Tempo, Grafana
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 2022 – 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zamhsu</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/pisces/" rel="noopener" target="_blank">NexT.Pisces</a> 強力驅動
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.js" integrity="sha256-yt2kYMy0w8AbtF89WXb2P1rfjcP/HTHLT7097U8Y5b8=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/next-boot.js"></script>
+
+  
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.0/search.js" integrity="sha256-vXZMYLEqsROAXkEw93GGIvaB2ab+QW6w3+1ahD9nXXA=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+  <script src="/js/third-party/fancybox.js"></script>
+
+
+  
+
+
+
+
+
+</body>
+</html>
