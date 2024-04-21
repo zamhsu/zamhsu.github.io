@@ -294,6 +294,31 @@
       </tags>
   </entry>
   <entry>
+    <title>遷移 Docker 資料</title>
+    <url>/Docker/%E9%81%B7%E7%A7%BBDocker%E8%B3%87%E6%96%99/</url>
+    <content><![CDATA[<h2 id="起因"><a href="#起因" class="headerlink" title="起因"></a>起因</h2><p>Windows 裡使用 WSL 2 的 Docker 資料預設在 C 槽，不知不覺間就被塞爆了，我們來將它移到其他槽。</p>
+<p>先輸入 <code>wsl -l -v</code> 指令來看一下會有什麼：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">&gt; wsl -l -v</span><br><span class="line">  NAME                   STATE           VERSION</span><br><span class="line">* docker-desktop         Stopped         2</span><br><span class="line">  docker-desktop-data    Stopped         2</span><br></pre></td></tr></table></figure>
+
+<p>docker-desktop：docker 的系統和資料<br>docker-desktop-data：各 container, image（這個最重要，當然 volume 也是）</p>
+<p>後續我們先關閉 Docker，停止運行那些東東、匯出備份，最後在新的位置還原就可以了。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># 終止運行</span><br><span class="line">&gt; wsl -t docker-desktop</span><br><span class="line">&gt; wsl -t docker-desktop-data</span><br><span class="line"></span><br><span class="line"># 匯出備份</span><br><span class="line">&gt; wsl --export docker-desktop D:\wsl\docker-desktop-20230101.tar</span><br><span class="line">&gt; wsl --export docker-desktop-data D:\wsl\docker-desktop-data-20230101.tar</span><br><span class="line"></span><br><span class="line"># 註銷</span><br><span class="line">&gt; wsl --unregister docker-desktop</span><br><span class="line">&gt; wsl --unregister docker-desktop-data</span><br><span class="line"></span><br><span class="line"># 從備份匯入</span><br><span class="line">&gt; wsl --import docker-desktop D:\wsl\docker-desktop D:\wsl\docker-desktop-20230101.tar --version 2</span><br><span class="line">&gt; wsl --import docker-desktop-data D:\wsl\docker-desktop-data D:\wsl\docker-desktop-data-20230101.tar --version 2</span><br><span class="line"></span><br><span class="line"># 完成</span><br></pre></td></tr></table></figure>
+
+<p>匯出的備份檔可以留著，以防出意外還可以還原回來。這是親身經歷過，之前嘗試安裝 Elastic APM，結果 Docker 當機，重開 Docker 後整個 Docker 就壞了，docker-desktop 內的虛擬硬碟直接消失。幸好 docker-desktop-data 和 volume 還在，保住資料，用這個辦法將現有資料掛回去。</p>
+<h2 id="參考"><a href="#參考" class="headerlink" title="參考"></a>參考</h2><ul>
+<li><a href="https://blog.csdn.net/weifengdq/article/details/121776188">WSL2迁移与硬盘读写测试</a></li>
+<li><a href="https://learn.microsoft.com/zh-tw/windows/wsl/basic-commands">WSL 的基本命令 | Microsoft Learn</a></li>
+</ul>
+]]></content>
+      <categories>
+        <category>Docker</category>
+      </categories>
+      <tags>
+        <tag>Docker</tag>
+        <tag>WSL</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>使用 Docker 安裝 Elasticsearch 和 Kibana</title>
     <url>/Elasticsearch/%E4%BD%BF%E7%94%A8Docker%E5%AE%89%E8%A3%9DElasticsearch%E5%92%8CKibana/</url>
     <content><![CDATA[<p>這次來試玩一下傳說中的 Elasticsearch，主要是想要把網站記錄的 Log 存到這裡面來，再設定一些 UI 來顯示，就不用每次查網站的 Log 都要進資料庫用 SQL 查。</p>
@@ -341,31 +366,6 @@
       <tags>
         <tag>教學</tag>
         <tag>Elasticsearch</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>遷移 Docker 資料</title>
-    <url>/Docker/%E9%81%B7%E7%A7%BBDocker%E8%B3%87%E6%96%99/</url>
-    <content><![CDATA[<h2 id="起因"><a href="#起因" class="headerlink" title="起因"></a>起因</h2><p>Windows 裡使用 WSL 2 的 Docker 資料預設在 C 槽，不知不覺間就被塞爆了，我們來將它移到其他槽。</p>
-<p>先輸入 <code>wsl -l -v</code> 指令來看一下會有什麼：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">&gt; wsl -l -v</span><br><span class="line">  NAME                   STATE           VERSION</span><br><span class="line">* docker-desktop         Stopped         2</span><br><span class="line">  docker-desktop-data    Stopped         2</span><br></pre></td></tr></table></figure>
-
-<p>docker-desktop：docker 的系統和資料<br>docker-desktop-data：各 container, image（這個最重要，當然 volume 也是）</p>
-<p>後續我們先關閉 Docker，停止運行那些東東、匯出備份，最後在新的位置還原就可以了。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># 終止運行</span><br><span class="line">&gt; wsl -t docker-desktop</span><br><span class="line">&gt; wsl -t docker-desktop-data</span><br><span class="line"></span><br><span class="line"># 匯出備份</span><br><span class="line">&gt; wsl --export docker-desktop D:\wsl\docker-desktop-20230101.tar</span><br><span class="line">&gt; wsl --export docker-desktop-data D:\wsl\docker-desktop-data-20230101.tar</span><br><span class="line"></span><br><span class="line"># 註銷</span><br><span class="line">&gt; wsl --unregister docker-desktop</span><br><span class="line">&gt; wsl --unregister docker-desktop-data</span><br><span class="line"></span><br><span class="line"># 從備份匯入</span><br><span class="line">&gt; wsl --import docker-desktop D:\wsl\docker-desktop D:\wsl\docker-desktop-20230101.tar --version 2</span><br><span class="line">&gt; wsl --import docker-desktop-data D:\wsl\docker-desktop-data D:\wsl\docker-desktop-data-20230101.tar --version 2</span><br><span class="line"></span><br><span class="line"># 完成</span><br></pre></td></tr></table></figure>
-
-<p>匯出的備份檔可以留著，以防出意外還可以還原回來。這是親身經歷過，之前嘗試安裝 Elastic APM，結果 Docker 當機，重開 Docker 後整個 Docker 就壞了，docker-desktop 內的虛擬硬碟直接消失。幸好 docker-desktop-data 和 volume 還在，保住資料，用這個辦法將現有資料掛回去。</p>
-<h2 id="參考"><a href="#參考" class="headerlink" title="參考"></a>參考</h2><ul>
-<li><a href="https://blog.csdn.net/weifengdq/article/details/121776188">WSL2迁移与硬盘读写测试</a></li>
-<li><a href="https://learn.microsoft.com/zh-tw/windows/wsl/basic-commands">WSL 的基本命令 | Microsoft Learn</a></li>
-</ul>
-]]></content>
-      <categories>
-        <category>Docker</category>
-      </categories>
-      <tags>
-        <tag>Docker</tag>
-        <tag>WSL</tag>
       </tags>
   </entry>
   <entry>
@@ -620,13 +620,13 @@
       </tags>
   </entry>
   <entry>
-    <title>自架部落格(3) 換個跟別人一樣的NexT主題</title>
+    <title>自架部落格(3) 換個跟別人一樣的 NexT 主題</title>
     <url>/Hexo/%E4%BD%BF%E7%94%A8Hexo%E5%9C%A8GitHub-Pages%E4%B8%8A%E5%BB%BA%E7%AB%8B%E9%83%A8%E8%90%BD%E6%A0%BC-3/</url>
     <content><![CDATA[<p>Hexo 的主題其實也不少，也有很多有個性的主題，各位可以到 Hexo 的 <a href="https://hexo.io/themes/">Themes</a> 或是 Google 找找。這次我採用的是比較多人用的 <a href="https://github.com/next-theme/hexo-theme-next">NexT</a>。主要原因就是看起來比較乾淨、有分類，最重要的是網路上有很多相關的教學（我就懶）。這個主題用的人很多，很容易就會看到一樣主題的，不過寫部落格主要還是文章內容，樣式就看個人吧。</p>
 <h2 id="如何安裝"><a href="#如何安裝" class="headerlink" title="如何安裝"></a>如何安裝</h2><p>NexT有提供2種方式安裝</p>
 <ol>
-<li>Hexo 5.0 或以上，可以使用npm安裝</li>
-<li>git clone他的專案</li>
+<li>Hexo 5.0 或以上，可以使用 npm 安裝</li>
+<li>git clone 他的專案</li>
 </ol>
 <p>我採用 npm 的方式安裝，因為我的是 Hexo 6.2.0，而且後續要升級版本也方便很多。</p>
 <h3 id="npm的安裝方式（推薦）"><a href="#npm的安裝方式（推薦）" class="headerlink" title="npm的安裝方式（推薦）"></a>npm的安裝方式（推薦）</h3><p>到專案位置，輸入以下指令：</p>
@@ -644,6 +644,10 @@
 <figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># Extensions</span></span><br><span class="line"><span class="comment">## Plugins: https://hexo.io/plugins/</span></span><br><span class="line"><span class="comment">## Themes: https://hexo.io/themes/</span></span><br><span class="line"><span class="attr">theme:</span> <span class="string">next</span></span><br></pre></td></tr></table></figure>
 
 <p>啟動看看主題的樣子，順便測試是否安裝成功</p>
+<p>指令：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">hexo server</span><br></pre></td></tr></table></figure>
+
+
 <p><img src="https://i.imgur.com/XP6QR2V.png" alt="圖1：啟動 Hexo server 後的樣子"></p>
 <p><img src="https://i.imgur.com/TVUZMUg.png" alt="圖2：更換成功，顯示 NexT 預設的主題樣式"></p>
 <h2 id="配置檔位置異動"><a href="#配置檔位置異動" class="headerlink" title="配置檔位置異動"></a>配置檔位置異動</h2><p>安裝好主題之後，如果想要修改主題提供的配置要怎麼辦呢？</p>
