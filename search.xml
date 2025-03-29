@@ -181,55 +181,6 @@
       </tags>
   </entry>
   <entry>
-    <title>自架 Grafana Tempo (1) 介紹</title>
-    <url>/APM/%E8%87%AA%E6%9E%B6Grafana_Tempo-1/</url>
-    <content><![CDATA[<p>外行人使用 Grafana Tempo 在本機建置APM服務。</p>
-<h2 id="起因"><a href="#起因" class="headerlink" title="起因"></a>起因</h2><p>其實原因很簡單，就只是想玩玩看如何建置APM服務，看看那精美的圖表，「嘗試」看自己的服務哪邊可以再優化（我這菜鳥能看得出來和成功改善就要偷笑了），另一方面其實是想看有沒有辦法取代 CoreProfiler。因為這工具算是比較簡易、好裝好用，但是只能存在記憶體裡，會為了節省記憶體使用量而減少紀錄留存的筆數，變成看不到以前的紀錄，也沒辦法統計某時段內服務的效能等問題。原本是想用 Elastic APM，後來想到之前裝過 Elasticsearch 時覺得有點麻煩，不想再試了，所以 Google 搜一搜就看到了這個 - Grafana Tempo。</p>
-<p>這裡面的知識量很多，我只能提供目前所知道的粗淺內容，每一項服務&#x2F;工具的水都很深，短時間內無法參透，如果有什麼問題歡迎隨時糾正。</p>
-<h2 id="用途"><a href="#用途" class="headerlink" title="用途"></a>用途</h2><p>用來查詢一個服務的執行時間，以及每個執行步驟的執行時間、呼叫了哪個API，來找出效能瓶頸。</p>
-<h2 id="架構"><a href="#架構" class="headerlink" title="架構"></a>架構</h2><p><img src="https://i.imgur.com/WeRghZ7.png" alt="圖1：架構。資料來源：https://grafana.com/docs/tempo/latest/getting-started/"></p>
-<p>功能分別是：</p>
-<p>遙測 -&gt; pipeline (資料處理) -&gt; 服務後端 -&gt; 視覺化</p>
-<h3 id="OpenTelemetry"><a href="#OpenTelemetry" class="headerlink" title="OpenTelemetry"></a>OpenTelemetry</h3><p>應用程式端的遙測工具，專門用來蒐集應用程式的各項數據，例如 logs, metrics 和 traces，讓服務可以被觀測。你沒聽錯，這個工具提供這三項數據，簡單省事，但是格式需要符合它的規範。蒐集完後會透過OTLP協議發送到目的地，裡面有提供 gRPC 或 HTTP 的方式傳送。</p>
-<p>.Net 有套件支援，還可以自動遙測 WebApi, SqlClient, HttpClient 和 Redis，意思是這些不用自己埋點遙測。埋點時使用 System.Diagnostics 裡面的 Activity，這裡面內容很多，good luck。</p>
-<h3 id="Grafana-Agent"><a href="#Grafana-Agent" class="headerlink" title="Grafana Agent"></a>Grafana Agent</h3><p>類似中轉站，可以緩衝接收到資料、過濾不要記錄的資料等各種資料處理後，再轉送到APM的伺服器。它有支援多個資料來源，例如 Jaeger, Kafka, OpenCensus, OTLP 和 Zipkin。當然也是可以不經過 pipeline 處理，直接送到 Tempo，但是資料量大或服務多的時候還是建議要使用。</p>
-<p>其他選擇：</p>
-<ul>
-<li><a href="https://github.com/open-telemetry/opentelemetry-collector">OpenTelemetry Collector</a></li>
-<li><a href="https://www.jaegertracing.io/docs/latest/deployment/">Jaeger Agent</a></li>
-</ul>
-<p>選擇原因：最初 OpenTelemetry Collector 裝了之後不知道為什麼一直收不到資料，懶得除錯就換了 Grafana Agent。結果發現換了也不行，除錯後發現設定有誤，現在看來用 OpenTelemetry Collector 也是沒問題。</p>
-<h3 id="Grafana-Tempo"><a href="#Grafana-Tempo" class="headerlink" title="Grafana Tempo"></a>Grafana Tempo</h3><p>Grafana 旗下的一款分散式 tracing 後端工具，主要負責搜尋、儲存資料，內建 TempoDB。這裡面的設定比較複雜，如果以嘗試的角度來用，先以範例的設定檔來配置就好。目前只知道它的資料儲存會先在 <code>wal</code> 建立一份，到一定大小或時間後會搬到 <code>wal/data</code> 裡，同時會寫一份到指定路徑中儲存。裡面的資料到一定的時間後會被壓縮，以節省空間。</p>
-<h3 id="Grafana"><a href="#Grafana" class="headerlink" title="Grafana"></a>Grafana</h3><p>視覺化工具，設定資料來源後就可以搜尋資料和建立報表。需要學習怎麼建立報表和搜尋的語法，內容也是很多，簡單用的話可以先不學語法和建報表，用裡面搜尋後的結果報表就足夠了，但有些功能還是 beta 版。內建的報表像是各服務的關聯圖（包含流量、時間）、指定時間範圍內的平均回應時間，當然還有最重要的服務追蹤。</p>
-<h2 id="待學技能"><a href="#待學技能" class="headerlink" title="待學技能"></a>待學技能</h2><p>看了這麼多，應該會知道裡面需要學什麼，簡直像掉進了無底洞一樣，快逃啊…</p>
-<ul>
-<li>OpenTelemetry</li>
-<li>System.Diagnostics 埋點</li>
-<li>Tempo 資料儲存的方式</li>
-<li>Grafana 查詢語法</li>
-<li>Grafana 製作報表</li>
-<li>Agent, Tempo, Grafana 的設定</li>
-</ul>
-<h2 id="懶得看我的文章"><a href="#懶得看我的文章" class="headerlink" title="懶得看我的文章"></a>懶得看我的文章</h2><p>那就直接去看我 GitHub 的 Repository 吧：<a href="https://github.com/zamhsu/GrafanaTempo">zamhsu&#x2F;GrafanaTempo</a></p>
-<h2 id="相關資料"><a href="#相關資料" class="headerlink" title="相關資料"></a>相關資料</h2><ul>
-<li><a href="https://opentelemetry.io/">Opentelemetry</a></li>
-<li><a href="https://grafana.com/docs/agent/latest/">Grafana Agent</a></li>
-<li><a href="https://grafana.com/oss/tempo/">Grafana Tempo</a></li>
-<li><a href="https://grafana.com/grafana/">Grafana</a></li>
-<li><a href="https://learn.microsoft.com/zh-tw/dotnet/api/system.diagnostics">System.Diagnostics</a></li>
-<li><a href="https://github.com/grafana/tempo/tree/main/example">Grafana Tempo Example - Github</a></li>
-</ul>
-]]></content>
-      <categories>
-        <category>APM</category>
-      </categories>
-      <tags>
-        <tag>APM</tag>
-        <tag>Grafana Tempo</tag>
-        <tag>教學</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>自架 Grafana Tempo (2) 配置 Agent, Tempo, Grafana</title>
     <url>/APM/%E8%87%AA%E6%9E%B6Grafana-Tempo-2/</url>
     <content><![CDATA[<p>上一篇已經簡單介紹了這幾個服務的功能，這篇就使用 docker compose 來架設這幾個服務，並且修改一些小地方以符合我們想要的設定。</p>
@@ -294,6 +245,80 @@
       </tags>
   </entry>
   <entry>
+    <title>自架 Grafana Tempo (1) 介紹</title>
+    <url>/APM/%E8%87%AA%E6%9E%B6Grafana_Tempo-1/</url>
+    <content><![CDATA[<p>外行人使用 Grafana Tempo 在本機建置APM服務。</p>
+<h2 id="起因"><a href="#起因" class="headerlink" title="起因"></a>起因</h2><p>其實原因很簡單，就只是想玩玩看如何建置APM服務，看看那精美的圖表，「嘗試」看自己的服務哪邊可以再優化（我這菜鳥能看得出來和成功改善就要偷笑了），另一方面其實是想看有沒有辦法取代 CoreProfiler。因為這工具算是比較簡易、好裝好用，但是只能存在記憶體裡，會為了節省記憶體使用量而減少紀錄留存的筆數，變成看不到以前的紀錄，也沒辦法統計某時段內服務的效能等問題。原本是想用 Elastic APM，後來想到之前裝過 Elasticsearch 時覺得有點麻煩，不想再試了，所以 Google 搜一搜就看到了這個 - Grafana Tempo。</p>
+<p>這裡面的知識量很多，我只能提供目前所知道的粗淺內容，每一項服務&#x2F;工具的水都很深，短時間內無法參透，如果有什麼問題歡迎隨時糾正。</p>
+<h2 id="用途"><a href="#用途" class="headerlink" title="用途"></a>用途</h2><p>用來查詢一個服務的執行時間，以及每個執行步驟的執行時間、呼叫了哪個API，來找出效能瓶頸。</p>
+<h2 id="架構"><a href="#架構" class="headerlink" title="架構"></a>架構</h2><p><img src="https://i.imgur.com/WeRghZ7.png" alt="圖1：架構。資料來源：https://grafana.com/docs/tempo/latest/getting-started/"></p>
+<p>功能分別是：</p>
+<p>遙測 -&gt; pipeline (資料處理) -&gt; 服務後端 -&gt; 視覺化</p>
+<h3 id="OpenTelemetry"><a href="#OpenTelemetry" class="headerlink" title="OpenTelemetry"></a>OpenTelemetry</h3><p>應用程式端的遙測工具，專門用來蒐集應用程式的各項數據，例如 logs, metrics 和 traces，讓服務可以被觀測。你沒聽錯，這個工具提供這三項數據，簡單省事，但是格式需要符合它的規範。蒐集完後會透過OTLP協議發送到目的地，裡面有提供 gRPC 或 HTTP 的方式傳送。</p>
+<p>.Net 有套件支援，還可以自動遙測 WebApi, SqlClient, HttpClient 和 Redis，意思是這些不用自己埋點遙測。埋點時使用 System.Diagnostics 裡面的 Activity，這裡面內容很多，good luck。</p>
+<h3 id="Grafana-Agent"><a href="#Grafana-Agent" class="headerlink" title="Grafana Agent"></a>Grafana Agent</h3><p>類似中轉站，可以緩衝接收到資料、過濾不要記錄的資料等各種資料處理後，再轉送到APM的伺服器。它有支援多個資料來源，例如 Jaeger, Kafka, OpenCensus, OTLP 和 Zipkin。當然也是可以不經過 pipeline 處理，直接送到 Tempo，但是資料量大或服務多的時候還是建議要使用。</p>
+<p>其他選擇：</p>
+<ul>
+<li><a href="https://github.com/open-telemetry/opentelemetry-collector">OpenTelemetry Collector</a></li>
+<li><a href="https://www.jaegertracing.io/docs/latest/deployment/">Jaeger Agent</a></li>
+</ul>
+<p>選擇原因：最初 OpenTelemetry Collector 裝了之後不知道為什麼一直收不到資料，懶得除錯就換了 Grafana Agent。結果發現換了也不行，除錯後發現設定有誤，現在看來用 OpenTelemetry Collector 也是沒問題。</p>
+<h3 id="Grafana-Tempo"><a href="#Grafana-Tempo" class="headerlink" title="Grafana Tempo"></a>Grafana Tempo</h3><p>Grafana 旗下的一款分散式 tracing 後端工具，主要負責搜尋、儲存資料，內建 TempoDB。這裡面的設定比較複雜，如果以嘗試的角度來用，先以範例的設定檔來配置就好。目前只知道它的資料儲存會先在 <code>wal</code> 建立一份，到一定大小或時間後會搬到 <code>wal/data</code> 裡，同時會寫一份到指定路徑中儲存。裡面的資料到一定的時間後會被壓縮，以節省空間。</p>
+<h3 id="Grafana"><a href="#Grafana" class="headerlink" title="Grafana"></a>Grafana</h3><p>視覺化工具，設定資料來源後就可以搜尋資料和建立報表。需要學習怎麼建立報表和搜尋的語法，內容也是很多，簡單用的話可以先不學語法和建報表，用裡面搜尋後的結果報表就足夠了，但有些功能還是 beta 版。內建的報表像是各服務的關聯圖（包含流量、時間）、指定時間範圍內的平均回應時間，當然還有最重要的服務追蹤。</p>
+<h2 id="待學技能"><a href="#待學技能" class="headerlink" title="待學技能"></a>待學技能</h2><p>看了這麼多，應該會知道裡面需要學什麼，簡直像掉進了無底洞一樣，快逃啊…</p>
+<ul>
+<li>OpenTelemetry</li>
+<li>System.Diagnostics 埋點</li>
+<li>Tempo 資料儲存的方式</li>
+<li>Grafana 查詢語法</li>
+<li>Grafana 製作報表</li>
+<li>Agent, Tempo, Grafana 的設定</li>
+</ul>
+<h2 id="懶得看我的文章"><a href="#懶得看我的文章" class="headerlink" title="懶得看我的文章"></a>懶得看我的文章</h2><p>那就直接去看我 GitHub 的 Repository 吧：<a href="https://github.com/zamhsu/GrafanaTempo">zamhsu&#x2F;GrafanaTempo</a></p>
+<h2 id="相關資料"><a href="#相關資料" class="headerlink" title="相關資料"></a>相關資料</h2><ul>
+<li><a href="https://opentelemetry.io/">Opentelemetry</a></li>
+<li><a href="https://grafana.com/docs/agent/latest/">Grafana Agent</a></li>
+<li><a href="https://grafana.com/oss/tempo/">Grafana Tempo</a></li>
+<li><a href="https://grafana.com/grafana/">Grafana</a></li>
+<li><a href="https://learn.microsoft.com/zh-tw/dotnet/api/system.diagnostics">System.Diagnostics</a></li>
+<li><a href="https://github.com/grafana/tempo/tree/main/example">Grafana Tempo Example - Github</a></li>
+</ul>
+]]></content>
+      <categories>
+        <category>APM</category>
+      </categories>
+      <tags>
+        <tag>APM</tag>
+        <tag>Grafana Tempo</tag>
+        <tag>教學</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>遷移 Docker 資料</title>
+    <url>/Docker/%E9%81%B7%E7%A7%BBDocker%E8%B3%87%E6%96%99/</url>
+    <content><![CDATA[<h2 id="起因"><a href="#起因" class="headerlink" title="起因"></a>起因</h2><p>Windows 裡使用 WSL 2 的 Docker 資料預設在 C 槽，不知不覺間就被塞爆了，我們來將它移到其他槽。</p>
+<p>先輸入 <code>wsl -l -v</code> 指令來看一下會有什麼：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">&gt; wsl -l -v</span><br><span class="line">  NAME                   STATE           VERSION</span><br><span class="line">* docker-desktop         Stopped         2</span><br><span class="line">  docker-desktop-data    Stopped         2</span><br></pre></td></tr></table></figure>
+
+<p>docker-desktop：docker 的系統和資料<br>docker-desktop-data：各 container, image（這個最重要，當然 volume 也是）</p>
+<p>後續我們先關閉 Docker，停止運行那些東東、匯出備份，最後在新的位置還原就可以了。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># 終止運行</span><br><span class="line">&gt; wsl -t docker-desktop</span><br><span class="line">&gt; wsl -t docker-desktop-data</span><br><span class="line"></span><br><span class="line"># 匯出備份</span><br><span class="line">&gt; wsl --export docker-desktop D:\wsl\docker-desktop-20230101.tar</span><br><span class="line">&gt; wsl --export docker-desktop-data D:\wsl\docker-desktop-data-20230101.tar</span><br><span class="line"></span><br><span class="line"># 註銷</span><br><span class="line">&gt; wsl --unregister docker-desktop</span><br><span class="line">&gt; wsl --unregister docker-desktop-data</span><br><span class="line"></span><br><span class="line"># 從備份匯入</span><br><span class="line">&gt; wsl --import docker-desktop D:\wsl\docker-desktop D:\wsl\docker-desktop-20230101.tar --version 2</span><br><span class="line">&gt; wsl --import docker-desktop-data D:\wsl\docker-desktop-data D:\wsl\docker-desktop-data-20230101.tar --version 2</span><br><span class="line"></span><br><span class="line"># 完成</span><br></pre></td></tr></table></figure>
+
+<p>匯出的備份檔可以留著，以防出意外還可以還原回來。這是親身經歷過，之前嘗試安裝 Elastic APM，結果 Docker 當機，重開 Docker 後整個 Docker 就壞了，docker-desktop 內的虛擬硬碟直接消失。幸好 docker-desktop-data 和 volume 還在，保住資料，用這個辦法將現有資料掛回去。</p>
+<h2 id="參考"><a href="#參考" class="headerlink" title="參考"></a>參考</h2><ul>
+<li><a href="https://blog.csdn.net/weifengdq/article/details/121776188">WSL2迁移与硬盘读写测试</a></li>
+<li><a href="https://learn.microsoft.com/zh-tw/windows/wsl/basic-commands">WSL 的基本命令 | Microsoft Learn</a></li>
+</ul>
+]]></content>
+      <categories>
+        <category>Docker</category>
+      </categories>
+      <tags>
+        <tag>Docker</tag>
+        <tag>WSL</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>使用 Docker 安裝 Elasticsearch 和 Kibana</title>
     <url>/Elasticsearch/%E4%BD%BF%E7%94%A8Docker%E5%AE%89%E8%A3%9DElasticsearch%E5%92%8CKibana/</url>
     <content><![CDATA[<p>這次來試玩一下傳說中的 Elasticsearch，主要是想要把網站記錄的 Log 存到這裡面來，再設定一些 UI 來顯示，就不用每次查網站的 Log 都要進資料庫用 SQL 查。</p>
@@ -344,28 +369,136 @@
       </tags>
   </entry>
   <entry>
-    <title>遷移 Docker 資料</title>
-    <url>/Docker/%E9%81%B7%E7%A7%BBDocker%E8%B3%87%E6%96%99/</url>
-    <content><![CDATA[<h2 id="起因"><a href="#起因" class="headerlink" title="起因"></a>起因</h2><p>Windows 裡使用 WSL 2 的 Docker 資料預設在 C 槽，不知不覺間就被塞爆了，我們來將它移到其他槽。</p>
-<p>先輸入 <code>wsl -l -v</code> 指令來看一下會有什麼：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">&gt; wsl -l -v</span><br><span class="line">  NAME                   STATE           VERSION</span><br><span class="line">* docker-desktop         Stopped         2</span><br><span class="line">  docker-desktop-data    Stopped         2</span><br></pre></td></tr></table></figure>
-
-<p>docker-desktop：docker 的系統和資料<br>docker-desktop-data：各 container, image（這個最重要，當然 volume 也是）</p>
-<p>後續我們先關閉 Docker，停止運行那些東東、匯出備份，最後在新的位置還原就可以了。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># 終止運行</span><br><span class="line">&gt; wsl -t docker-desktop</span><br><span class="line">&gt; wsl -t docker-desktop-data</span><br><span class="line"></span><br><span class="line"># 匯出備份</span><br><span class="line">&gt; wsl --export docker-desktop D:\wsl\docker-desktop-20230101.tar</span><br><span class="line">&gt; wsl --export docker-desktop-data D:\wsl\docker-desktop-data-20230101.tar</span><br><span class="line"></span><br><span class="line"># 註銷</span><br><span class="line">&gt; wsl --unregister docker-desktop</span><br><span class="line">&gt; wsl --unregister docker-desktop-data</span><br><span class="line"></span><br><span class="line"># 從備份匯入</span><br><span class="line">&gt; wsl --import docker-desktop D:\wsl\docker-desktop D:\wsl\docker-desktop-20230101.tar --version 2</span><br><span class="line">&gt; wsl --import docker-desktop-data D:\wsl\docker-desktop-data D:\wsl\docker-desktop-data-20230101.tar --version 2</span><br><span class="line"></span><br><span class="line"># 完成</span><br></pre></td></tr></table></figure>
-
-<p>匯出的備份檔可以留著，以防出意外還可以還原回來。這是親身經歷過，之前嘗試安裝 Elastic APM，結果 Docker 當機，重開 Docker 後整個 Docker 就壞了，docker-desktop 內的虛擬硬碟直接消失。幸好 docker-desktop-data 和 volume 還在，保住資料，用這個辦法將現有資料掛回去。</p>
+    <title>CRON 表達式</title>
+    <url>/Schedule/cron%E8%A1%A8%E9%81%94%E5%BC%8F/</url>
+    <content><![CDATA[<p>一種排程的時間設定表達式，可以用在 CRON, Hangfire, Coravel。</p>
+<p>最近工作需要用到 Hangfire 來作為工作排程器，而裡面關於定期執行工作（recurring）的時間設定是使用 cron expression。對於只用過 Windows 內建工作排程器的我來說可以說是相當陌生，因此來學學怎麼這種表達式的設定方式。</p>
+<h2 id="說明"><a href="#說明" class="headerlink" title="說明"></a>說明</h2><blockquote>
+<p>工具型軟體 <strong>cron</strong> 是一款類Unix的作業系統下的基於時間的任務管理系統。用戶們可以通過 <strong>cron</strong><br>在固定時間、日期、間隔下，運行定期任務（可以是命令和腳本）。</p>
+</blockquote>
+<p>來源：<a href="https://zh.wikipedia.org/zh-tw/Cron">Cron-維基百科</a></p>
+<p>這個表達式其實內含「每次」這個概念，設定的值都是實際執行的日期和時間。</p>
+<p>表達式： <code>* * * * *</code></p>
+<p>每個之間要有空格</p>
+<table>
+<thead>
+<tr>
+<th>欄位</th>
+<th>分鐘</th>
+<th>小時</th>
+<th>日</th>
+<th>月</th>
+<th>星期</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>範圍</td>
+<td>0-59</td>
+<td>0-23</td>
+<td>1-31</td>
+<td>1-12或JAN-DEC</td>
+<td>0-6或SUN-SAT</td>
+</tr>
+</tbody></table>
+<p>除了直接輸入數字外，還可以搭配一些符號使用</p>
+<ol>
+<li><code>*</code> ：欄位的所有值。例如分鐘欄位輸入<code>*</code>，代表每分鐘（0-59）都執行。</li>
+<li><code>,</code> ：多個指定值。例如小時欄位輸入<code>9,18</code>，代表9點和18點執行。</li>
+<li><code>-</code> ：指定範圍。例如日欄位輸入<code>15-20</code>，代表一個月裡的15日至20日都執行。</li>
+<li><code>/</code> ：指定增量，<code>開始值/每次增加的量</code>。例如分鐘欄位輸入<code>1/10</code>，代表從1開始，每次10分鐘才再次執行。</li>
+</ol>
+<h2 id="練習"><a href="#練習" class="headerlink" title="練習"></a>練習</h2><ol>
+<li>每天08:00：<code>0 8 * * *</code></li>
+<li>每週一至週五22:30：<code>30 22 * * 1-5</code></li>
+<li>每週末5分鐘一次：<code>*/5 * * * 0,6</code></li>
+<li>每個雙數月1日的00:00：<code>0 0 1 */2 *</code></li>
+<li>每月的15日03:00：<code>0 3 15 * *</code></li>
+</ol>
+<p>可以到這裡驗證和練習 <a href="https://crontab.guru/">https://crontab.guru/</a></p>
 <h2 id="參考"><a href="#參考" class="headerlink" title="參考"></a>參考</h2><ul>
-<li><a href="https://blog.csdn.net/weifengdq/article/details/121776188">WSL2迁移与硬盘读写测试</a></li>
-<li><a href="https://learn.microsoft.com/zh-tw/windows/wsl/basic-commands">WSL 的基本命令 | Microsoft Learn</a></li>
+<li><a href="https://zh.wikipedia.org/zh-tw/Cron">Cron-維基百科</a></li>
+<li><a href="https://docs.aws.amazon.com/zh_tw/lambda/latest/dg/services-cloudwatchevents-expressions.html">AWS使用 Rate 或 Cron 排定表達式</a></li>
+<li><a href="https://crontab.guru/">crontab guru</a></li>
 </ul>
 ]]></content>
       <categories>
-        <category>Docker</category>
+        <category>排程</category>
       </categories>
       <tags>
-        <tag>Docker</tag>
-        <tag>WSL</tag>
+        <tag>排程</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>批判性思考</title>
+    <url>/SoftSkill/%E6%89%B9%E5%88%A4%E6%80%A7%E6%80%9D%E8%80%83/</url>
+    <content><![CDATA[<h1 id="批判性思考"><a href="#批判性思考" class="headerlink" title="批判性思考"></a>批判性思考</h1><p>依據 「思辨，從問對問題開始」 一書所簡單整理，並加上一些個人看法。</p>
+<ul>
+<li>英文書名：Asking the Right Questions: A Guide to Critical Thinking</li>
+<li>作者：M. Neil Browne , Stuart M. Keeley</li>
+<li>中文書名會因為改版而更換，用英文書名搜尋比較準確</li>
+<li><del>中文書名有點騙，看起來跟雞湯或空洞勵志的書一樣，英文書名就很明確是寫批判性思考</del></li>
+</ul>
+<h2 id="這是什麼"><a href="#這是什麼" class="headerlink" title="這是什麼"></a>這是什麼</h2><ul>
+<li>用來分析、評估、解釋、推理以及反思那些我們接收到的資訊</li>
+<li>查證說法，找出真正的答案</li>
+</ul>
+<h2 id="為什麼需要"><a href="#為什麼需要" class="headerlink" title="為什麼需要"></a>為什麼需要</h2><ul>
+<li>在資訊爆炸的時代，幫助分析評估、去蕪存菁、歸納分類，建構出屬於自己的解答</li>
+<li>避免被牽著鼻子走，專家說的也不是一定正確</li>
+<li>幫助獨立思考</li>
+<li>持續糾正和調整自己的觀點</li>
+</ul>
+<h2 id="弱義和強義批判思考"><a href="#弱義和強義批判思考" class="headerlink" title="弱義和強義批判思考"></a>弱義和強義批判思考</h2><p>依據國際批判思考權威理查·保羅（Richard Paul）所定義。</p>
+<h3 id="弱義"><a href="#弱義" class="headerlink" title="弱義"></a>弱義</h3><ul>
+<li>定義：運用批判技巧防衛你既有的信念</li>
+<li>無意求真或求善</li>
+<li>目的是為了抗拒和消滅與你不同的意見及推論</li>
+<li>以壓制和戰勝異議者作為批判思考的目標</li>
+<li>缺乏建設性意見</li>
+</ul>
+<h3 id="強義"><a href="#強義" class="headerlink" title="強義"></a>強義</h3><ul>
+<li>定義：運用相同的技巧，去評估所有的論點和信念，尤其是自身的論點和信念。</li>
+<li>需要對所有的申論提出批判性問題，包含自己的申論</li>
+<li>強迫自己以批判性的態度來觀察自身原始的觀點，避免自欺和從眾的行為</li>
+<li>不是要強迫放棄自己的觀點，有時候反而可以強化</li>
+</ul>
+<h2 id="可協助批判性思考的問題"><a href="#可協助批判性思考的問題" class="headerlink" title="可協助批判性思考的問題"></a>可協助批判性思考的問題</h2><ul>
+<li>議題和結論是什麼？</li>
+<li>理由是什麼？</li>
+<li>有無曖昧不明的語言？</li>
+<li>有無價值觀與描述性假設？</li>
+<li>推論過程有無謬誤？</li>
+<li>證據是否可信？</li>
+<li>是不是還有其他原因？</li>
+<li>統計數字是否可信？</li>
+<li>哪些重要資訊被消失？</li>
+<li>有沒有更適合的結論？</li>
+</ul>
+<h2 id="應有行為"><a href="#應有行為" class="headerlink" title="應有行為"></a>應有行為</h2><p>運用批判性思考前應該要有的行為：</p>
+<ul>
+<li>吸收大量的資料，透過這些資料來提供多元觀點和全面性的假設</li>
+<li>以理由和證據作為決策依據</li>
+<li>以開放的心胸了解他人的觀點，但是採取質疑的態度去驗證觀點是否合理可信</li>
+<li>對於任何說法的真實性，提醒對方應該要尋求並尊重多元觀點</li>
+</ul>
+<h2 id="不要走火入魔"><a href="#不要走火入魔" class="headerlink" title="不要走火入魔"></a>不要走火入魔</h2><ul>
+<li>不是所有事情都需要批判</li>
+<li>批判性思考不是抓語意漏洞</li>
+<li>在內心自省批判或利用新聞報導作為練習</li>
+<li>為了批判而批判，小心沒有朋友</li>
+</ul>
+<h2 id="延伸閱讀"><a href="#延伸閱讀" class="headerlink" title="延伸閱讀"></a>延伸閱讀</h2><ul>
+<li>快思慢想（Thinking, Fast and Slow）- Daniel Kahneman</li>
+<li>思考的祕密 - 傅皓政</li>
+<li><a href="https://ocw.aca.ntu.edu.tw/ntu-ocw/ocw/cou/108S205">邏輯（台大開放式課程）- 傅皓政</a></li>
+</ul>
+]]></content>
+      <categories>
+        <category>軟實力</category>
+      </categories>
+      <tags>
+        <tag>軟實力</tag>
+        <tag>思考</tag>
       </tags>
   </entry>
   <entry>
@@ -409,163 +542,6 @@
 <p>到這裡就大功告成，恭喜安裝 Hexo 並啟動成功。</p>
 <h2 id="參考"><a href="#參考" class="headerlink" title="參考"></a>參考</h2><ul>
 <li><a href="https://hexo.io/zh-tw/docs/">Hexo文件</a></li>
-</ul>
-]]></content>
-      <categories>
-        <category>Hexo</category>
-      </categories>
-      <tags>
-        <tag>教學</tag>
-        <tag>Hexo</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>自架部落格(3) 換個跟別人一樣的 NexT 主題</title>
-    <url>/Hexo/%E4%BD%BF%E7%94%A8Hexo%E5%9C%A8GitHub-Pages%E4%B8%8A%E5%BB%BA%E7%AB%8B%E9%83%A8%E8%90%BD%E6%A0%BC-3/</url>
-    <content><![CDATA[<p>Hexo 的主題其實也不少，也有很多有個性的主題，各位可以到 Hexo 的 <a href="https://hexo.io/themes/">Themes</a> 或是 Google 找找。這次我採用的是比較多人用的 <a href="https://github.com/next-theme/hexo-theme-next">NexT</a>。主要原因就是看起來比較乾淨、有分類，最重要的是網路上有很多相關的教學（我就懶）。這個主題用的人很多，很容易就會看到一樣主題的，不過寫部落格主要還是文章內容，樣式就看個人吧。</p>
-<h2 id="如何安裝"><a href="#如何安裝" class="headerlink" title="如何安裝"></a>如何安裝</h2><p>NexT有提供2種方式安裝</p>
-<ol>
-<li>Hexo 5.0 或以上，可以使用 npm 安裝</li>
-<li>git clone 他的專案</li>
-</ol>
-<p>我採用 npm 的方式安裝，因為我的是 Hexo 6.2.0，而且後續要升級版本也方便很多。</p>
-<h3 id="npm的安裝方式（推薦）"><a href="#npm的安裝方式（推薦）" class="headerlink" title="npm的安裝方式（推薦）"></a>npm的安裝方式（推薦）</h3><p>到專案位置，輸入以下指令：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">npm install hexo-theme-next</span><br></pre></td></tr></table></figure>
-
-<p>預設安裝最新版，我當時的最新版是 <code>8.12.1</code></p>
-<h3 id="git-clone-的安裝方式"><a href="#git-clone-的安裝方式" class="headerlink" title="git clone 的安裝方式"></a>git clone 的安裝方式</h3><p>到專案位置，輸入以下指令：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">git clone https://github.com/next-theme/hexo-theme-next themes/next</span><br></pre></td></tr></table></figure>
-
-<p>將 NexT 的原始碼複製到專案目錄底下 <code>themes</code> 資料夾裡的 <code>next</code> 資料夾，沒有 <code>next</code> 資料夾也沒關係，會自己建立。</p>
-<blockquote>
-<p>npm安裝的方式不需要把原始碼放到 <code>themes/next</code> 內</p>
-</blockquote>
-<p>安裝完後，到專案目錄底下的 <code>_config.yml</code> 更換主題設定為 NexT</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># Extensions</span></span><br><span class="line"><span class="comment">## Plugins: https://hexo.io/plugins/</span></span><br><span class="line"><span class="comment">## Themes: https://hexo.io/themes/</span></span><br><span class="line"><span class="attr">theme:</span> <span class="string">next</span></span><br></pre></td></tr></table></figure>
-
-<p>啟動看看主題的樣子，順便測試是否安裝成功</p>
-<p>指令：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">hexo server</span><br></pre></td></tr></table></figure>
-
-
-<p><img src="https://i.imgur.com/XP6QR2V.png" alt="圖1：啟動 Hexo server 後的樣子"></p>
-<p><img src="https://i.imgur.com/TVUZMUg.png" alt="圖2：更換成功，顯示 NexT 預設的主題樣式"></p>
-<h2 id="配置檔位置異動"><a href="#配置檔位置異動" class="headerlink" title="配置檔位置異動"></a>配置檔位置異動</h2><p>安裝好主題之後，如果想要修改主題提供的配置要怎麼辦呢？</p>
-<p>首先我們先看看專案裡實際的檔案結構，會發現 _config 居然會有兩個：<code>_config.yml</code> 和 <code>_config.landscape.yml</code>。看到 <code>landscape</code> 這個字有沒有覺得在換主題的時候有看到？沒錯，就是 Hexo 預設的主題，而 <code>_config.landscape.yml</code> 就是這個主題的設定檔。那麼我們NexT的主題設定檔放到專案目錄底下就可以了。</p>
-<p><img src="https://i.imgur.com/eGdRJjc.png" alt="圖3：兩個 _config"></p>
-<h3 id="npm安裝的做法"><a href="#npm安裝的做法" class="headerlink" title="npm安裝的做法"></a>npm安裝的做法</h3><p>到專案目錄下的這個位置 <code>\node_modules\hexo-theme-next</code> ，找到 <code>_config.yml</code>，複製一份，然後修改名稱為 <code>_config.next.yml</code>，再把它移動到專案目錄下就可以了。之後修改NexT主題相關配置都只要修改專案目錄下的這份 <code>_config.next.yml</code> 即可。</p>
-<h3 id="git-clone安裝的做法"><a href="#git-clone安裝的做法" class="headerlink" title="git clone安裝的做法"></a>git clone安裝的做法</h3><p>到專案目錄下的這個位置 <code>\themes\next</code>，找到 <code>_config.yml</code>，複製一份，然後修改名稱為 <code>_config.next.yml</code>，再把它移動到專案目錄下就可以了。之後修改NexT主題相關配置都只要修改專案目錄下的這份 <code>_config.next.yml</code> 即可。</p>
-<p><img src="https://i.imgur.com/Nh4IHuw.png" alt="圖4：異動後的專案目錄"></p>
-<p>這樣，就把主題換成大家都在用的NexT了。</p>
-<h2 id="參考"><a href="#參考" class="headerlink" title="參考"></a>參考</h2><ul>
-<li><a href="https://github.com/next-theme/hexo-theme-next">NexT 的 GitHub</a></li>
-<li><a href="https://ithelp.ithome.com.tw/articles/10268369">Day 5：Hexo 安裝完成後的設定密技，並且為 Hexo 換上新佈景！</a></li>
-<li><a href="https://ithelp.ithome.com.tw/articles/10281506">Day 29：利用 NPM 來安裝 Next 佈景主題</a></li>
-</ul>
-]]></content>
-      <categories>
-        <category>Hexo</category>
-      </categories>
-      <tags>
-        <tag>教學</tag>
-        <tag>Hexo</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>自架部落格(4) NexT 主題配置介紹</title>
-    <url>/Hexo/%E4%BD%BF%E7%94%A8Hexo%E5%9C%A8GitHub-Pages%E4%B8%8A%E5%BB%BA%E7%AB%8B%E9%83%A8%E8%90%BD%E6%A0%BC-4/</url>
-    <content><![CDATA[<p>這篇主要會介紹 NexT 可修改的配置。由於可修改的東西實在太多，所以就只挑我有修改的地方，如果要看更詳細的設定說明，可以到<a href="https://theme-next.js.org/docs/theme-settings/">官網</a>查看。</p>
-<h2 id="Core-Configuration"><a href="#Core-Configuration" class="headerlink" title="Core Configuration"></a>Core Configuration</h2><p>NexT主題的核心設定，這裡我沒修改過設定。</p>
-<p>如果需要修改網頁元件樣板，可以修改 <code>custom_file_path</code> 這裡的設置。</p>
-<p>需要注意的是 <code>cache</code> 的設定是需要 NexT v6+ 才能夠使用。</p>
-<h2 id="Scheme"><a href="#Scheme" class="headerlink" title="Scheme"></a>Scheme</h2><p>修改 NexT 主題樣式的地方</p>
-<p>有4種 scheme 可以選擇，我選的是 <code>Pisces</code>。</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># Schemes</span></span><br><span class="line"><span class="comment">#scheme: Muse</span></span><br><span class="line"><span class="comment">#scheme: Mist</span></span><br><span class="line"><span class="attr">scheme:</span> <span class="string">Pisces</span></span><br><span class="line"><span class="comment">#scheme: Gemini</span></span><br></pre></td></tr></table></figure>
-
-<p>他們的樣式分別是這樣：</p>
-<p>Muse</p>
-<p>這個是預設的樣式</p>
-<p><img src="https://i.imgur.com/Yk6pj2N.png" alt="圖1：Muse"></p>
-<p>Mist</p>
-<p><img src="https://i.imgur.com/em3SyOR.png" alt="圖2：Mist"></p>
-<p>Pisces</p>
-<p><img src="https://i.imgur.com/VwOHycV.png" alt="圖3：Pisces"></p>
-<p>Gemini</p>
-<p>這個和上面的 Pisces 很像，不過這個多了陰影。</p>
-<p><img src="https://i.imgur.com/xq8LRbY.png" alt="圖4：Gemini"></p>
-<p>另外還有 Dark Mode 可以使用，但是這個需要作業系統和瀏覽器的配合才有作用，而不是一直都啟用 Dark Mode。</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># Dark Mode</span></span><br><span class="line"><span class="attr">darkmode:</span> <span class="literal">true</span></span><br></pre></td></tr></table></figure>
-
-<h2 id="Site-Information"><a href="#Site-Information" class="headerlink" title="Site Information"></a>Site Information</h2><p>修改 icon、網站 header 裡 <code>&lt;meta&gt;</code> 標籤的配置和版權宣告</p>
-<p>這邊我只有修改 <code>creative_commons</code>（版權宣告），讓它在 sidebar 裡顯示出來。主要是創用 CC 的宣告。我是使用 by-nc-sa （姓名標示-非商業-相同方式分享）。除了我用的之外，NexT支援的還有以下幾種，我在下面簡單說明一下，可以依照自己的需求設定。</p>
-<p>by：姓名標示</p>
-<p>by-nc：姓名標示-非商業</p>
-<p>by-nc-nd：姓名標示-非商業-禁止修改</p>
-<p>by-nc-sa：姓名標示-非商業-相同方式分享</p>
-<p>by-nd：姓名標示-禁止修改</p>
-<p>by-sa：姓名標示-相同方式分享</p>
-<p>cc-zero：拋棄著作權</p>
-<p><a href="https://creativecommons.org/licenses/">Creative Commons 的說明</a></p>
-<p><a href="https://creativecommons.org/share-your-work/public-domain/cc0">CC0 的說明</a></p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># Creative Commons 4.0 International License.</span></span><br><span class="line"><span class="comment"># See: https://creativecommons.org/about/cclicenses/</span></span><br><span class="line"><span class="attr">creative_commons:</span></span><br><span class="line">  <span class="comment"># Available values: by | by-nc | by-nc-nd | by-nc-sa | by-nd | by-sa | cc-zero</span></span><br><span class="line">  <span class="attr">license:</span> <span class="string">by-nc-sa</span></span><br><span class="line">  <span class="comment"># Available values: big | small</span></span><br><span class="line">  <span class="attr">size:</span> <span class="string">big</span></span><br><span class="line">  <span class="attr">sidebar:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">post:</span> <span class="literal">true</span></span><br><span class="line">  <span class="comment"># You can set a language value if you prefer a translated version of CC license, e.g. deed.zh</span></span><br><span class="line">  <span class="comment"># CC licenses are available in 39 languages, you can find the specific and correct abbreviation you need on https://creativecommons.org</span></span><br><span class="line">  <span class="attr">language:</span></span><br></pre></td></tr></table></figure>
-
-<h2 id="Menu"><a href="#Menu" class="headerlink" title="Menu"></a>Menu</h2><p>設定 menu 要顯示什麼欄位和 icon 的樣式</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># Usage: `Key: /link/ || icon`</span></span><br><span class="line"><span class="comment"># Key is the name of menu item. If the translation for this item is available, the translated text will be loaded, otherwise the Key name will be used. Key is case-sensitive.</span></span><br><span class="line"><span class="comment"># Value before `||` delimiter is the target link, value after `||` delimiter is the name of Font Awesome icon.</span></span><br><span class="line"><span class="comment"># External url should start with http:// or https://</span></span><br><span class="line"><span class="attr">menu:</span></span><br><span class="line">  <span class="attr">home:</span> <span class="string">/</span> <span class="string">||</span> <span class="string">fa</span> <span class="string">fa-home</span></span><br><span class="line">  <span class="comment">#about: /about/ || fa fa-user</span></span><br><span class="line">  <span class="attr">tags:</span> <span class="string">/tags/</span> <span class="string">||</span> <span class="string">fa</span> <span class="string">fa-tags</span></span><br><span class="line">  <span class="attr">categories:</span> <span class="string">/categories/</span> <span class="string">||</span> <span class="string">fa</span> <span class="string">fa-th</span></span><br><span class="line">  <span class="attr">archives:</span> <span class="string">/archives/</span> <span class="string">||</span> <span class="string">fa</span> <span class="string">fa-archive</span></span><br><span class="line">  <span class="comment">#schedule: /schedule/ || fa fa-calendar</span></span><br><span class="line">  <span class="comment">#sitemap: /sitemap.xml || fa fa-sitemap</span></span><br><span class="line">  <span class="comment">#commonweal: /404/ || fa fa-heartbeat</span></span><br></pre></td></tr></table></figure>
-
-<p>效果：</p>
-<p><img src="https://i.imgur.com/r9RAVkh.png" alt="圖5：Menu 的效果"></p>
-<p>搜尋要在下面的 Search Services 裡設定，這邊不會有。另外這裡需要注意除了 <code>home</code> 和 <code>archives</code> 外，其他欄位都需要自行添加頁面。這裡以 <code>tags</code> 和 <code>categories</code> 為例，需要在專案目錄下的 source 資料夾內建立相對應的資料夾，裡面再放一個 Markdown 檔案，說明 title 和 type。title 可自行輸入，中英文皆可，但 type 就必須和 key 值一樣，例如 tags 欄位就輸入 tags，categories 欄位就輸入 categories。</p>
-<p>資料夾結構：</p>
-<p><img src="https://i.imgur.com/YuLUwMG.png" alt="圖6：資料夾結構"></p>
-<p>tags&#x2F;index.md 的內容：</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">title:</span> <span class="string">標籤</span></span><br><span class="line"><span class="attr">date:</span> <span class="number">2022-06-25 22:29:06</span></span><br><span class="line"><span class="attr">type:</span> <span class="string">tags</span></span><br><span class="line"><span class="meta">---</span></span><br></pre></td></tr></table></figure>
-
-<p>categories&#x2F;index.md 的內容：</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">title:</span> <span class="string">分類</span></span><br><span class="line"><span class="attr">date:</span> <span class="number">2022-06-25 22:29:25</span></span><br><span class="line"><span class="attr">type:</span> <span class="string">categories</span></span><br><span class="line"><span class="meta">---</span></span><br></pre></td></tr></table></figure>
-
-<p>你沒看錯，只要這幾行就可以了，會自動幫你統計和顯示列表，不用自己輸入。</p>
-<p>詳細可看<a href="https://theme-next.js.org/docs/theme-settings/custom-pages.html">官方文件的Custom Pages篇章說明</a></p>
-<h2 id="Sidebar"><a href="#Sidebar" class="headerlink" title="Sidebar"></a>Sidebar</h2><p>設定 sidebar 的樣式</p>
-<p>這裡我主要調整顯示 social 的設定，顯示我的 GitHub 連結和改成只顯示 icon</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># Social Links</span></span><br><span class="line"><span class="comment"># Usage: `Key: permalink || icon`</span></span><br><span class="line"><span class="comment"># Key is the link label showing to end users.</span></span><br><span class="line"><span class="comment"># Value before `||` delimiter is the target permalink, value after `||` delimiter is the name of Font Awesome icon.</span></span><br><span class="line"><span class="attr">social:</span></span><br><span class="line">  <span class="attr">GitHub:</span> <span class="string">https://github.com/yourname</span> <span class="string">||</span> <span class="string">fab</span> <span class="string">fa-github</span></span><br><span class="line">  <span class="comment">#E-Mail: mailto:yourname@gmail.com || fa fa-envelope</span></span><br><span class="line">  <span class="comment">#Weibo: https://weibo.com/yourname || fab fa-weibo</span></span><br><span class="line">  <span class="comment">#Google: https://plus.google.com/yourname || fab fa-google</span></span><br><span class="line">  <span class="comment">#Twitter: https://twitter.com/yourname || fab fa-twitter</span></span><br><span class="line">  <span class="comment">#FB Page: https://www.facebook.com/yourname || fab fa-facebook</span></span><br><span class="line">  <span class="comment">#StackOverflow: https://stackoverflow.com/yourname || fab fa-stack-overflow</span></span><br><span class="line">  <span class="comment">#YouTube: https://youtube.com/yourname || fab fa-youtube</span></span><br><span class="line">  <span class="comment">#Instagram: https://instagram.com/yourname || fab fa-instagram</span></span><br><span class="line">  <span class="comment">#Skype: skype:yourname?call|chat || fab fa-skype</span></span><br><span class="line"></span><br><span class="line"><span class="attr">social_icons:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">icons_only:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">transition:</span> <span class="literal">false</span></span><br></pre></td></tr></table></figure>
-
-<p>Sidebar 這裡的效果在首頁和文章裡會不一樣。首頁的時候只會有<code>本站概要</code>，在文章裡的時候會多了個<code>文章目錄</code>標籤顯示文章的大綱（預設顯示這個），而另一個標籤則是<code>本站概要</code>。</p>
-<h2 id="Footer"><a href="#Footer" class="headerlink" title="Footer"></a>Footer</h2><p>設定 footer 的樣式</p>
-<p>這裡我只設定了愛心有動畫效果，其他都是預設值。另外，<code>copyright</code> 這個欄位，如果沒有填的話會去 <code>_config.yml</code> 裡的 <code>author</code> 欄位抓。而 <code>beian</code>（備案）欄位，是給海的另一邊使用者設定的。</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">footer:</span></span><br><span class="line">  <span class="comment"># Icon between year and copyright info.</span></span><br><span class="line">  <span class="attr">icon:</span></span><br><span class="line">    <span class="comment"># Icon name in Font Awesome. See: https://fontawesome.com/icons</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">fa</span> <span class="string">fa-heart</span></span><br><span class="line">    <span class="comment"># If you want to animate the icon, set it to true.</span></span><br><span class="line">    <span class="attr">animated:</span> <span class="literal">true</span></span><br><span class="line">    <span class="comment"># Change the color of icon, using Hex Code.</span></span><br><span class="line">    <span class="attr">color:</span> <span class="string">&quot;#ff0000&quot;</span></span><br></pre></td></tr></table></figure>
-
-<h2 id="Misc"><a href="#Misc" class="headerlink" title="Misc"></a>Misc</h2><p>雜項</p>
-<p>這裡我改了 <code>codeblock</code> 和 <code>reading_progress</code>。</p>
-<p><code>codeblock</code> 這個可以在 hexo 的 <code>_config.yml</code> 選擇 highlight 的引擎是 highlight 還是 prism，然後到 <code>_config.next.yml</code> 中分別設定一般和黑暗模式時的樣式。另外，NexT 也有提供<a href="https://theme-next.js.org/highlight/">網站</a>來修改設定和預覽結果。</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">codeblock:</span></span><br><span class="line">  <span class="comment"># Code Highlight theme</span></span><br><span class="line">  <span class="comment"># All available themes: https://theme-next.js.org/highlight/</span></span><br><span class="line">  <span class="attr">theme:</span></span><br><span class="line">    <span class="attr">light:</span> <span class="string">default</span></span><br><span class="line">    <span class="attr">dark:</span> <span class="string">vs2015</span></span><br><span class="line">  <span class="attr">prism:</span></span><br><span class="line">    <span class="attr">light:</span> <span class="string">prism</span></span><br><span class="line">    <span class="attr">dark:</span> <span class="string">prism-dark</span></span><br><span class="line">  <span class="comment"># Add copy button on codeblock</span></span><br><span class="line">  <span class="attr">copy_button:</span></span><br><span class="line">    <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">    <span class="comment"># Available values: default | flat | mac</span></span><br><span class="line">    <span class="attr">style:</span></span><br></pre></td></tr></table></figure>
-
-<p><code>reading_progress</code> 的話就是設定文章閱讀的進度條，設定是否啟用、顯示位置和顏色等。</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># Reading progress bar</span></span><br><span class="line"><span class="attr">reading_progress:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">  <span class="comment"># Available values: left | right</span></span><br><span class="line">  <span class="attr">start_at:</span> <span class="string">left</span></span><br><span class="line">  <span class="comment"># Available values: top | bottom</span></span><br><span class="line">  <span class="attr">position:</span> <span class="string">top</span></span><br><span class="line">  <span class="attr">reversed:</span> <span class="literal">false</span></span><br><span class="line">  <span class="attr">color:</span> <span class="string">&quot;#37c6c0&quot;</span></span><br><span class="line">  <span class="attr">height:</span> <span class="string">3px</span></span><br></pre></td></tr></table></figure>
-
-<h2 id="Third-Party-Plugins-amp-Services"><a href="#Third-Party-Plugins-amp-Services" class="headerlink" title="Third Party Plugins &amp; Services"></a>Third Party Plugins &amp; Services</h2><p>第三方套件</p>
-<p>這裡面的東西就很多了，用的套件其實都很常見，依照需求設定吧。這裡我啟用了 fancybox。</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># FancyBox is a tool that offers a nice and elegant way to add zooming functionality for images.</span></span><br><span class="line"><span class="comment"># For more information: https://fancyapps.com/fancybox/</span></span><br><span class="line"><span class="attr">fancybox:</span> <span class="literal">true</span></span><br></pre></td></tr></table></figure>
-
-<h2 id="Statistics-and-Analytics"><a href="#Statistics-and-Analytics" class="headerlink" title="Statistics and Analytics"></a>Statistics and Analytics</h2><p>設定網站流量統計的地方，例如 Google Analytics、百度統計、Cloudflare Web Analytics 等。這些我不太熟悉，只有設定GA而已，就不再說明。</p>
-<h2 id="Search-Services"><a href="#Search-Services" class="headerlink" title="Search Services"></a>Search Services</h2><p>設定站內搜尋的工具</p>
-<p>可以使用 Algolia 或是本地端搜尋。經費有限啊，我還是用local search 就好。</p>
-<p>不論用 Algolia 還是 local search，都是要額外安裝套件的。詳細設定看<a href="https://theme-next.js.org/docs/third-party-services/search-services">這裡</a>。</p>
-<p>這裡以 local search 為例</p>
-<p>輸入指令安裝</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="string">npm</span> <span class="string">install</span> <span class="string">hexo-generator-searchdb</span></span><br></pre></td></tr></table></figure>
-
-<p><code>_config.next.yml</code>的設定</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># Local Search</span></span><br><span class="line"><span class="comment"># Dependencies: https://github.com/next-theme/hexo-generator-searchdb</span></span><br><span class="line"><span class="attr">local_search:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line"><span class="string">...</span></span><br><span class="line"><span class="string">...</span></span><br><span class="line"><span class="string">...</span></span><br></pre></td></tr></table></figure>
-
-<h2 id="Animation"><a href="#Animation" class="headerlink" title="Animation"></a>Animation</h2><p>動畫設定</p>
-<p>說實話，一直顯示慢慢載入動畫讓我這個沒耐心的人感到非常困擾，看到可以設定就果斷關掉。</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># Use Animate.css to animate everything.</span></span><br><span class="line"><span class="comment"># For more information: https://animate.style</span></span><br><span class="line"><span class="attr">motion:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">false</span></span><br><span class="line"><span class="string">...</span></span><br><span class="line"><span class="string">...</span></span><br><span class="line"><span class="string">...</span></span><br></pre></td></tr></table></figure>
-
-<p>配置這東西沒什麼好說的，就是依照需求看文件調整一下吧。多嘗試，多踩雷，你就會了。</p>
-<h2 id="參考"><a href="#參考" class="headerlink" title="參考"></a>參考</h2><ul>
-<li><a href="https://theme-next.js.org/docs/theme-settings/">NexT Theme Settings</a></li>
-<li><a href="https://ithelp.ithome.com.tw/articles/10269050">Day 6：設定你的 Hexo 佈景主題：Next（上）</a></li>
-<li><a href="https://ithelp.ithome.com.tw/articles/10269747">Day 7：設定你的 Hexo 佈景主題：Next（下）</a></li>
 </ul>
 ]]></content>
       <categories>
@@ -777,6 +753,163 @@
       </tags>
   </entry>
   <entry>
+    <title>自架部落格(3) 換個跟別人一樣的 NexT 主題</title>
+    <url>/Hexo/%E4%BD%BF%E7%94%A8Hexo%E5%9C%A8GitHub-Pages%E4%B8%8A%E5%BB%BA%E7%AB%8B%E9%83%A8%E8%90%BD%E6%A0%BC-3/</url>
+    <content><![CDATA[<p>Hexo 的主題其實也不少，也有很多有個性的主題，各位可以到 Hexo 的 <a href="https://hexo.io/themes/">Themes</a> 或是 Google 找找。這次我採用的是比較多人用的 <a href="https://github.com/next-theme/hexo-theme-next">NexT</a>。主要原因就是看起來比較乾淨、有分類，最重要的是網路上有很多相關的教學（我就懶）。這個主題用的人很多，很容易就會看到一樣主題的，不過寫部落格主要還是文章內容，樣式就看個人吧。</p>
+<h2 id="如何安裝"><a href="#如何安裝" class="headerlink" title="如何安裝"></a>如何安裝</h2><p>NexT有提供2種方式安裝</p>
+<ol>
+<li>Hexo 5.0 或以上，可以使用 npm 安裝</li>
+<li>git clone 他的專案</li>
+</ol>
+<p>我採用 npm 的方式安裝，因為我的是 Hexo 6.2.0，而且後續要升級版本也方便很多。</p>
+<h3 id="npm的安裝方式（推薦）"><a href="#npm的安裝方式（推薦）" class="headerlink" title="npm的安裝方式（推薦）"></a>npm的安裝方式（推薦）</h3><p>到專案位置，輸入以下指令：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">npm install hexo-theme-next</span><br></pre></td></tr></table></figure>
+
+<p>預設安裝最新版，我當時的最新版是 <code>8.12.1</code></p>
+<h3 id="git-clone-的安裝方式"><a href="#git-clone-的安裝方式" class="headerlink" title="git clone 的安裝方式"></a>git clone 的安裝方式</h3><p>到專案位置，輸入以下指令：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">git clone https://github.com/next-theme/hexo-theme-next themes/next</span><br></pre></td></tr></table></figure>
+
+<p>將 NexT 的原始碼複製到專案目錄底下 <code>themes</code> 資料夾裡的 <code>next</code> 資料夾，沒有 <code>next</code> 資料夾也沒關係，會自己建立。</p>
+<blockquote>
+<p>npm安裝的方式不需要把原始碼放到 <code>themes/next</code> 內</p>
+</blockquote>
+<p>安裝完後，到專案目錄底下的 <code>_config.yml</code> 更換主題設定為 NexT</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># Extensions</span></span><br><span class="line"><span class="comment">## Plugins: https://hexo.io/plugins/</span></span><br><span class="line"><span class="comment">## Themes: https://hexo.io/themes/</span></span><br><span class="line"><span class="attr">theme:</span> <span class="string">next</span></span><br></pre></td></tr></table></figure>
+
+<p>啟動看看主題的樣子，順便測試是否安裝成功</p>
+<p>指令：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">hexo server</span><br></pre></td></tr></table></figure>
+
+
+<p><img src="https://i.imgur.com/XP6QR2V.png" alt="圖1：啟動 Hexo server 後的樣子"></p>
+<p><img src="https://i.imgur.com/TVUZMUg.png" alt="圖2：更換成功，顯示 NexT 預設的主題樣式"></p>
+<h2 id="配置檔位置異動"><a href="#配置檔位置異動" class="headerlink" title="配置檔位置異動"></a>配置檔位置異動</h2><p>安裝好主題之後，如果想要修改主題提供的配置要怎麼辦呢？</p>
+<p>首先我們先看看專案裡實際的檔案結構，會發現 _config 居然會有兩個：<code>_config.yml</code> 和 <code>_config.landscape.yml</code>。看到 <code>landscape</code> 這個字有沒有覺得在換主題的時候有看到？沒錯，就是 Hexo 預設的主題，而 <code>_config.landscape.yml</code> 就是這個主題的設定檔。那麼我們NexT的主題設定檔放到專案目錄底下就可以了。</p>
+<p><img src="https://i.imgur.com/eGdRJjc.png" alt="圖3：兩個 _config"></p>
+<h3 id="npm安裝的做法"><a href="#npm安裝的做法" class="headerlink" title="npm安裝的做法"></a>npm安裝的做法</h3><p>到專案目錄下的這個位置 <code>\node_modules\hexo-theme-next</code> ，找到 <code>_config.yml</code>，複製一份，然後修改名稱為 <code>_config.next.yml</code>，再把它移動到專案目錄下就可以了。之後修改NexT主題相關配置都只要修改專案目錄下的這份 <code>_config.next.yml</code> 即可。</p>
+<h3 id="git-clone安裝的做法"><a href="#git-clone安裝的做法" class="headerlink" title="git clone安裝的做法"></a>git clone安裝的做法</h3><p>到專案目錄下的這個位置 <code>\themes\next</code>，找到 <code>_config.yml</code>，複製一份，然後修改名稱為 <code>_config.next.yml</code>，再把它移動到專案目錄下就可以了。之後修改NexT主題相關配置都只要修改專案目錄下的這份 <code>_config.next.yml</code> 即可。</p>
+<p><img src="https://i.imgur.com/Nh4IHuw.png" alt="圖4：異動後的專案目錄"></p>
+<p>這樣，就把主題換成大家都在用的NexT了。</p>
+<h2 id="參考"><a href="#參考" class="headerlink" title="參考"></a>參考</h2><ul>
+<li><a href="https://github.com/next-theme/hexo-theme-next">NexT 的 GitHub</a></li>
+<li><a href="https://ithelp.ithome.com.tw/articles/10268369">Day 5：Hexo 安裝完成後的設定密技，並且為 Hexo 換上新佈景！</a></li>
+<li><a href="https://ithelp.ithome.com.tw/articles/10281506">Day 29：利用 NPM 來安裝 Next 佈景主題</a></li>
+</ul>
+]]></content>
+      <categories>
+        <category>Hexo</category>
+      </categories>
+      <tags>
+        <tag>教學</tag>
+        <tag>Hexo</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>自架部落格(4) NexT 主題配置介紹</title>
+    <url>/Hexo/%E4%BD%BF%E7%94%A8Hexo%E5%9C%A8GitHub-Pages%E4%B8%8A%E5%BB%BA%E7%AB%8B%E9%83%A8%E8%90%BD%E6%A0%BC-4/</url>
+    <content><![CDATA[<p>這篇主要會介紹 NexT 可修改的配置。由於可修改的東西實在太多，所以就只挑我有修改的地方，如果要看更詳細的設定說明，可以到<a href="https://theme-next.js.org/docs/theme-settings/">官網</a>查看。</p>
+<h2 id="Core-Configuration"><a href="#Core-Configuration" class="headerlink" title="Core Configuration"></a>Core Configuration</h2><p>NexT主題的核心設定，這裡我沒修改過設定。</p>
+<p>如果需要修改網頁元件樣板，可以修改 <code>custom_file_path</code> 這裡的設置。</p>
+<p>需要注意的是 <code>cache</code> 的設定是需要 NexT v6+ 才能夠使用。</p>
+<h2 id="Scheme"><a href="#Scheme" class="headerlink" title="Scheme"></a>Scheme</h2><p>修改 NexT 主題樣式的地方</p>
+<p>有4種 scheme 可以選擇，我選的是 <code>Pisces</code>。</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># Schemes</span></span><br><span class="line"><span class="comment">#scheme: Muse</span></span><br><span class="line"><span class="comment">#scheme: Mist</span></span><br><span class="line"><span class="attr">scheme:</span> <span class="string">Pisces</span></span><br><span class="line"><span class="comment">#scheme: Gemini</span></span><br></pre></td></tr></table></figure>
+
+<p>他們的樣式分別是這樣：</p>
+<p>Muse</p>
+<p>這個是預設的樣式</p>
+<p><img src="https://i.imgur.com/Yk6pj2N.png" alt="圖1：Muse"></p>
+<p>Mist</p>
+<p><img src="https://i.imgur.com/em3SyOR.png" alt="圖2：Mist"></p>
+<p>Pisces</p>
+<p><img src="https://i.imgur.com/VwOHycV.png" alt="圖3：Pisces"></p>
+<p>Gemini</p>
+<p>這個和上面的 Pisces 很像，不過這個多了陰影。</p>
+<p><img src="https://i.imgur.com/xq8LRbY.png" alt="圖4：Gemini"></p>
+<p>另外還有 Dark Mode 可以使用，但是這個需要作業系統和瀏覽器的配合才有作用，而不是一直都啟用 Dark Mode。</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># Dark Mode</span></span><br><span class="line"><span class="attr">darkmode:</span> <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="Site-Information"><a href="#Site-Information" class="headerlink" title="Site Information"></a>Site Information</h2><p>修改 icon、網站 header 裡 <code>&lt;meta&gt;</code> 標籤的配置和版權宣告</p>
+<p>這邊我只有修改 <code>creative_commons</code>（版權宣告），讓它在 sidebar 裡顯示出來。主要是創用 CC 的宣告。我是使用 by-nc-sa （姓名標示-非商業-相同方式分享）。除了我用的之外，NexT支援的還有以下幾種，我在下面簡單說明一下，可以依照自己的需求設定。</p>
+<p>by：姓名標示</p>
+<p>by-nc：姓名標示-非商業</p>
+<p>by-nc-nd：姓名標示-非商業-禁止修改</p>
+<p>by-nc-sa：姓名標示-非商業-相同方式分享</p>
+<p>by-nd：姓名標示-禁止修改</p>
+<p>by-sa：姓名標示-相同方式分享</p>
+<p>cc-zero：拋棄著作權</p>
+<p><a href="https://creativecommons.org/licenses/">Creative Commons 的說明</a></p>
+<p><a href="https://creativecommons.org/share-your-work/public-domain/cc0">CC0 的說明</a></p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># Creative Commons 4.0 International License.</span></span><br><span class="line"><span class="comment"># See: https://creativecommons.org/about/cclicenses/</span></span><br><span class="line"><span class="attr">creative_commons:</span></span><br><span class="line">  <span class="comment"># Available values: by | by-nc | by-nc-nd | by-nc-sa | by-nd | by-sa | cc-zero</span></span><br><span class="line">  <span class="attr">license:</span> <span class="string">by-nc-sa</span></span><br><span class="line">  <span class="comment"># Available values: big | small</span></span><br><span class="line">  <span class="attr">size:</span> <span class="string">big</span></span><br><span class="line">  <span class="attr">sidebar:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">post:</span> <span class="literal">true</span></span><br><span class="line">  <span class="comment"># You can set a language value if you prefer a translated version of CC license, e.g. deed.zh</span></span><br><span class="line">  <span class="comment"># CC licenses are available in 39 languages, you can find the specific and correct abbreviation you need on https://creativecommons.org</span></span><br><span class="line">  <span class="attr">language:</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="Menu"><a href="#Menu" class="headerlink" title="Menu"></a>Menu</h2><p>設定 menu 要顯示什麼欄位和 icon 的樣式</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># Usage: `Key: /link/ || icon`</span></span><br><span class="line"><span class="comment"># Key is the name of menu item. If the translation for this item is available, the translated text will be loaded, otherwise the Key name will be used. Key is case-sensitive.</span></span><br><span class="line"><span class="comment"># Value before `||` delimiter is the target link, value after `||` delimiter is the name of Font Awesome icon.</span></span><br><span class="line"><span class="comment"># External url should start with http:// or https://</span></span><br><span class="line"><span class="attr">menu:</span></span><br><span class="line">  <span class="attr">home:</span> <span class="string">/</span> <span class="string">||</span> <span class="string">fa</span> <span class="string">fa-home</span></span><br><span class="line">  <span class="comment">#about: /about/ || fa fa-user</span></span><br><span class="line">  <span class="attr">tags:</span> <span class="string">/tags/</span> <span class="string">||</span> <span class="string">fa</span> <span class="string">fa-tags</span></span><br><span class="line">  <span class="attr">categories:</span> <span class="string">/categories/</span> <span class="string">||</span> <span class="string">fa</span> <span class="string">fa-th</span></span><br><span class="line">  <span class="attr">archives:</span> <span class="string">/archives/</span> <span class="string">||</span> <span class="string">fa</span> <span class="string">fa-archive</span></span><br><span class="line">  <span class="comment">#schedule: /schedule/ || fa fa-calendar</span></span><br><span class="line">  <span class="comment">#sitemap: /sitemap.xml || fa fa-sitemap</span></span><br><span class="line">  <span class="comment">#commonweal: /404/ || fa fa-heartbeat</span></span><br></pre></td></tr></table></figure>
+
+<p>效果：</p>
+<p><img src="https://i.imgur.com/r9RAVkh.png" alt="圖5：Menu 的效果"></p>
+<p>搜尋要在下面的 Search Services 裡設定，這邊不會有。另外這裡需要注意除了 <code>home</code> 和 <code>archives</code> 外，其他欄位都需要自行添加頁面。這裡以 <code>tags</code> 和 <code>categories</code> 為例，需要在專案目錄下的 source 資料夾內建立相對應的資料夾，裡面再放一個 Markdown 檔案，說明 title 和 type。title 可自行輸入，中英文皆可，但 type 就必須和 key 值一樣，例如 tags 欄位就輸入 tags，categories 欄位就輸入 categories。</p>
+<p>資料夾結構：</p>
+<p><img src="https://i.imgur.com/YuLUwMG.png" alt="圖6：資料夾結構"></p>
+<p>tags&#x2F;index.md 的內容：</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">title:</span> <span class="string">標籤</span></span><br><span class="line"><span class="attr">date:</span> <span class="number">2022-06-25 22:29:06</span></span><br><span class="line"><span class="attr">type:</span> <span class="string">tags</span></span><br><span class="line"><span class="meta">---</span></span><br></pre></td></tr></table></figure>
+
+<p>categories&#x2F;index.md 的內容：</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">title:</span> <span class="string">分類</span></span><br><span class="line"><span class="attr">date:</span> <span class="number">2022-06-25 22:29:25</span></span><br><span class="line"><span class="attr">type:</span> <span class="string">categories</span></span><br><span class="line"><span class="meta">---</span></span><br></pre></td></tr></table></figure>
+
+<p>你沒看錯，只要這幾行就可以了，會自動幫你統計和顯示列表，不用自己輸入。</p>
+<p>詳細可看<a href="https://theme-next.js.org/docs/theme-settings/custom-pages.html">官方文件的Custom Pages篇章說明</a></p>
+<h2 id="Sidebar"><a href="#Sidebar" class="headerlink" title="Sidebar"></a>Sidebar</h2><p>設定 sidebar 的樣式</p>
+<p>這裡我主要調整顯示 social 的設定，顯示我的 GitHub 連結和改成只顯示 icon</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># Social Links</span></span><br><span class="line"><span class="comment"># Usage: `Key: permalink || icon`</span></span><br><span class="line"><span class="comment"># Key is the link label showing to end users.</span></span><br><span class="line"><span class="comment"># Value before `||` delimiter is the target permalink, value after `||` delimiter is the name of Font Awesome icon.</span></span><br><span class="line"><span class="attr">social:</span></span><br><span class="line">  <span class="attr">GitHub:</span> <span class="string">https://github.com/yourname</span> <span class="string">||</span> <span class="string">fab</span> <span class="string">fa-github</span></span><br><span class="line">  <span class="comment">#E-Mail: mailto:yourname@gmail.com || fa fa-envelope</span></span><br><span class="line">  <span class="comment">#Weibo: https://weibo.com/yourname || fab fa-weibo</span></span><br><span class="line">  <span class="comment">#Google: https://plus.google.com/yourname || fab fa-google</span></span><br><span class="line">  <span class="comment">#Twitter: https://twitter.com/yourname || fab fa-twitter</span></span><br><span class="line">  <span class="comment">#FB Page: https://www.facebook.com/yourname || fab fa-facebook</span></span><br><span class="line">  <span class="comment">#StackOverflow: https://stackoverflow.com/yourname || fab fa-stack-overflow</span></span><br><span class="line">  <span class="comment">#YouTube: https://youtube.com/yourname || fab fa-youtube</span></span><br><span class="line">  <span class="comment">#Instagram: https://instagram.com/yourname || fab fa-instagram</span></span><br><span class="line">  <span class="comment">#Skype: skype:yourname?call|chat || fab fa-skype</span></span><br><span class="line"></span><br><span class="line"><span class="attr">social_icons:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">icons_only:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">transition:</span> <span class="literal">false</span></span><br></pre></td></tr></table></figure>
+
+<p>Sidebar 這裡的效果在首頁和文章裡會不一樣。首頁的時候只會有<code>本站概要</code>，在文章裡的時候會多了個<code>文章目錄</code>標籤顯示文章的大綱（預設顯示這個），而另一個標籤則是<code>本站概要</code>。</p>
+<h2 id="Footer"><a href="#Footer" class="headerlink" title="Footer"></a>Footer</h2><p>設定 footer 的樣式</p>
+<p>這裡我只設定了愛心有動畫效果，其他都是預設值。另外，<code>copyright</code> 這個欄位，如果沒有填的話會去 <code>_config.yml</code> 裡的 <code>author</code> 欄位抓。而 <code>beian</code>（備案）欄位，是給海的另一邊使用者設定的。</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">footer:</span></span><br><span class="line">  <span class="comment"># Icon between year and copyright info.</span></span><br><span class="line">  <span class="attr">icon:</span></span><br><span class="line">    <span class="comment"># Icon name in Font Awesome. See: https://fontawesome.com/icons</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">fa</span> <span class="string">fa-heart</span></span><br><span class="line">    <span class="comment"># If you want to animate the icon, set it to true.</span></span><br><span class="line">    <span class="attr">animated:</span> <span class="literal">true</span></span><br><span class="line">    <span class="comment"># Change the color of icon, using Hex Code.</span></span><br><span class="line">    <span class="attr">color:</span> <span class="string">&quot;#ff0000&quot;</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="Misc"><a href="#Misc" class="headerlink" title="Misc"></a>Misc</h2><p>雜項</p>
+<p>這裡我改了 <code>codeblock</code> 和 <code>reading_progress</code>。</p>
+<p><code>codeblock</code> 這個可以在 hexo 的 <code>_config.yml</code> 選擇 highlight 的引擎是 highlight 還是 prism，然後到 <code>_config.next.yml</code> 中分別設定一般和黑暗模式時的樣式。另外，NexT 也有提供<a href="https://theme-next.js.org/highlight/">網站</a>來修改設定和預覽結果。</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">codeblock:</span></span><br><span class="line">  <span class="comment"># Code Highlight theme</span></span><br><span class="line">  <span class="comment"># All available themes: https://theme-next.js.org/highlight/</span></span><br><span class="line">  <span class="attr">theme:</span></span><br><span class="line">    <span class="attr">light:</span> <span class="string">default</span></span><br><span class="line">    <span class="attr">dark:</span> <span class="string">vs2015</span></span><br><span class="line">  <span class="attr">prism:</span></span><br><span class="line">    <span class="attr">light:</span> <span class="string">prism</span></span><br><span class="line">    <span class="attr">dark:</span> <span class="string">prism-dark</span></span><br><span class="line">  <span class="comment"># Add copy button on codeblock</span></span><br><span class="line">  <span class="attr">copy_button:</span></span><br><span class="line">    <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">    <span class="comment"># Available values: default | flat | mac</span></span><br><span class="line">    <span class="attr">style:</span></span><br></pre></td></tr></table></figure>
+
+<p><code>reading_progress</code> 的話就是設定文章閱讀的進度條，設定是否啟用、顯示位置和顏色等。</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># Reading progress bar</span></span><br><span class="line"><span class="attr">reading_progress:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">  <span class="comment"># Available values: left | right</span></span><br><span class="line">  <span class="attr">start_at:</span> <span class="string">left</span></span><br><span class="line">  <span class="comment"># Available values: top | bottom</span></span><br><span class="line">  <span class="attr">position:</span> <span class="string">top</span></span><br><span class="line">  <span class="attr">reversed:</span> <span class="literal">false</span></span><br><span class="line">  <span class="attr">color:</span> <span class="string">&quot;#37c6c0&quot;</span></span><br><span class="line">  <span class="attr">height:</span> <span class="string">3px</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="Third-Party-Plugins-amp-Services"><a href="#Third-Party-Plugins-amp-Services" class="headerlink" title="Third Party Plugins &amp; Services"></a>Third Party Plugins &amp; Services</h2><p>第三方套件</p>
+<p>這裡面的東西就很多了，用的套件其實都很常見，依照需求設定吧。這裡我啟用了 fancybox。</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># FancyBox is a tool that offers a nice and elegant way to add zooming functionality for images.</span></span><br><span class="line"><span class="comment"># For more information: https://fancyapps.com/fancybox/</span></span><br><span class="line"><span class="attr">fancybox:</span> <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="Statistics-and-Analytics"><a href="#Statistics-and-Analytics" class="headerlink" title="Statistics and Analytics"></a>Statistics and Analytics</h2><p>設定網站流量統計的地方，例如 Google Analytics、百度統計、Cloudflare Web Analytics 等。這些我不太熟悉，只有設定GA而已，就不再說明。</p>
+<h2 id="Search-Services"><a href="#Search-Services" class="headerlink" title="Search Services"></a>Search Services</h2><p>設定站內搜尋的工具</p>
+<p>可以使用 Algolia 或是本地端搜尋。經費有限啊，我還是用local search 就好。</p>
+<p>不論用 Algolia 還是 local search，都是要額外安裝套件的。詳細設定看<a href="https://theme-next.js.org/docs/third-party-services/search-services">這裡</a>。</p>
+<p>這裡以 local search 為例</p>
+<p>輸入指令安裝</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="string">npm</span> <span class="string">install</span> <span class="string">hexo-generator-searchdb</span></span><br></pre></td></tr></table></figure>
+
+<p><code>_config.next.yml</code>的設定</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># Local Search</span></span><br><span class="line"><span class="comment"># Dependencies: https://github.com/next-theme/hexo-generator-searchdb</span></span><br><span class="line"><span class="attr">local_search:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line"><span class="string">...</span></span><br><span class="line"><span class="string">...</span></span><br><span class="line"><span class="string">...</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="Animation"><a href="#Animation" class="headerlink" title="Animation"></a>Animation</h2><p>動畫設定</p>
+<p>說實話，一直顯示慢慢載入動畫讓我這個沒耐心的人感到非常困擾，看到可以設定就果斷關掉。</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># Use Animate.css to animate everything.</span></span><br><span class="line"><span class="comment"># For more information: https://animate.style</span></span><br><span class="line"><span class="attr">motion:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">false</span></span><br><span class="line"><span class="string">...</span></span><br><span class="line"><span class="string">...</span></span><br><span class="line"><span class="string">...</span></span><br></pre></td></tr></table></figure>
+
+<p>配置這東西沒什麼好說的，就是依照需求看文件調整一下吧。多嘗試，多踩雷，你就會了。</p>
+<h2 id="參考"><a href="#參考" class="headerlink" title="參考"></a>參考</h2><ul>
+<li><a href="https://theme-next.js.org/docs/theme-settings/">NexT Theme Settings</a></li>
+<li><a href="https://ithelp.ithome.com.tw/articles/10269050">Day 6：設定你的 Hexo 佈景主題：Next（上）</a></li>
+<li><a href="https://ithelp.ithome.com.tw/articles/10269747">Day 7：設定你的 Hexo 佈景主題：Next（下）</a></li>
+</ul>
+]]></content>
+      <categories>
+        <category>Hexo</category>
+      </categories>
+      <tags>
+        <tag>教學</tag>
+        <tag>Hexo</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>自架部落格(5) 寫一篇文章</title>
     <url>/Hexo/%E4%BD%BF%E7%94%A8Hexo%E5%9C%A8GitHub-Pages%E4%B8%8A%E5%BB%BA%E7%AB%8B%E9%83%A8%E8%90%BD%E6%A0%BC-5/</url>
     <content><![CDATA[<p>寫一篇文章剛開始主要就是注意 front-matter 的設定，其他就是用 Markdown 寫文章了。</p>
@@ -888,76 +1021,35 @@
       </tags>
   </entry>
   <entry>
-    <title>批判性思考</title>
-    <url>/SoftSkill/%E6%89%B9%E5%88%A4%E6%80%A7%E6%80%9D%E8%80%83/</url>
-    <content><![CDATA[<h1 id="批判性思考"><a href="#批判性思考" class="headerlink" title="批判性思考"></a>批判性思考</h1><p>依據 「思辨，從問對問題開始」 一書所簡單整理，並加上一些個人看法。</p>
-<ul>
-<li>英文書名：Asking the Right Questions: A Guide to Critical Thinking</li>
-<li>作者：M. Neil Browne , Stuart M. Keeley</li>
-<li>中文書名會因為改版而更換，用英文書名搜尋比較準確</li>
-<li><del>中文書名有點騙，看起來跟雞湯或空洞勵志的書一樣，英文書名就很明確是寫批判性思考</del></li>
+    <title>xUnit Assembly Fixture</title>
+    <url>/UnitTest/xUnitAssemblyFixture/</url>
+    <content><![CDATA[<p>生命週期貫穿整個測試的 fixture。</p>
+<p>注意：此為 v3 的功能，v2 需要使用其他套件輔助或是使用官方範例裡的寫法。</p>
+<p><a href="https://github.com/xunit/samples.xunit/tree/main/AssemblyFixtureExample">https://github.com/xunit/samples.xunit/tree/main/AssemblyFixtureExample</a></p>
+<h2 id="生命週期"><a href="#生命週期" class="headerlink" title="生命週期"></a>生命週期</h2><ul>
+<li>初始化：組件載入後</li>
+<li>清除：組件卸載前</li>
 </ul>
-<h2 id="這是什麼"><a href="#這是什麼" class="headerlink" title="這是什麼"></a>這是什麼</h2><ul>
-<li>用來分析、評估、解釋、推理以及反思那些我們接收到的資訊</li>
-<li>查證說法，找出真正的答案</li>
-</ul>
-<h2 id="為什麼需要"><a href="#為什麼需要" class="headerlink" title="為什麼需要"></a>為什麼需要</h2><ul>
-<li>在資訊爆炸的時代，幫助分析評估、去蕪存菁、歸納分類，建構出屬於自己的解答</li>
-<li>避免被牽著鼻子走，專家說的也不是一定正確</li>
-<li>幫助獨立思考</li>
-<li>持續糾正和調整自己的觀點</li>
-</ul>
-<h2 id="弱義和強義批判思考"><a href="#弱義和強義批判思考" class="headerlink" title="弱義和強義批判思考"></a>弱義和強義批判思考</h2><p>依據國際批判思考權威理查·保羅（Richard Paul）所定義。</p>
-<h3 id="弱義"><a href="#弱義" class="headerlink" title="弱義"></a>弱義</h3><ul>
-<li>定義：運用批判技巧防衛你既有的信念</li>
-<li>無意求真或求善</li>
-<li>目的是為了抗拒和消滅與你不同的意見及推論</li>
-<li>以壓制和戰勝異議者作為批判思考的目標</li>
-<li>缺乏建設性意見</li>
-</ul>
-<h3 id="強義"><a href="#強義" class="headerlink" title="強義"></a>強義</h3><ul>
-<li>定義：運用相同的技巧，去評估所有的論點和信念，尤其是自身的論點和信念。</li>
-<li>需要對所有的申論提出批判性問題，包含自己的申論</li>
-<li>強迫自己以批判性的態度來觀察自身原始的觀點，避免自欺和從眾的行為</li>
-<li>不是要強迫放棄自己的觀點，有時候反而可以強化</li>
-</ul>
-<h2 id="可協助批判性思考的問題"><a href="#可協助批判性思考的問題" class="headerlink" title="可協助批判性思考的問題"></a>可協助批判性思考的問題</h2><ul>
-<li>議題和結論是什麼？</li>
-<li>理由是什麼？</li>
-<li>有無曖昧不明的語言？</li>
-<li>有無價值觀與描述性假設？</li>
-<li>推論過程有無謬誤？</li>
-<li>證據是否可信？</li>
-<li>是不是還有其他原因？</li>
-<li>統計數字是否可信？</li>
-<li>哪些重要資訊被消失？</li>
-<li>有沒有更適合的結論？</li>
-</ul>
-<h2 id="應有行為"><a href="#應有行為" class="headerlink" title="應有行為"></a>應有行為</h2><p>運用批判性思考前應該要有的行為：</p>
-<ul>
-<li>吸收大量的資料，透過這些資料來提供多元觀點和全面性的假設</li>
-<li>以理由和證據作為決策依據</li>
-<li>以開放的心胸了解他人的觀點，但是採取質疑的態度去驗證觀點是否合理可信</li>
-<li>對於任何說法的真實性，提醒對方應該要尋求並尊重多元觀點</li>
-</ul>
-<h2 id="不要走火入魔"><a href="#不要走火入魔" class="headerlink" title="不要走火入魔"></a>不要走火入魔</h2><ul>
-<li>不是所有事情都需要批判</li>
-<li>批判性思考不是抓語意漏洞</li>
-<li>在內心自省批判或利用新聞報導作為練習</li>
-<li>為了批判而批判，小心沒有朋友</li>
-</ul>
-<h2 id="延伸閱讀"><a href="#延伸閱讀" class="headerlink" title="延伸閱讀"></a>延伸閱讀</h2><ul>
-<li>快思慢想（Thinking, Fast and Slow）- Daniel Kahneman</li>
-<li>思考的祕密 - 傅皓政</li>
-<li><a href="https://ocw.aca.ntu.edu.tw/ntu-ocw/ocw/cou/108S205">邏輯（台大開放式課程）- 傅皓政</a></li>
+<h2 id="建立-Assembly-Fixture-類別"><a href="#建立-Assembly-Fixture-類別" class="headerlink" title="建立 Assembly Fixture 類別"></a>建立 Assembly Fixture 類別</h2><p>寫法和觀念就和 Class Fixture 一樣，其實這個也可以用在 Class Fixture。</p>
+<figure class="highlight csharp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">DatabaseAssemblyFixture</span> : <span class="title">IDisposable</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">DatabaseAssemblyFixture</span>()</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">// Docker 啟動 container 和建立資料庫</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Dispose 同 [AssemblyCleanup]</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">Dispose</span>()</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">// Docker 刪除 container</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">PrintMssqlVersion</span>(<span class="params"><span class="built_in">string</span> conn</span>)</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">using</span> <span class="keyword">var</span> connection = <span class="keyword">new</span> SqlConnection(conn);</span><br><span class="line">        <span class="keyword">using</span> <span class="keyword">var</span> command = <span class="keyword">new</span> SqlCommand(<span class="string">&quot;SELECT @@VERSION&quot;</span>, connection);</span><br><span class="line">        connection.Open();</span><br><span class="line"></span><br><span class="line">        <span class="keyword">var</span> reader = command.ExecuteReader();</span><br><span class="line">        reader.Read();</span><br><span class="line"></span><br><span class="line">        Console.WriteLine(<span class="string">$&quot;MSSQL Version: <span class="subst">&#123;reader.GetString(<span class="number">0</span>)&#125;</span>&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="使用方式"><a href="#使用方式" class="headerlink" title="使用方式"></a>使用方式</h2><p>加入 assembly attribute</p>
+<p>方法一：新增一個 <code>AssemblyInfo.cs</code>，在裡面加入(建議)</p>
+<figure class="highlight csharp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">using</span> RepositoryTests.Fixtures;</span><br><span class="line"></span><br><span class="line">[<span class="meta">assembly: AssemblyFixture(typeof(DatabaseAssemblyFixture))</span>]</span><br></pre></td></tr></table></figure>
+
+<p>方法二：在測試類別的 namespace 上面加入</p>
+<figure class="highlight csharp"><table><tr><td class="code"><pre><span class="line">[<span class="meta">assembly: AssemblyFixture(typeof(DatabaseAssemblyFixture))</span>]</span><br><span class="line"></span><br><span class="line"><span class="keyword">namespace</span> <span class="title">RepositoryTests.Implement</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">class</span> <span class="title">MemberRepositoryTests</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">private</span> <span class="keyword">readonly</span> DatabaseAssemblyFixture _db;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">MemberRepositoryTests</span>(<span class="params">DatabaseAssemblyFixture db</span>)</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">this</span>._db = db;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 測試方法...</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="參考"><a href="#參考" class="headerlink" title="參考"></a>參考</h2><ul>
+<li><a href="https://xunit.net/docs/shared-context">Shared Context between Tests &gt; xUnit.net</a></li>
 </ul>
 ]]></content>
       <categories>
-        <category>軟實力</category>
+        <category>單元測試</category>
       </categories>
       <tags>
-        <tag>軟實力</tag>
-        <tag>思考</tag>
+        <tag>單元測試</tag>
+        <tag>xUnit</tag>
       </tags>
   </entry>
   <entry>
@@ -977,38 +1069,6 @@
 
 <p>以下是會用到 Class Fixture 內部公開屬性的範例：</p>
 <figure class="highlight csharp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">MemberServiceTests</span> : <span class="title">IClassFixture</span>&lt;<span class="title">CommonClassFixture</span>&gt;</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">readonly</span> CommonClassFixture _commonFixture;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">readonly</span> IAppLogger&lt;MemberEntity&gt; _logger;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">readonly</span> AdminMemberService _sut;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">MemberServiceTests</span>(<span class="params">CommonClassFixture commonFixture</span>)</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">this</span>._commonFixture = commonFixture;</span><br><span class="line">        <span class="keyword">this</span>._logger = Substitute.For&lt;IAppLogger&lt;AdminMember&gt;&gt;();</span><br><span class="line">        <span class="keyword">this</span>._sut = <span class="keyword">new</span> MemberService(<span class="keyword">this</span>._commonFixture.UnitOfWork, <span class="keyword">this</span>._commonFixture.Mapper, <span class="keyword">this</span>._logger);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 測試方法...</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">SampleTestMethod</span>()</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">// arrange</span></span><br><span class="line">        <span class="keyword">var</span> id = <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">var</span> member = <span class="keyword">this</span>._commonFixture.fixture.Build&lt;MemberEntity&gt;()</span><br><span class="line">            .With(q =&gt; q.Id, id)</span><br><span class="line">            .With(q =&gt; q.Status, <span class="number">1</span>)</span><br><span class="line">            .Create();</span><br><span class="line">            </span><br><span class="line">        <span class="comment">// 以下省略</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="參考"><a href="#參考" class="headerlink" title="參考"></a>參考</h2><ul>
-<li><a href="https://xunit.net/docs/shared-context">Shared Context between Tests &gt; xUnit.net</a></li>
-</ul>
-]]></content>
-      <categories>
-        <category>單元測試</category>
-      </categories>
-      <tags>
-        <tag>單元測試</tag>
-        <tag>xUnit</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>xUnit Assembly Fixture</title>
-    <url>/UnitTest/xUnitAssemblyFixture/</url>
-    <content><![CDATA[<p>生命週期貫穿整個測試的 fixture。</p>
-<p>注意：此為 v3 的功能，v2 需要使用其他套件輔助或是使用官方範例裡的寫法。</p>
-<p><a href="https://github.com/xunit/samples.xunit/tree/main/AssemblyFixtureExample">https://github.com/xunit/samples.xunit/tree/main/AssemblyFixtureExample</a></p>
-<h2 id="生命週期"><a href="#生命週期" class="headerlink" title="生命週期"></a>生命週期</h2><ul>
-<li>初始化：組件載入後</li>
-<li>清除：組件卸載前</li>
-</ul>
-<h2 id="建立-Assembly-Fixture-類別"><a href="#建立-Assembly-Fixture-類別" class="headerlink" title="建立 Assembly Fixture 類別"></a>建立 Assembly Fixture 類別</h2><p>寫法和觀念就和 Class Fixture 一樣，其實這個也可以用在 Class Fixture。</p>
-<figure class="highlight csharp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">DatabaseAssemblyFixture</span> : <span class="title">IDisposable</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">DatabaseAssemblyFixture</span>()</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">// Docker 啟動 container 和建立資料庫</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Dispose 同 [AssemblyCleanup]</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">Dispose</span>()</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">// Docker 刪除 container</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">PrintMssqlVersion</span>(<span class="params"><span class="built_in">string</span> conn</span>)</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">using</span> <span class="keyword">var</span> connection = <span class="keyword">new</span> SqlConnection(conn);</span><br><span class="line">        <span class="keyword">using</span> <span class="keyword">var</span> command = <span class="keyword">new</span> SqlCommand(<span class="string">&quot;SELECT @@VERSION&quot;</span>, connection);</span><br><span class="line">        connection.Open();</span><br><span class="line"></span><br><span class="line">        <span class="keyword">var</span> reader = command.ExecuteReader();</span><br><span class="line">        reader.Read();</span><br><span class="line"></span><br><span class="line">        Console.WriteLine(<span class="string">$&quot;MSSQL Version: <span class="subst">&#123;reader.GetString(<span class="number">0</span>)&#125;</span>&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="使用方式"><a href="#使用方式" class="headerlink" title="使用方式"></a>使用方式</h2><p>加入 assembly attribute</p>
-<p>方法一：新增一個 <code>AssemblyInfo.cs</code>，在裡面加入(建議)</p>
-<figure class="highlight csharp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">using</span> RepositoryTests.Fixtures;</span><br><span class="line"></span><br><span class="line">[<span class="meta">assembly: AssemblyFixture(typeof(DatabaseAssemblyFixture))</span>]</span><br></pre></td></tr></table></figure>
-
-<p>方法二：在測試類別的 namespace 上面加入</p>
-<figure class="highlight csharp"><table><tr><td class="code"><pre><span class="line">[<span class="meta">assembly: AssemblyFixture(typeof(DatabaseAssemblyFixture))</span>]</span><br><span class="line"></span><br><span class="line"><span class="keyword">namespace</span> <span class="title">RepositoryTests.Implement</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">class</span> <span class="title">MemberRepositoryTests</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">private</span> <span class="keyword">readonly</span> DatabaseAssemblyFixture _db;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">MemberRepositoryTests</span>(<span class="params">DatabaseAssemblyFixture db</span>)</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">this</span>._db = db;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 測試方法...</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <h2 id="參考"><a href="#參考" class="headerlink" title="參考"></a>參考</h2><ul>
 <li><a href="https://xunit.net/docs/shared-context">Shared Context between Tests &gt; xUnit.net</a></li>
@@ -1056,17 +1116,17 @@
     <content><![CDATA[<p>核心觀念和主流的測試工具一樣，主要差在 Initialize 和 Cleanup 不同，xUnit 主要靠建構式和實作 <code>IDisposable</code> 來處理，而且有 <code>IClassFixture</code> 和 <code>ICollectionFixture</code> 來提供多種組合，增加了彈性。目前 v2 不支援 Assembly 層級，但是有其他套件，不想用可以等 v3。</p>
 <h2 id="目錄"><a href="#目錄" class="headerlink" title="目錄"></a>目錄</h2><p>Attribute：</p>
 <ul>
-<li><a href="%E5%9F%BA%E7%A4%8E%E7%9F%A5%E8%AD%98.md">基礎知識</a></li>
+<li><a href="https://zamhsu.github.io/UnitTest/xUnit%E5%9F%BA%E7%A4%8E%E8%A7%80%E5%BF%B5/">基礎知識</a></li>
 </ul>
 <p>各層級 Fixture 生命週期的說明</p>
 <ul>
-<li><a href="xUnit%E5%90%84%E5%B1%A4%E7%B4%9AFixture%E7%9A%84%E7%94%9F%E5%91%BD%E9%80%B1%E6%9C%9F.md">xUnit 各層級 Fixture 的生命週期</a></li>
+<li><a href="https://zamhsu.github.io/UnitTest/xUnit%E5%90%84%E5%B1%A4%E7%B4%9AFixture%E7%9A%84%E7%94%9F%E5%91%BD%E9%80%B1%E6%9C%9F/">xUnit 各層級 Fixture 的生命週期</a></li>
 </ul>
 <p>Fixture：</p>
 <ul>
-<li><a href="AssemblyFixture.md">Assembly Level Fixture</a></li>
-<li><a href="ClassFixture.md">Class Level Fixture</a></li>
-<li><a href="CollectionFixture.md">Collection Fixture</a></li>
+<li><a href="https://zamhsu.github.io/UnitTest/xUnitAssemblyFixture/">Assembly Level Fixture</a></li>
+<li><a href="https://zamhsu.github.io/UnitTest/xUnitClassFixture/">Class Level Fixture</a></li>
+<li><a href="https://zamhsu.github.io/UnitTest/xUnitCollectionFixture/">Collection Fixture</a></li>
 </ul>
 <h2 id="已知和-MSTest-的差異"><a href="#已知和-MSTest-的差異" class="headerlink" title="已知和 MSTest 的差異"></a>已知和 MSTest 的差異</h2><p>主要和 MSTest 常用的寫法對比。</p>
 <p>官方也有給詳細的差異對照表，詳細可以看 <a href="https://xunit.net/docs/comparisons">Comparing xUnit.net to other frameworks</a>。</p>
@@ -1213,60 +1273,6 @@
       </tags>
   </entry>
   <entry>
-    <title>xUnit 基礎觀念</title>
-    <url>/UnitTest/xUnit%E5%9F%BA%E7%A4%8E%E8%A7%80%E5%BF%B5/</url>
-    <content><![CDATA[<p>簡單說明 xUnit 的一些基礎觀念與用法，還加上對應到 MSTest 的功能。如果是從 MSTest 轉過來，可能會需要一些時間來適應。</p>
-<h2 id="測試類別"><a href="#測試類別" class="headerlink" title="測試類別"></a>測試類別</h2><p>生命週期：</p>
-<ul>
-<li>初始化：每個測試開始前</li>
-<li>清除：每個測試結束後</li>
-</ul>
-<p>和一般的測試框架不同，xUnit 採用建構式和實作 <code>IDispose</code> 來達成初始化和清除</p>
-<p>對應 MSTest：[XxxInitialize], [XxxCleanup]</p>
-<figure class="highlight csharp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">ProductServiceTests</span> : <span class="title">IDisposable</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">readonly</span> IMapper _mapper;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">readonly</span> IProductRepository _productRepository;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">readonly</span> ProductService _sut;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">ProductServiceTests</span>()</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">this</span>._mapper = TestHook.MapperConfigurationProvider.CreateMapper();</span><br><span class="line">        <span class="keyword">this</span>._productRepository = Substitute.For&lt;IProductRepository&gt;();</span><br><span class="line">        <span class="keyword">this</span>._sut = <span class="keyword">new</span> ProductService(<span class="keyword">this</span>._productRepository, <span class="keyword">this</span>._mapper);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">Dispose</span>()</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">// 想要清除的東西</span></span><br><span class="line">        <span class="comment">// 不需要可以不用繼承 IDisposable</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 測試方法...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="測試方法"><a href="#測試方法" class="headerlink" title="測試方法"></a>測試方法</h2><h3 id="Fact"><a href="#Fact" class="headerlink" title="[Fact]"></a>[Fact]</h3><p>對應 MSTest：[TestMethod]</p>
-<figure class="highlight csharp"><table><tr><td class="code"><pre><span class="line">[<span class="meta">Fact</span>]</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> GetById_輸入id_資料庫有資料_應回傳ProductDto資料()</span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">// arrange</span></span><br><span class="line">    <span class="keyword">var</span> id = <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">var</span> fixture = <span class="keyword">new</span> Fixture();</span><br><span class="line">    <span class="keyword">var</span> product = fixture.Build&lt;ProductEntity&gt;()</span><br><span class="line">        .With(q =&gt; q.Id, id)</span><br><span class="line">        .With(q =&gt; q.Status, <span class="number">1</span>)</span><br><span class="line">        .Create();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">this</span>._productRepository.GetById(Arg.Any&lt;<span class="built_in">int</span>&gt;()).Returns(product);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// act</span></span><br><span class="line">    <span class="keyword">var</span> actual = <span class="keyword">this</span>._sut.GetById(id);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// assert</span></span><br><span class="line">    Assert.Equal(id, actual.Id);</span><br><span class="line">    Assert.NotNull(actual);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h3 id="Theory-InlineData"><a href="#Theory-InlineData" class="headerlink" title="[Theory], [InlineData]"></a>[Theory], [InlineData]</h3><p>資料的使用範圍：此方法內</p>
-<p>可理解為內部資料</p>
-<p>對應 MSTest：[TestMethod], [DataRow]</p>
-<figure class="highlight csharp"><table><tr><td class="code"><pre><span class="line">[<span class="meta">Theory(DisplayName = <span class="string">&quot;GetRange_InlineData_不合規格的值&quot;</span>)</span>]</span><br><span class="line">[<span class="meta">InlineData(<span class="string">&quot;from&quot;</span>, -1, 10)</span>]</span><br><span class="line">[<span class="meta">InlineData(<span class="string">&quot;from&quot;</span>, 0, 10)</span>]</span><br><span class="line">[<span class="meta">InlineData(<span class="string">&quot;size&quot;</span>, 1, -1)</span>]</span><br><span class="line">[<span class="meta">InlineData(<span class="string">&quot;size&quot;</span>, 1, 0)</span>]</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> GetRange_InlineData_輸入引數的內容為不合規格的值_應拋出ArgumentOutOfRangeException(<span class="built_in">string</span> nameOfErrorArgument, <span class="built_in">int</span> <span class="keyword">from</span>, <span class="built_in">int</span> size)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">// InlineData 同 DataRow，但是無法每一筆資料指定自己的 DisplayName，只能在Theory統一指定 DisplayName</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// act</span></span><br><span class="line">    <span class="keyword">var</span> exception = Assert.Throws&lt;ArgumentOutOfRangeException&gt;(() =&gt; <span class="keyword">this</span>._sut.GetRange(<span class="keyword">from</span>, size));</span><br><span class="line"></span><br><span class="line">    <span class="comment">// assert</span></span><br><span class="line">    Assert.Contains(nameOfErrorArgument, exception.Message);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h3 id="Theory-MemberData"><a href="#Theory-MemberData" class="headerlink" title="[Theory], [MemberData]"></a>[Theory], [MemberData]</h3><p>可玩性極高，可以在同一類別內建立多個靜態方法，或是在另一個類別裡建立，彈性比 <code>ClassData</code> 還高。注意必須要回傳 <code>IEnumerable&lt;object[]&gt;</code></p>
-<p>資料的使用範圍：同一類別內、不限 (可跨類別、專案等)</p>
-<p>可理解為成員資料，來自於類別內的成員</p>
-<p>對應 MSTest：[TestMethod], [DynamicData]</p>
-<ul>
-<li><p>同一類別內 (範圍：同一類別)</p>
-<figure class="highlight csharp"><table><tr><td class="code"><pre><span class="line">[<span class="meta">Theory(DisplayName = <span class="string">&quot;GetRange_同類別MemberData_不合規格的值&quot;</span>)</span>]</span><br><span class="line">[<span class="meta">MemberData(nameof(PageDataMemberData))</span>]</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> GetRange_MemberData_同類別輸入引數的內容為不合規格的值_應拋出ArgumentOutOfRangeException(<span class="built_in">string</span> nameOfErrorArgument, <span class="built_in">int</span> <span class="keyword">from</span>, <span class="built_in">int</span> size)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">// 資料來源為獨立出一個必須是 public 且 static 的方法，必須要回傳 IEnumerable&lt;object[]&gt;</span></span><br><span class="line">    <span class="comment">// 資料的使用範圍：此類別內</span></span><br><span class="line">    <span class="comment">// attribute 內使用 nameof(string memberDataName)</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// act</span></span><br><span class="line">    <span class="keyword">var</span> exception = Assert.Throws&lt;ArgumentOutOfRangeException&gt;(() =&gt; <span class="keyword">this</span>._sut.GetRange(<span class="keyword">from</span>, size));</span><br><span class="line"></span><br><span class="line">    <span class="comment">// assert</span></span><br><span class="line">    Assert.Contains(nameOfErrorArgument, exception.Message);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> IEnumerable&lt;<span class="built_in">object</span>[]&gt; PageDataMemberData =&gt;</span><br><span class="line">    <span class="keyword">new</span> List&lt;<span class="built_in">object</span>[]&gt;</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; <span class="string">&quot;from&quot;</span>, <span class="number">-1</span>, <span class="number">10</span> &#125;,</span><br><span class="line">        <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; <span class="string">&quot;from&quot;</span>, <span class="number">0</span>, <span class="number">10</span> &#125;,</span><br><span class="line">        <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; <span class="string">&quot;size&quot;</span>, <span class="number">1</span>, <span class="number">-1</span> &#125;,</span><br><span class="line">        <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; <span class="string">&quot;size&quot;</span>, <span class="number">1</span>, <span class="number">0</span> &#125;</span><br><span class="line">    &#125;;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>不同類別內 (範圍：不限)</p>
-<figure class="highlight csharp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">ProductServiceTests</span> : <span class="title">IDisposable</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">// 省略...</span></span><br><span class="line"></span><br><span class="line">    [<span class="meta">Theory(DisplayName = <span class="string">&quot;GetRange_不同類別MemberData_不合規格的值&quot;</span>)</span>]</span><br><span class="line">    [<span class="meta">MemberData(nameof(PageTestMemberData.GetPageErrorData), MemberType = typeof(PageTestMemberData))</span>]</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> GetRange_不同類別MemberData_輸入引數的內容為不合規格的值_應拋出ArgumentOutOfRangeException(<span class="built_in">string</span> nameOfErrorArgument,</span><br><span class="line">        <span class="built_in">int</span> <span class="keyword">from</span>, <span class="built_in">int</span> size)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">// 資料來源為獨立出一個必須是 public 且 static 的方法，必須要回傳 IEnumerable&lt;object[]&gt;</span></span><br><span class="line">        <span class="comment">// 資料的使用範圍：不限 (可跨類別、專案等)</span></span><br><span class="line">        <span class="comment">// attribute 內使用 nameof(string memberDataName), MemberType = typeof(資料來源類別的名稱)</span></span><br><span class="line"></span><br><span class="line">        <span class="comment">// act</span></span><br><span class="line">        <span class="keyword">var</span> exception = Assert.Throws&lt;ArgumentOutOfRangeException&gt;(() =&gt; <span class="keyword">this</span>._sut.GetRange(<span class="keyword">from</span>, size));</span><br><span class="line"></span><br><span class="line">        <span class="comment">// assert</span></span><br><span class="line">        Assert.Contains(nameOfErrorArgument, exception.Message);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">PageTestMemberData</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> IEnumerable&lt;<span class="built_in">object</span>[]&gt; GetPageCorrectData()</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">yield</span> <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; <span class="string">&quot;from&quot;</span>, <span class="number">1</span>, <span class="number">10</span> &#125;;</span><br><span class="line">        <span class="keyword">yield</span> <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; <span class="string">&quot;from&quot;</span>, <span class="number">2</span>, <span class="number">10</span> &#125;;</span><br><span class="line">        <span class="keyword">yield</span> <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; <span class="string">&quot;size&quot;</span>, <span class="number">1</span>, <span class="number">1</span> &#125;;</span><br><span class="line">        <span class="keyword">yield</span> <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; <span class="string">&quot;size&quot;</span>, <span class="number">1</span>, <span class="number">2</span> &#125;;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> IEnumerable&lt;<span class="built_in">object</span>[]&gt; GetPageErrorData()</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">yield</span> <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; <span class="string">&quot;from&quot;</span>, <span class="number">-5</span>, <span class="number">10</span> &#125;;</span><br><span class="line">        <span class="keyword">yield</span> <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; <span class="string">&quot;from&quot;</span>, <span class="number">0</span>, <span class="number">10</span> &#125;;</span><br><span class="line">        <span class="keyword">yield</span> <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; <span class="string">&quot;size&quot;</span>, <span class="number">1</span>, <span class="number">-5</span> &#125;;</span><br><span class="line">        <span class="keyword">yield</span> <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; <span class="string">&quot;size&quot;</span>, <span class="number">1</span>, <span class="number">0</span> &#125;;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
-</ul>
-<h3 id="Theory-ClassData"><a href="#Theory-ClassData" class="headerlink" title="[Theory], [ClassData]"></a>[Theory], [ClassData]</h3><p>資料的使用範圍：不限 (可跨類別、專案等)</p>
-<p>可理解為由一個專門提供資料的類別取得資料</p>
-<p>對應 MSTest：[TestMethod], [CustomDataSource]</p>
-<figure class="highlight csharp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">ProductServiceTests</span> : <span class="title">IDisposable</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">// 省略...</span></span><br><span class="line"></span><br><span class="line">    [<span class="meta">Theory(DisplayName = <span class="string">&quot;GetRange_ClassData_不合規格的值&quot;</span>)</span>]</span><br><span class="line">    [<span class="meta">ClassData(typeof(PageTestClassData))</span>]</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> GetRange_ClassData_輸入引數的內容為不合規格的值_應拋出ArgumentOutOfRangeException(<span class="built_in">string</span> nameOfErrorArgument, <span class="built_in">int</span> <span class="keyword">from</span>, <span class="built_in">int</span> size)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">// 資料來源為獨立的類別，但是這個類別必須繼承 IEnumerable</span></span><br><span class="line">        <span class="comment">// attribute 內使用 typeof</span></span><br><span class="line"></span><br><span class="line">        <span class="comment">// act</span></span><br><span class="line">        <span class="keyword">var</span> exception = Assert.Throws&lt;ArgumentOutOfRangeException&gt;(() =&gt; <span class="keyword">this</span>._sut.GetRange(<span class="keyword">from</span>, size));</span><br><span class="line"></span><br><span class="line">        <span class="comment">// assert</span></span><br><span class="line">        Assert.Contains(nameOfErrorArgument, exception.Message);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">PageTestClassData</span> : <span class="title">IEnumerable</span>&lt;<span class="title">object</span>[]&gt;</span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">// 用於 ClassData 的類別，必須要繼承 IEnumerable</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> IEnumerator&lt;<span class="built_in">object</span>[]&gt; GetEnumerator()</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">yield</span> <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; <span class="string">&quot;from&quot;</span>, <span class="number">-1</span>, <span class="number">10</span> &#125;;</span><br><span class="line">        <span class="keyword">yield</span> <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; <span class="string">&quot;from&quot;</span>, <span class="number">0</span>, <span class="number">10</span> &#125;;</span><br><span class="line">        <span class="keyword">yield</span> <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; <span class="string">&quot;size&quot;</span>, <span class="number">1</span>, <span class="number">-1</span> &#125;;</span><br><span class="line">        <span class="keyword">yield</span> <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; <span class="string">&quot;size&quot;</span>, <span class="number">1</span>, <span class="number">0</span> &#125;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    IEnumerator IEnumerable.GetEnumerator()</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">this</span>.GetEnumerator();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h3 id="注意事項"><a href="#注意事項" class="headerlink" title="注意事項"></a>注意事項</h3><ul>
-<li>想要判斷陣列是否為空集合的時候，可能會想要使用 <code>Assert.Equal(0, actual.Count());</code>，但是官方不建議，IDE 也會提示。建議使用 <code>Empty</code> (<code>Assert.Empty(actual);</code>)。</li>
-</ul>
-<h2 id="參考"><a href="#參考" class="headerlink" title="參考"></a>參考</h2><ul>
-<li><a href="https://xunit.net/docs/getting-started/v3/cmdline">Getting started with xUnit.net v3 (command line) &gt; xUnit.net</a></li>
-<li><a href="https://xunit.net/docs/shared-context">Shared Context between Tests &gt; xUnit.net</a></li>
-<li><a href="https://andrewlock.net/creating-parameterised-tests-in-xunit-with-inlinedata-classdata-and-memberdata/">Creating parameterised tests in xUnit with [InlineData], [ClassData], and [MemberData]</a></li>
-</ul>
-]]></content>
-      <categories>
-        <category>單元測試</category>
-      </categories>
-      <tags>
-        <tag>單元測試</tag>
-        <tag>xUnit</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>xUnit 各層級 Fixture 的生命週期</title>
     <url>/UnitTest/xUnit%E5%90%84%E5%B1%A4%E7%B4%9AFixture%E7%9A%84%E7%94%9F%E5%91%BD%E9%80%B1%E6%9C%9F/</url>
     <content><![CDATA[<p>簡單說說 fixture 這東西，裡面充滿意想不到的坑。沒親自實驗過，根本不知道原來裡面 fixture 的建立以及 dispose 的順序是不可控的。其實還是有一些方式來解決這個問題。</p>
@@ -1343,6 +1349,60 @@
       </tags>
   </entry>
   <entry>
+    <title>xUnit 基礎觀念</title>
+    <url>/UnitTest/xUnit%E5%9F%BA%E7%A4%8E%E8%A7%80%E5%BF%B5/</url>
+    <content><![CDATA[<p>簡單說明 xUnit 的一些基礎觀念與用法，還加上對應到 MSTest 的功能。如果是從 MSTest 轉過來，可能會需要一些時間來適應。</p>
+<h2 id="測試類別"><a href="#測試類別" class="headerlink" title="測試類別"></a>測試類別</h2><p>生命週期：</p>
+<ul>
+<li>初始化：每個測試開始前</li>
+<li>清除：每個測試結束後</li>
+</ul>
+<p>和一般的測試框架不同，xUnit 採用建構式和實作 <code>IDispose</code> 來達成初始化和清除</p>
+<p>對應 MSTest：[XxxInitialize], [XxxCleanup]</p>
+<figure class="highlight csharp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">ProductServiceTests</span> : <span class="title">IDisposable</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">readonly</span> IMapper _mapper;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">readonly</span> IProductRepository _productRepository;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">readonly</span> ProductService _sut;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">ProductServiceTests</span>()</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">this</span>._mapper = TestHook.MapperConfigurationProvider.CreateMapper();</span><br><span class="line">        <span class="keyword">this</span>._productRepository = Substitute.For&lt;IProductRepository&gt;();</span><br><span class="line">        <span class="keyword">this</span>._sut = <span class="keyword">new</span> ProductService(<span class="keyword">this</span>._productRepository, <span class="keyword">this</span>._mapper);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">Dispose</span>()</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">// 想要清除的東西</span></span><br><span class="line">        <span class="comment">// 不需要可以不用繼承 IDisposable</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 測試方法...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="測試方法"><a href="#測試方法" class="headerlink" title="測試方法"></a>測試方法</h2><h3 id="Fact"><a href="#Fact" class="headerlink" title="[Fact]"></a>[Fact]</h3><p>對應 MSTest：[TestMethod]</p>
+<figure class="highlight csharp"><table><tr><td class="code"><pre><span class="line">[<span class="meta">Fact</span>]</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> GetById_輸入id_資料庫有資料_應回傳ProductDto資料()</span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">// arrange</span></span><br><span class="line">    <span class="keyword">var</span> id = <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">var</span> fixture = <span class="keyword">new</span> Fixture();</span><br><span class="line">    <span class="keyword">var</span> product = fixture.Build&lt;ProductEntity&gt;()</span><br><span class="line">        .With(q =&gt; q.Id, id)</span><br><span class="line">        .With(q =&gt; q.Status, <span class="number">1</span>)</span><br><span class="line">        .Create();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">this</span>._productRepository.GetById(Arg.Any&lt;<span class="built_in">int</span>&gt;()).Returns(product);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// act</span></span><br><span class="line">    <span class="keyword">var</span> actual = <span class="keyword">this</span>._sut.GetById(id);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// assert</span></span><br><span class="line">    Assert.Equal(id, actual.Id);</span><br><span class="line">    Assert.NotNull(actual);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="Theory-InlineData"><a href="#Theory-InlineData" class="headerlink" title="[Theory], [InlineData]"></a>[Theory], [InlineData]</h3><p>資料的使用範圍：此方法內</p>
+<p>可理解為內部資料</p>
+<p>對應 MSTest：[TestMethod], [DataRow]</p>
+<figure class="highlight csharp"><table><tr><td class="code"><pre><span class="line">[<span class="meta">Theory(DisplayName = <span class="string">&quot;GetRange_InlineData_不合規格的值&quot;</span>)</span>]</span><br><span class="line">[<span class="meta">InlineData(<span class="string">&quot;from&quot;</span>, -1, 10)</span>]</span><br><span class="line">[<span class="meta">InlineData(<span class="string">&quot;from&quot;</span>, 0, 10)</span>]</span><br><span class="line">[<span class="meta">InlineData(<span class="string">&quot;size&quot;</span>, 1, -1)</span>]</span><br><span class="line">[<span class="meta">InlineData(<span class="string">&quot;size&quot;</span>, 1, 0)</span>]</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> GetRange_InlineData_輸入引數的內容為不合規格的值_應拋出ArgumentOutOfRangeException(<span class="built_in">string</span> nameOfErrorArgument, <span class="built_in">int</span> <span class="keyword">from</span>, <span class="built_in">int</span> size)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">// InlineData 同 DataRow，但是無法每一筆資料指定自己的 DisplayName，只能在Theory統一指定 DisplayName</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// act</span></span><br><span class="line">    <span class="keyword">var</span> exception = Assert.Throws&lt;ArgumentOutOfRangeException&gt;(() =&gt; <span class="keyword">this</span>._sut.GetRange(<span class="keyword">from</span>, size));</span><br><span class="line"></span><br><span class="line">    <span class="comment">// assert</span></span><br><span class="line">    Assert.Contains(nameOfErrorArgument, exception.Message);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="Theory-MemberData"><a href="#Theory-MemberData" class="headerlink" title="[Theory], [MemberData]"></a>[Theory], [MemberData]</h3><p>可玩性極高，可以在同一類別內建立多個靜態方法，或是在另一個類別裡建立，彈性比 <code>ClassData</code> 還高。注意必須要回傳 <code>IEnumerable&lt;object[]&gt;</code></p>
+<p>資料的使用範圍：同一類別內、不限 (可跨類別、專案等)</p>
+<p>可理解為成員資料，來自於類別內的成員</p>
+<p>對應 MSTest：[TestMethod], [DynamicData]</p>
+<ul>
+<li><p>同一類別內 (範圍：同一類別)</p>
+<figure class="highlight csharp"><table><tr><td class="code"><pre><span class="line">[<span class="meta">Theory(DisplayName = <span class="string">&quot;GetRange_同類別MemberData_不合規格的值&quot;</span>)</span>]</span><br><span class="line">[<span class="meta">MemberData(nameof(PageDataMemberData))</span>]</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> GetRange_MemberData_同類別輸入引數的內容為不合規格的值_應拋出ArgumentOutOfRangeException(<span class="built_in">string</span> nameOfErrorArgument, <span class="built_in">int</span> <span class="keyword">from</span>, <span class="built_in">int</span> size)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">// 資料來源為獨立出一個必須是 public 且 static 的方法，必須要回傳 IEnumerable&lt;object[]&gt;</span></span><br><span class="line">    <span class="comment">// 資料的使用範圍：此類別內</span></span><br><span class="line">    <span class="comment">// attribute 內使用 nameof(string memberDataName)</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// act</span></span><br><span class="line">    <span class="keyword">var</span> exception = Assert.Throws&lt;ArgumentOutOfRangeException&gt;(() =&gt; <span class="keyword">this</span>._sut.GetRange(<span class="keyword">from</span>, size));</span><br><span class="line"></span><br><span class="line">    <span class="comment">// assert</span></span><br><span class="line">    Assert.Contains(nameOfErrorArgument, exception.Message);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> IEnumerable&lt;<span class="built_in">object</span>[]&gt; PageDataMemberData =&gt;</span><br><span class="line">    <span class="keyword">new</span> List&lt;<span class="built_in">object</span>[]&gt;</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; <span class="string">&quot;from&quot;</span>, <span class="number">-1</span>, <span class="number">10</span> &#125;,</span><br><span class="line">        <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; <span class="string">&quot;from&quot;</span>, <span class="number">0</span>, <span class="number">10</span> &#125;,</span><br><span class="line">        <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; <span class="string">&quot;size&quot;</span>, <span class="number">1</span>, <span class="number">-1</span> &#125;,</span><br><span class="line">        <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; <span class="string">&quot;size&quot;</span>, <span class="number">1</span>, <span class="number">0</span> &#125;</span><br><span class="line">    &#125;;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>不同類別內 (範圍：不限)</p>
+<figure class="highlight csharp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">ProductServiceTests</span> : <span class="title">IDisposable</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">// 省略...</span></span><br><span class="line"></span><br><span class="line">    [<span class="meta">Theory(DisplayName = <span class="string">&quot;GetRange_不同類別MemberData_不合規格的值&quot;</span>)</span>]</span><br><span class="line">    [<span class="meta">MemberData(nameof(PageTestMemberData.GetPageErrorData), MemberType = typeof(PageTestMemberData))</span>]</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> GetRange_不同類別MemberData_輸入引數的內容為不合規格的值_應拋出ArgumentOutOfRangeException(<span class="built_in">string</span> nameOfErrorArgument,</span><br><span class="line">        <span class="built_in">int</span> <span class="keyword">from</span>, <span class="built_in">int</span> size)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">// 資料來源為獨立出一個必須是 public 且 static 的方法，必須要回傳 IEnumerable&lt;object[]&gt;</span></span><br><span class="line">        <span class="comment">// 資料的使用範圍：不限 (可跨類別、專案等)</span></span><br><span class="line">        <span class="comment">// attribute 內使用 nameof(string memberDataName), MemberType = typeof(資料來源類別的名稱)</span></span><br><span class="line"></span><br><span class="line">        <span class="comment">// act</span></span><br><span class="line">        <span class="keyword">var</span> exception = Assert.Throws&lt;ArgumentOutOfRangeException&gt;(() =&gt; <span class="keyword">this</span>._sut.GetRange(<span class="keyword">from</span>, size));</span><br><span class="line"></span><br><span class="line">        <span class="comment">// assert</span></span><br><span class="line">        Assert.Contains(nameOfErrorArgument, exception.Message);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">PageTestMemberData</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> IEnumerable&lt;<span class="built_in">object</span>[]&gt; GetPageCorrectData()</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">yield</span> <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; <span class="string">&quot;from&quot;</span>, <span class="number">1</span>, <span class="number">10</span> &#125;;</span><br><span class="line">        <span class="keyword">yield</span> <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; <span class="string">&quot;from&quot;</span>, <span class="number">2</span>, <span class="number">10</span> &#125;;</span><br><span class="line">        <span class="keyword">yield</span> <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; <span class="string">&quot;size&quot;</span>, <span class="number">1</span>, <span class="number">1</span> &#125;;</span><br><span class="line">        <span class="keyword">yield</span> <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; <span class="string">&quot;size&quot;</span>, <span class="number">1</span>, <span class="number">2</span> &#125;;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> IEnumerable&lt;<span class="built_in">object</span>[]&gt; GetPageErrorData()</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">yield</span> <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; <span class="string">&quot;from&quot;</span>, <span class="number">-5</span>, <span class="number">10</span> &#125;;</span><br><span class="line">        <span class="keyword">yield</span> <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; <span class="string">&quot;from&quot;</span>, <span class="number">0</span>, <span class="number">10</span> &#125;;</span><br><span class="line">        <span class="keyword">yield</span> <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; <span class="string">&quot;size&quot;</span>, <span class="number">1</span>, <span class="number">-5</span> &#125;;</span><br><span class="line">        <span class="keyword">yield</span> <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; <span class="string">&quot;size&quot;</span>, <span class="number">1</span>, <span class="number">0</span> &#125;;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h3 id="Theory-ClassData"><a href="#Theory-ClassData" class="headerlink" title="[Theory], [ClassData]"></a>[Theory], [ClassData]</h3><p>資料的使用範圍：不限 (可跨類別、專案等)</p>
+<p>可理解為由一個專門提供資料的類別取得資料</p>
+<p>對應 MSTest：[TestMethod], [CustomDataSource]</p>
+<figure class="highlight csharp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">ProductServiceTests</span> : <span class="title">IDisposable</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">// 省略...</span></span><br><span class="line"></span><br><span class="line">    [<span class="meta">Theory(DisplayName = <span class="string">&quot;GetRange_ClassData_不合規格的值&quot;</span>)</span>]</span><br><span class="line">    [<span class="meta">ClassData(typeof(PageTestClassData))</span>]</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> GetRange_ClassData_輸入引數的內容為不合規格的值_應拋出ArgumentOutOfRangeException(<span class="built_in">string</span> nameOfErrorArgument, <span class="built_in">int</span> <span class="keyword">from</span>, <span class="built_in">int</span> size)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">// 資料來源為獨立的類別，但是這個類別必須繼承 IEnumerable</span></span><br><span class="line">        <span class="comment">// attribute 內使用 typeof</span></span><br><span class="line"></span><br><span class="line">        <span class="comment">// act</span></span><br><span class="line">        <span class="keyword">var</span> exception = Assert.Throws&lt;ArgumentOutOfRangeException&gt;(() =&gt; <span class="keyword">this</span>._sut.GetRange(<span class="keyword">from</span>, size));</span><br><span class="line"></span><br><span class="line">        <span class="comment">// assert</span></span><br><span class="line">        Assert.Contains(nameOfErrorArgument, exception.Message);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">PageTestClassData</span> : <span class="title">IEnumerable</span>&lt;<span class="title">object</span>[]&gt;</span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">// 用於 ClassData 的類別，必須要繼承 IEnumerable</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> IEnumerator&lt;<span class="built_in">object</span>[]&gt; GetEnumerator()</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">yield</span> <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; <span class="string">&quot;from&quot;</span>, <span class="number">-1</span>, <span class="number">10</span> &#125;;</span><br><span class="line">        <span class="keyword">yield</span> <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; <span class="string">&quot;from&quot;</span>, <span class="number">0</span>, <span class="number">10</span> &#125;;</span><br><span class="line">        <span class="keyword">yield</span> <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; <span class="string">&quot;size&quot;</span>, <span class="number">1</span>, <span class="number">-1</span> &#125;;</span><br><span class="line">        <span class="keyword">yield</span> <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; <span class="string">&quot;size&quot;</span>, <span class="number">1</span>, <span class="number">0</span> &#125;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    IEnumerator IEnumerable.GetEnumerator()</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">this</span>.GetEnumerator();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="注意事項"><a href="#注意事項" class="headerlink" title="注意事項"></a>注意事項</h3><ul>
+<li>想要判斷陣列是否為空集合的時候，可能會想要使用 <code>Assert.Equal(0, actual.Count());</code>，但是官方不建議，IDE 也會提示。建議使用 <code>Empty</code> (<code>Assert.Empty(actual);</code>)。</li>
+</ul>
+<h2 id="參考"><a href="#參考" class="headerlink" title="參考"></a>參考</h2><ul>
+<li><a href="https://xunit.net/docs/getting-started/v3/cmdline">Getting started with xUnit.net v3 (command line) &gt; xUnit.net</a></li>
+<li><a href="https://xunit.net/docs/shared-context">Shared Context between Tests &gt; xUnit.net</a></li>
+<li><a href="https://andrewlock.net/creating-parameterised-tests-in-xunit-with-inlinedata-classdata-and-memberdata/">Creating parameterised tests in xUnit with [InlineData], [ClassData], and [MemberData]</a></li>
+</ul>
+]]></content>
+      <categories>
+        <category>單元測試</category>
+      </categories>
+      <tags>
+        <tag>單元測試</tag>
+        <tag>xUnit</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>在單元測試使用指定 appsettings.json 或 IOptions</title>
     <url>/UnitTest/%E5%9C%A8%E5%96%AE%E5%85%83%E6%B8%AC%E8%A9%A6%E4%BD%BF%E7%94%A8%E6%8C%87%E5%AE%9Aappsettings-json%E6%88%96IOptions/</url>
     <content><![CDATA[<p>有時候寫到 WebService 的單元測試時，需要注入 IConfiguration 時該怎麼處理？<br>想要使用單元測試專用的 appsettings.json 要怎麼讀取？<br>甚至要注入 IOptions 時又要怎麼處理？<br>這篇文章就來告訴你該怎麼做。</p>
@@ -1382,66 +1442,6 @@
       </categories>
       <tags>
         <tag>單元測試</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>CRON 表達式</title>
-    <url>/Schedule/cron%E8%A1%A8%E9%81%94%E5%BC%8F/</url>
-    <content><![CDATA[<p>一種排程的時間設定表達式，可以用在 CRON, Hangfire, Coravel。</p>
-<p>最近工作需要用到 Hangfire 來作為工作排程器，而裡面關於定期執行工作（recurring）的時間設定是使用 cron expression。對於只用過 Windows 內建工作排程器的我來說可以說是相當陌生，因此來學學怎麼這種表達式的設定方式。</p>
-<h2 id="說明"><a href="#說明" class="headerlink" title="說明"></a>說明</h2><blockquote>
-<p>工具型軟體 <strong>cron</strong> 是一款類Unix的作業系統下的基於時間的任務管理系統。用戶們可以通過 <strong>cron</strong><br>在固定時間、日期、間隔下，運行定期任務（可以是命令和腳本）。</p>
-</blockquote>
-<p>來源：<a href="https://zh.wikipedia.org/zh-tw/Cron">Cron-維基百科</a></p>
-<p>這個表達式其實內含「每次」這個概念，設定的值都是實際執行的日期和時間。</p>
-<p>表達式： <code>* * * * *</code></p>
-<p>每個之間要有空格</p>
-<table>
-<thead>
-<tr>
-<th>欄位</th>
-<th>分鐘</th>
-<th>小時</th>
-<th>日</th>
-<th>月</th>
-<th>星期</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>範圍</td>
-<td>0-59</td>
-<td>0-23</td>
-<td>1-31</td>
-<td>1-12或JAN-DEC</td>
-<td>0-6或SUN-SAT</td>
-</tr>
-</tbody></table>
-<p>除了直接輸入數字外，還可以搭配一些符號使用</p>
-<ol>
-<li><code>*</code> ：欄位的所有值。例如分鐘欄位輸入<code>*</code>，代表每分鐘（0-59）都執行。</li>
-<li><code>,</code> ：多個指定值。例如小時欄位輸入<code>9,18</code>，代表9點和18點執行。</li>
-<li><code>-</code> ：指定範圍。例如日欄位輸入<code>15-20</code>，代表一個月裡的15日至20日都執行。</li>
-<li><code>/</code> ：指定增量，<code>開始值/每次增加的量</code>。例如分鐘欄位輸入<code>1/10</code>，代表從1開始，每次10分鐘才再次執行。</li>
-</ol>
-<h2 id="練習"><a href="#練習" class="headerlink" title="練習"></a>練習</h2><ol>
-<li>每天08:00：<code>0 8 * * *</code></li>
-<li>每週一至週五22:30：<code>30 22 * * 1-5</code></li>
-<li>每週末5分鐘一次：<code>*/5 * * * 0,6</code></li>
-<li>每個雙數月1日的00:00：<code>0 0 1 */2 *</code></li>
-<li>每月的15日03:00：<code>0 3 15 * *</code></li>
-</ol>
-<p>可以到這裡驗證和練習 <a href="https://crontab.guru/">https://crontab.guru/</a></p>
-<h2 id="參考"><a href="#參考" class="headerlink" title="參考"></a>參考</h2><ul>
-<li><a href="https://zh.wikipedia.org/zh-tw/Cron">Cron-維基百科</a></li>
-<li><a href="https://docs.aws.amazon.com/zh_tw/lambda/latest/dg/services-cloudwatchevents-expressions.html">AWS使用 Rate 或 Cron 排定表達式</a></li>
-<li><a href="https://crontab.guru/">crontab guru</a></li>
-</ul>
-]]></content>
-      <categories>
-        <category>排程</category>
-      </categories>
-      <tags>
-        <tag>排程</tag>
       </tags>
   </entry>
 </search>

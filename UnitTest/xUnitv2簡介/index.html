@@ -28,7 +28,7 @@
 <meta property="og:description" content="核心觀念和主流的測試工具一樣，主要差在 Initialize 和 Cleanup 不同，xUnit 主要靠建構式和實作 IDisposable 來處理，而且有 IClassFixture 和 ICollectionFixture 來提供多種組合，增加了彈性。">
 <meta property="og:locale" content="zh_TW">
 <meta property="article:published_time" content="2025-03-29T08:51:21.000Z">
-<meta property="article:modified_time" content="2025-03-29T10:20:37.750Z">
+<meta property="article:modified_time" content="2025-03-29T10:54:59.180Z">
 <meta property="article:author" content="zamhsu">
 <meta property="article:tag" content="單元測試">
 <meta property="article:tag" content="xUnit">
@@ -252,7 +252,7 @@
       <span class="post-meta-item-text">發表於</span>
       
 
-      <time title="創建時間：2025-03-29 16:51:21 / 修改時間：18:20:37" itemprop="dateCreated datePublished" datetime="2025-03-29T16:51:21+08:00">2025-03-29</time>
+      <time title="創建時間：2025-03-29 16:51:21 / 修改時間：18:54:59" itemprop="dateCreated datePublished" datetime="2025-03-29T16:51:21+08:00">2025-03-29</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -278,17 +278,17 @@
         <p>核心觀念和主流的測試工具一樣，主要差在 Initialize 和 Cleanup 不同，xUnit 主要靠建構式和實作 <code>IDisposable</code> 來處理，而且有 <code>IClassFixture</code> 和 <code>ICollectionFixture</code> 來提供多種組合，增加了彈性。目前 v2 不支援 Assembly 層級，但是有其他套件，不想用可以等 v3。</p>
 <h2 id="目錄"><a href="#目錄" class="headerlink" title="目錄"></a>目錄</h2><p>Attribute：</p>
 <ul>
-<li><a href="%E5%9F%BA%E7%A4%8E%E7%9F%A5%E8%AD%98.md">基礎知識</a></li>
+<li><a href="https://zamhsu.github.io/UnitTest/xUnit%E5%9F%BA%E7%A4%8E%E8%A7%80%E5%BF%B5/">基礎知識</a></li>
 </ul>
 <p>各層級 Fixture 生命週期的說明</p>
 <ul>
-<li><a href="xUnit%E5%90%84%E5%B1%A4%E7%B4%9AFixture%E7%9A%84%E7%94%9F%E5%91%BD%E9%80%B1%E6%9C%9F.md">xUnit 各層級 Fixture 的生命週期</a></li>
+<li><a href="https://zamhsu.github.io/UnitTest/xUnit%E5%90%84%E5%B1%A4%E7%B4%9AFixture%E7%9A%84%E7%94%9F%E5%91%BD%E9%80%B1%E6%9C%9F/">xUnit 各層級 Fixture 的生命週期</a></li>
 </ul>
 <p>Fixture：</p>
 <ul>
-<li><a href="AssemblyFixture.md">Assembly Level Fixture</a></li>
-<li><a href="ClassFixture.md">Class Level Fixture</a></li>
-<li><a href="CollectionFixture.md">Collection Fixture</a></li>
+<li><a href="https://zamhsu.github.io/UnitTest/xUnitAssemblyFixture/">Assembly Level Fixture</a></li>
+<li><a href="https://zamhsu.github.io/UnitTest/xUnitClassFixture/">Class Level Fixture</a></li>
+<li><a href="https://zamhsu.github.io/UnitTest/xUnitCollectionFixture/">Collection Fixture</a></li>
 </ul>
 <h2 id="已知和-MSTest-的差異"><a href="#已知和-MSTest-的差異" class="headerlink" title="已知和 MSTest 的差異"></a>已知和 MSTest 的差異</h2><p>主要和 MSTest 常用的寫法對比。</p>
 <p>官方也有給詳細的差異對照表，詳細可以看 <a target="_blank" rel="noopener" href="https://xunit.net/docs/comparisons">Comparing xUnit.net to other frameworks</a>。</p>
