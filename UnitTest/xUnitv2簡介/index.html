@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 6.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/GrayCat_32_32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/GrayCat_16_16.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" integrity="sha256-DfWjNxDkM94fVBWx1H5BMMp0Zq7luBlV8QRcSES7s+0=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.css" integrity="sha256-Vzbj7sDDS/woiFS3uNKo8eIuni59rjyNGtXfstRzStA=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"zamhsu.github.io","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.12.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":{"enable":true,"style":null},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜尋...","empty":"我們無法找到任何有關 ${query} 的搜索結果","hits_time":"${hits} 找到 ${time} 個結果","hits":"找到 ${hits} 個結果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="核心觀念和主流的測試工具一樣，主要差在 Initialize 和 Cleanup 不同，xUnit 主要靠建構式和實作 IDisposable 來處理，而且有 IClassFixture 和 ICollectionFixture 來提供多種組合，增加了彈性。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="xUnit v2 簡介">
+<meta property="og:url" content="https://zamhsu.github.io/UnitTest/xUnitv2%E7%B0%A1%E4%BB%8B/">
+<meta property="og:site_name" content="灰貓遊樂場">
+<meta property="og:description" content="核心觀念和主流的測試工具一樣，主要差在 Initialize 和 Cleanup 不同，xUnit 主要靠建構式和實作 IDisposable 來處理，而且有 IClassFixture 和 ICollectionFixture 來提供多種組合，增加了彈性。">
+<meta property="og:locale" content="zh_TW">
+<meta property="article:published_time" content="2025-03-29T08:51:21.000Z">
+<meta property="article:modified_time" content="2025-03-29T10:20:37.750Z">
+<meta property="article:author" content="zamhsu">
+<meta property="article:tag" content="單元測試">
+<meta property="article:tag" content="xUnit">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://zamhsu.github.io/UnitTest/xUnitv2%E7%B0%A1%E4%BB%8B/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-TW","comments":true,"permalink":"https://zamhsu.github.io/UnitTest/xUnitv2%E7%B0%A1%E4%BB%8B/","path":"UnitTest/xUnitv2簡介/","title":"xUnit v2 簡介"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>xUnit v2 簡介 | 灰貓遊樂場</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-0GCE5PM3VG"></script>
+  <script class="next-config" data-name="google_analytics" type="application/json">{"tracking_id":"G-0GCE5PM3VG","only_pageview":false}</script>
+  <script src="/js/third-party/analytics/google-analytics.js"></script>
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切換導航欄" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">灰貓遊樂場</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">蹦蹦跳跳頑皮小灰貓</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首頁</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>標籤</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分類</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>歸檔</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜尋
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜尋..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目錄
+        </li>
+        <li class="sidebar-nav-overview">
+          本站概要
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%9B%AE%E9%8C%84"><span class="nav-number">1.</span> <span class="nav-text">目錄</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B7%B2%E7%9F%A5%E5%92%8C-MSTest-%E7%9A%84%E5%B7%AE%E7%95%B0"><span class="nav-number">2.</span> <span class="nav-text">已知和 MSTest 的差異</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Method-Level"><span class="nav-number">2.1.</span> <span class="nav-text">Method Level</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Class-Level"><span class="nav-number">2.2.</span> <span class="nav-text">Class Level</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Assembly-Level"><span class="nav-number">2.3.</span> <span class="nav-text">Assembly Level</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B6%E4%BB%96%E5%8F%83%E8%80%83%E8%B3%87%E6%96%99"><span class="nav-number">3.</span> <span class="nav-text">其他參考資料</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zamhsu"
+      src="/images/GrayCat.png">
+  <p class="site-author-name" itemprop="name">zamhsu</p>
+  <div class="site-description" itemprop="description">小灰貓四處玩樂的筆記</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">20</span>
+          <span class="site-state-item-name">文章</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">分類</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">標籤</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zamhsu" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zamhsu" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+  <div class="cc-license site-overview-item animated" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="https://cdnjs.cloudflare.com/ajax/libs/creativecommons-vocabulary/2020.11.3/assets/license_badges/big/by_nc_sa.svg" alt="Creative Commons"></a>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="回到頂端">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-TW">
+    <link itemprop="mainEntityOfPage" href="https://zamhsu.github.io/UnitTest/xUnitv2%E7%B0%A1%E4%BB%8B/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/GrayCat.png">
+      <meta itemprop="name" content="zamhsu">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="灰貓遊樂場">
+      <meta itemprop="description" content="小灰貓四處玩樂的筆記">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="xUnit v2 簡介 | 灰貓遊樂場">
+      <meta itemprop="description" content="核心觀念和主流的測試工具一樣，主要差在 Initialize 和 Cleanup 不同，xUnit 主要靠建構式和實作 IDisposable 來處理，而且有 IClassFixture 和 ICollectionFixture 來提供多種組合，增加了彈性。">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          xUnit v2 簡介
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">發表於</span>
+      
+
+      <time title="創建時間：2025-03-29 16:51:21 / 修改時間：18:20:37" itemprop="dateCreated datePublished" datetime="2025-03-29T16:51:21+08:00">2025-03-29</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分類於</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%96%AE%E5%85%83%E6%B8%AC%E8%A9%A6/" itemprop="url" rel="index"><span itemprop="name">單元測試</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+            <div class="post-description">核心觀念和主流的測試工具一樣，主要差在 Initialize 和 Cleanup 不同，xUnit 主要靠建構式和實作 IDisposable 來處理，而且有 IClassFixture 和 ICollectionFixture 來提供多種組合，增加了彈性。</div>
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>核心觀念和主流的測試工具一樣，主要差在 Initialize 和 Cleanup 不同，xUnit 主要靠建構式和實作 <code>IDisposable</code> 來處理，而且有 <code>IClassFixture</code> 和 <code>ICollectionFixture</code> 來提供多種組合，增加了彈性。目前 v2 不支援 Assembly 層級，但是有其他套件，不想用可以等 v3。</p>
+<h2 id="目錄"><a href="#目錄" class="headerlink" title="目錄"></a>目錄</h2><p>Attribute：</p>
+<ul>
+<li><a href="%E5%9F%BA%E7%A4%8E%E7%9F%A5%E8%AD%98.md">基礎知識</a></li>
+</ul>
+<p>各層級 Fixture 生命週期的說明</p>
+<ul>
+<li><a href="xUnit%E5%90%84%E5%B1%A4%E7%B4%9AFixture%E7%9A%84%E7%94%9F%E5%91%BD%E9%80%B1%E6%9C%9F.md">xUnit 各層級 Fixture 的生命週期</a></li>
+</ul>
+<p>Fixture：</p>
+<ul>
+<li><a href="AssemblyFixture.md">Assembly Level Fixture</a></li>
+<li><a href="ClassFixture.md">Class Level Fixture</a></li>
+<li><a href="CollectionFixture.md">Collection Fixture</a></li>
+</ul>
+<h2 id="已知和-MSTest-的差異"><a href="#已知和-MSTest-的差異" class="headerlink" title="已知和 MSTest 的差異"></a>已知和 MSTest 的差異</h2><p>主要和 MSTest 常用的寫法對比。</p>
+<p>官方也有給詳細的差異對照表，詳細可以看 <a target="_blank" rel="noopener" href="https://xunit.net/docs/comparisons">Comparing xUnit.net to other frameworks</a>。</p>
+<h3 id="Method-Level"><a href="#Method-Level" class="headerlink" title="Method Level"></a>Method Level</h3><table>
+<thead>
+<tr>
+<th>xUnit</th>
+<th>MSTest</th>
+<th>備註</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>x</td>
+<td>[TestClass]</td>
+<td>xUnit 不需要這個</td>
+</tr>
+<tr>
+<td>建構式</td>
+<td>[TestInitialize]</td>
+<td>xUnit 認為不好追蹤和除錯測試的程式碼，詳細請看 <a target="_blank" rel="noopener" href="https://xunit.net/docs/comparisons#note2">Attribute Notes, Note 2</a></td>
+</tr>
+<tr>
+<td>Dispose</td>
+<td>[TestCleanup]</td>
+<td>原因同上，xUnit 要繼承 <code>IDisposable</code></td>
+</tr>
+<tr>
+<td>[Fact]</td>
+<td>[TestMethod]</td>
+<td>靠這個偵測測試方法</td>
+</tr>
+<tr>
+<td>[Theory]</td>
+<td>[TestMethod]</td>
+<td>靠這個偵測測試方法。要用類似 MSTest 的 <code>DataRow</code> 功能時，<code>Fact</code> 必須改成 <code>Theory</code>。可以帶 <code>DisplayName</code> 在測試結果顯示此名稱</td>
+</tr>
+<tr>
+<td>[InlineData]</td>
+<td>[DataRow]</td>
+<td><code>InlineData</code> 沒有 <code>DisplayName</code>，都是看 <code>Theory</code> 的<code>DisplayName</code></td>
+</tr>
+<tr>
+<td>[MemberData]</td>
+<td>[DynamicData]</td>
+<td><code>MemberData</code> 類似於 <code>InlineData</code>，但是是獨立出一個必須是 public 且 static 的方法，型別使用 object。attribute 內使用 <code>nameof</code> (裡面參數是 string memberName)</td>
+</tr>
+<tr>
+<td>[ClassData]</td>
+<td>[CustomDataSource]</td>
+<td><code>ClassData</code> 類似於 <code>InlineData</code>，建一個獨立的類別，但是這個類別必須繼承 <code>IEnumerable</code>。attribute 內使用 <code>typeof</code></td>
+</tr>
+<tr>
+<td>x</td>
+<td>[Owner]</td>
+<td></td>
+</tr>
+<tr>
+<td>x</td>
+<td>[TestCategory]</td>
+<td></td>
+</tr>
+<tr>
+<td>x</td>
+<td>[TestProperty]</td>
+<td></td>
+</tr>
+<tr>
+<td>x</td>
+<td>[Timeout]</td>
+<td></td>
+</tr>
+</tbody></table>
+<p>其他注意事項</p>
+<ol>
+<li>想要判斷陣列是否為空集合的時候，可能會想要使用 <code>Assert.Equal(0, actual.Count());</code>，但是官方不建議，IDE 也會提示。建議使用 <code>Empty</code> (<code>Assert.Empty(actual);</code>)。</li>
+</ol>
+<h3 id="Class-Level"><a href="#Class-Level" class="headerlink" title="Class Level"></a>Class Level</h3><p>獨立出一個類別來撰寫，然後在測試的類別裡繼承 <code>IClassFixture&lt;T&gt;</code>，變成可以同時繼承多個，和 MSTest 寫在測試方法內不同。</p>
+<table>
+<thead>
+<tr>
+<th>xUnit</th>
+<th>MSTest</th>
+<th>備註</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>x</td>
+<td>[TestClass]</td>
+<td>xUnit 不需要這個</td>
+</tr>
+<tr>
+<td>建構式</td>
+<td>[ClassInitialize]</td>
+<td>xUnit 認為不好追蹤和除錯測試的程式碼，詳細請看 <a target="_blank" rel="noopener" href="https://xunit.net/docs/comparisons#note2">Attribute Notes, Note 2</a></td>
+</tr>
+<tr>
+<td>Dispose</td>
+<td>[ClassCleanup]</td>
+<td>原因同上，xUnit 要繼承 <code>IDisposable</code></td>
+</tr>
+</tbody></table>
+<h3 id="Assembly-Level"><a href="#Assembly-Level" class="headerlink" title="Assembly Level"></a>Assembly Level</h3><p>v2 版作者不支援也不打算做，但是有給<a target="_blank" rel="noopener" href="https://github.com/xunit/samples.xunit/tree/main/AssemblyFixtureExample">範例</a>，請看<a target="_blank" rel="noopener" href="https://github.com/xunit/xunit/issues/431">原因</a>。也有很多第三方套件可以用，例如 <a target="_blank" rel="noopener" href="https://github.com/tomaszeman/Xunit.Extensions.Ordering#assemblyFixture">Xunit.Extensions.Ordering</a> , <a target="_blank" rel="noopener" href="https://github.com/JDCain/Xunit.Extensions.AssemblyFixture">Xunit.Extensions.AssemblyFixture</a>。</p>
+<p>v3 版作者加進去了，但是風格不同，目前是使用 attribute，而不是 <code>IAssemblyFixture&lt;T&gt;</code> 這種。</p>
+<table>
+<thead>
+<tr>
+<th>xUnit</th>
+<th>MSTest</th>
+<th>備註</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>x</td>
+<td>[TestClass]</td>
+<td>xUnit 不需要這個</td>
+</tr>
+<tr>
+<td>建構式</td>
+<td>[AssemblyInitialize]</td>
+<td>xUnit 認為不好追蹤和除錯測試的程式碼，詳細請看 <a target="_blank" rel="noopener" href="https://xunit.net/docs/comparisons#note2">Attribute Notes, Note 2</a></td>
+</tr>
+<tr>
+<td>Dispose</td>
+<td>[AssemblyCleanup]</td>
+<td>原因同上，xUnit 要繼承 <code>IDisposable</code></td>
+</tr>
+</tbody></table>
+<p>執行測試的範例：</p>
+<p>到單元測試專案的目錄下，執行 <code>dotnet run</code>。</p>
+<h2 id="其他參考資料"><a href="#其他參考資料" class="headerlink" title="其他參考資料"></a>其他參考資料</h2><ul>
+<li><a target="_blank" rel="noopener" href="https://xunit.net/docs/shared-context">Shared Context between Tests &gt; xUnit.net</a></li>
+<li><a target="_blank" rel="noopener" href="https://andrewlock.net/creating-parameterised-tests-in-xunit-with-inlinedata-classdata-and-memberdata/">Creating parameterised tests in xUnit with [InlineData], [ClassData], and [MemberData]</a></li>
+<li><a target="_blank" rel="noopener" href="https://blog.yowko.com/mstest-nunit-xunit/#mstest-nunit-3-xunit-net-2-0-%E6%AF%94%E8%BC%83">MSTest,NUnit 3,xUnit.net 2.0 比較 - Yowko’s Notes</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/dotnet/runtime/blob/main/src/libraries/System.Collections/tests/Generic/HashSet/HashSet.Generic.Tests.cs">System.Collections HashSet 的測試</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/xunit/samples.xunit">xUnit 官方範例</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          
+
+<div class="post-copyright">
+<ul>
+  <li class="post-copyright-author">
+      <strong>作者： </strong>zamhsu
+  </li>
+  <li class="post-copyright-link">
+      <strong>文章連結：</strong>
+      <a href="https://zamhsu.github.io/UnitTest/xUnitv2%E7%B0%A1%E4%BB%8B/" title="xUnit v2 簡介">https://zamhsu.github.io/UnitTest/xUnitv2簡介/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版權聲明： </strong>本網誌所有文章除特別聲明外，均採用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 許可協議。轉載請註明出處！
+  </li>
+</ul>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/%E5%96%AE%E5%85%83%E6%B8%AC%E8%A9%A6/" rel="tag"># 單元測試</a>
+              <a href="/tags/xUnit/" rel="tag"># xUnit</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/SoftSkill/%E6%89%B9%E5%88%A4%E6%80%A7%E6%80%9D%E8%80%83/" rel="prev" title="批判性思考">
+                  <i class="fa fa-chevron-left"></i> 批判性思考
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/UnitTest/xUnit%E5%9F%BA%E7%A4%8E%E8%A7%80%E5%BF%B5/" rel="next" title="xUnit 基礎觀念">
+                  xUnit 基礎觀念 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 2022 – 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zamhsu</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/pisces/" rel="noopener" target="_blank">NexT.Pisces</a> 強力驅動
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.js" integrity="sha256-yt2kYMy0w8AbtF89WXb2P1rfjcP/HTHLT7097U8Y5b8=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/next-boot.js"></script>
+
+  
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.0/search.js" integrity="sha256-vXZMYLEqsROAXkEw93GGIvaB2ab+QW6w3+1ahD9nXXA=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+  <script src="/js/third-party/fancybox.js"></script>
+
+
+  
+
+
+
+
+
+</body>
+</html>

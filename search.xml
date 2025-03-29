@@ -1,80 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
-    <title>自架 Grafana Tempo (1) 介紹</title>
-    <url>/APM/%E8%87%AA%E6%9E%B6Grafana_Tempo-1/</url>
-    <content><![CDATA[<p>外行人使用 Grafana Tempo 在本機建置APM服務。</p>
-<h2 id="起因"><a href="#起因" class="headerlink" title="起因"></a>起因</h2><p>其實原因很簡單，就只是想玩玩看如何建置APM服務，看看那精美的圖表，「嘗試」看自己的服務哪邊可以再優化（我這菜鳥能看得出來和成功改善就要偷笑了），另一方面其實是想看有沒有辦法取代 CoreProfiler。因為這工具算是比較簡易、好裝好用，但是只能存在記憶體裡，會為了節省記憶體使用量而減少紀錄留存的筆數，變成看不到以前的紀錄，也沒辦法統計某時段內服務的效能等問題。原本是想用 Elastic APM，後來想到之前裝過 Elasticsearch 時覺得有點麻煩，不想再試了，所以 Google 搜一搜就看到了這個 - Grafana Tempo。</p>
-<p>這裡面的知識量很多，我只能提供目前所知道的粗淺內容，每一項服務&#x2F;工具的水都很深，短時間內無法參透，如果有什麼問題歡迎隨時糾正。</p>
-<h2 id="用途"><a href="#用途" class="headerlink" title="用途"></a>用途</h2><p>用來查詢一個服務的執行時間，以及每個執行步驟的執行時間、呼叫了哪個API，來找出效能瓶頸。</p>
-<h2 id="架構"><a href="#架構" class="headerlink" title="架構"></a>架構</h2><p><img src="https://i.imgur.com/WeRghZ7.png" alt="圖1：架構。資料來源：https://grafana.com/docs/tempo/latest/getting-started/"></p>
-<p>功能分別是：</p>
-<p>遙測 -&gt; pipeline (資料處理) -&gt; 服務後端 -&gt; 視覺化</p>
-<h3 id="OpenTelemetry"><a href="#OpenTelemetry" class="headerlink" title="OpenTelemetry"></a>OpenTelemetry</h3><p>應用程式端的遙測工具，專門用來蒐集應用程式的各項數據，例如 logs, metrics 和 traces，讓服務可以被觀測。你沒聽錯，這個工具提供這三項數據，簡單省事，但是格式需要符合它的規範。蒐集完後會透過OTLP協議發送到目的地，裡面有提供 gRPC 或 HTTP 的方式傳送。</p>
-<p>.Net 有套件支援，還可以自動遙測 WebApi, SqlClient, HttpClient 和 Redis，意思是這些不用自己埋點遙測。埋點時使用 System.Diagnostics 裡面的 Activity，這裡面內容很多，good luck。</p>
-<h3 id="Grafana-Agent"><a href="#Grafana-Agent" class="headerlink" title="Grafana Agent"></a>Grafana Agent</h3><p>類似中轉站，可以緩衝接收到資料、過濾不要記錄的資料等各種資料處理後，再轉送到APM的伺服器。它有支援多個資料來源，例如 Jaeger, Kafka, OpenCensus, OTLP 和 Zipkin。當然也是可以不經過 pipeline 處理，直接送到 Tempo，但是資料量大或服務多的時候還是建議要使用。</p>
-<p>其他選擇：</p>
-<ul>
-<li><a href="https://github.com/open-telemetry/opentelemetry-collector">OpenTelemetry Collector</a></li>
-<li><a href="https://www.jaegertracing.io/docs/latest/deployment/">Jaeger Agent</a></li>
-</ul>
-<p>選擇原因：最初 OpenTelemetry Collector 裝了之後不知道為什麼一直收不到資料，懶得除錯就換了 Grafana Agent。結果發現換了也不行，除錯後發現設定有誤，現在看來用 OpenTelemetry Collector 也是沒問題。</p>
-<h3 id="Grafana-Tempo"><a href="#Grafana-Tempo" class="headerlink" title="Grafana Tempo"></a>Grafana Tempo</h3><p>Grafana 旗下的一款分散式 tracing 後端工具，主要負責搜尋、儲存資料，內建 TempoDB。這裡面的設定比較複雜，如果以嘗試的角度來用，先以範例的設定檔來配置就好。目前只知道它的資料儲存會先在 <code>wal</code> 建立一份，到一定大小或時間後會搬到 <code>wal/data</code> 裡，同時會寫一份到指定路徑中儲存。裡面的資料到一定的時間後會被壓縮，以節省空間。</p>
-<h3 id="Grafana"><a href="#Grafana" class="headerlink" title="Grafana"></a>Grafana</h3><p>視覺化工具，設定資料來源後就可以搜尋資料和建立報表。需要學習怎麼建立報表和搜尋的語法，內容也是很多，簡單用的話可以先不學語法和建報表，用裡面搜尋後的結果報表就足夠了，但有些功能還是 beta 版。內建的報表像是各服務的關聯圖（包含流量、時間）、指定時間範圍內的平均回應時間，當然還有最重要的服務追蹤。</p>
-<h2 id="待學技能"><a href="#待學技能" class="headerlink" title="待學技能"></a>待學技能</h2><p>看了這麼多，應該會知道裡面需要學什麼，簡直像掉進了無底洞一樣，快逃啊…</p>
-<ul>
-<li>OpenTelemetry</li>
-<li>System.Diagnostics 埋點</li>
-<li>Tempo 資料儲存的方式</li>
-<li>Grafana 查詢語法</li>
-<li>Grafana 製作報表</li>
-<li>Agent, Tempo, Grafana 的設定</li>
-</ul>
-<h2 id="懶得看我的文章"><a href="#懶得看我的文章" class="headerlink" title="懶得看我的文章"></a>懶得看我的文章</h2><p>那就直接去看我 GitHub 的 Repository 吧：<a href="https://github.com/zamhsu/GrafanaTempo">zamhsu&#x2F;GrafanaTempo</a></p>
-<h2 id="相關資料"><a href="#相關資料" class="headerlink" title="相關資料"></a>相關資料</h2><ul>
-<li><a href="https://opentelemetry.io/">Opentelemetry</a></li>
-<li><a href="https://grafana.com/docs/agent/latest/">Grafana Agent</a></li>
-<li><a href="https://grafana.com/oss/tempo/">Grafana Tempo</a></li>
-<li><a href="https://grafana.com/grafana/">Grafana</a></li>
-<li><a href="https://learn.microsoft.com/zh-tw/dotnet/api/system.diagnostics">System.Diagnostics</a></li>
-<li><a href="https://github.com/grafana/tempo/tree/main/example">Grafana Tempo Example - Github</a></li>
-</ul>
-]]></content>
-      <categories>
-        <category>APM</category>
-      </categories>
-      <tags>
-        <tag>APM</tag>
-        <tag>Grafana Tempo</tag>
-        <tag>教學</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>遷移 Docker 資料</title>
-    <url>/Docker/%E9%81%B7%E7%A7%BBDocker%E8%B3%87%E6%96%99/</url>
-    <content><![CDATA[<h2 id="起因"><a href="#起因" class="headerlink" title="起因"></a>起因</h2><p>Windows 裡使用 WSL 2 的 Docker 資料預設在 C 槽，不知不覺間就被塞爆了，我們來將它移到其他槽。</p>
-<p>先輸入 <code>wsl -l -v</code> 指令來看一下會有什麼：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">&gt; wsl -l -v</span><br><span class="line">  NAME                   STATE           VERSION</span><br><span class="line">* docker-desktop         Stopped         2</span><br><span class="line">  docker-desktop-data    Stopped         2</span><br></pre></td></tr></table></figure>
-
-<p>docker-desktop：docker 的系統和資料<br>docker-desktop-data：各 container, image（這個最重要，當然 volume 也是）</p>
-<p>後續我們先關閉 Docker，停止運行那些東東、匯出備份，最後在新的位置還原就可以了。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># 終止運行</span><br><span class="line">&gt; wsl -t docker-desktop</span><br><span class="line">&gt; wsl -t docker-desktop-data</span><br><span class="line"></span><br><span class="line"># 匯出備份</span><br><span class="line">&gt; wsl --export docker-desktop D:\wsl\docker-desktop-20230101.tar</span><br><span class="line">&gt; wsl --export docker-desktop-data D:\wsl\docker-desktop-data-20230101.tar</span><br><span class="line"></span><br><span class="line"># 註銷</span><br><span class="line">&gt; wsl --unregister docker-desktop</span><br><span class="line">&gt; wsl --unregister docker-desktop-data</span><br><span class="line"></span><br><span class="line"># 從備份匯入</span><br><span class="line">&gt; wsl --import docker-desktop D:\wsl\docker-desktop D:\wsl\docker-desktop-20230101.tar --version 2</span><br><span class="line">&gt; wsl --import docker-desktop-data D:\wsl\docker-desktop-data D:\wsl\docker-desktop-data-20230101.tar --version 2</span><br><span class="line"></span><br><span class="line"># 完成</span><br></pre></td></tr></table></figure>
-
-<p>匯出的備份檔可以留著，以防出意外還可以還原回來。這是親身經歷過，之前嘗試安裝 Elastic APM，結果 Docker 當機，重開 Docker 後整個 Docker 就壞了，docker-desktop 內的虛擬硬碟直接消失。幸好 docker-desktop-data 和 volume 還在，保住資料，用這個辦法將現有資料掛回去。</p>
-<h2 id="參考"><a href="#參考" class="headerlink" title="參考"></a>參考</h2><ul>
-<li><a href="https://blog.csdn.net/weifengdq/article/details/121776188">WSL2迁移与硬盘读写测试</a></li>
-<li><a href="https://learn.microsoft.com/zh-tw/windows/wsl/basic-commands">WSL 的基本命令 | Microsoft Learn</a></li>
-</ul>
-]]></content>
-      <categories>
-        <category>Docker</category>
-      </categories>
-      <tags>
-        <tag>Docker</tag>
-        <tag>WSL</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>在 ASP .NET Core 中使用 OpenTelemetry，為應用程式埋下觀測點</title>
     <url>/APM/%E5%9C%A8ASPNETCore%E4%B8%AD%E4%BD%BF%E7%94%A8OpenTelemetry%EF%BC%8C%E7%82%BA%E6%87%89%E7%94%A8%E7%A8%8B%E5%BC%8F%E5%9F%8B%E4%B8%8B%E8%A7%80%E6%B8%AC%E9%BB%9E/</url>
     <content><![CDATA[<p>這篇文章主要會說明為什麼選擇使用 OpenTelemetry 作為處理追蹤資料的套件，還有如何利用 .NET <code>System.Diagnostics</code> 函式庫來產生追蹤資料，並交由 OpenTelemetry 來接手處理後續流程的方式。</p>
@@ -255,6 +181,55 @@
       </tags>
   </entry>
   <entry>
+    <title>自架 Grafana Tempo (1) 介紹</title>
+    <url>/APM/%E8%87%AA%E6%9E%B6Grafana_Tempo-1/</url>
+    <content><![CDATA[<p>外行人使用 Grafana Tempo 在本機建置APM服務。</p>
+<h2 id="起因"><a href="#起因" class="headerlink" title="起因"></a>起因</h2><p>其實原因很簡單，就只是想玩玩看如何建置APM服務，看看那精美的圖表，「嘗試」看自己的服務哪邊可以再優化（我這菜鳥能看得出來和成功改善就要偷笑了），另一方面其實是想看有沒有辦法取代 CoreProfiler。因為這工具算是比較簡易、好裝好用，但是只能存在記憶體裡，會為了節省記憶體使用量而減少紀錄留存的筆數，變成看不到以前的紀錄，也沒辦法統計某時段內服務的效能等問題。原本是想用 Elastic APM，後來想到之前裝過 Elasticsearch 時覺得有點麻煩，不想再試了，所以 Google 搜一搜就看到了這個 - Grafana Tempo。</p>
+<p>這裡面的知識量很多，我只能提供目前所知道的粗淺內容，每一項服務&#x2F;工具的水都很深，短時間內無法參透，如果有什麼問題歡迎隨時糾正。</p>
+<h2 id="用途"><a href="#用途" class="headerlink" title="用途"></a>用途</h2><p>用來查詢一個服務的執行時間，以及每個執行步驟的執行時間、呼叫了哪個API，來找出效能瓶頸。</p>
+<h2 id="架構"><a href="#架構" class="headerlink" title="架構"></a>架構</h2><p><img src="https://i.imgur.com/WeRghZ7.png" alt="圖1：架構。資料來源：https://grafana.com/docs/tempo/latest/getting-started/"></p>
+<p>功能分別是：</p>
+<p>遙測 -&gt; pipeline (資料處理) -&gt; 服務後端 -&gt; 視覺化</p>
+<h3 id="OpenTelemetry"><a href="#OpenTelemetry" class="headerlink" title="OpenTelemetry"></a>OpenTelemetry</h3><p>應用程式端的遙測工具，專門用來蒐集應用程式的各項數據，例如 logs, metrics 和 traces，讓服務可以被觀測。你沒聽錯，這個工具提供這三項數據，簡單省事，但是格式需要符合它的規範。蒐集完後會透過OTLP協議發送到目的地，裡面有提供 gRPC 或 HTTP 的方式傳送。</p>
+<p>.Net 有套件支援，還可以自動遙測 WebApi, SqlClient, HttpClient 和 Redis，意思是這些不用自己埋點遙測。埋點時使用 System.Diagnostics 裡面的 Activity，這裡面內容很多，good luck。</p>
+<h3 id="Grafana-Agent"><a href="#Grafana-Agent" class="headerlink" title="Grafana Agent"></a>Grafana Agent</h3><p>類似中轉站，可以緩衝接收到資料、過濾不要記錄的資料等各種資料處理後，再轉送到APM的伺服器。它有支援多個資料來源，例如 Jaeger, Kafka, OpenCensus, OTLP 和 Zipkin。當然也是可以不經過 pipeline 處理，直接送到 Tempo，但是資料量大或服務多的時候還是建議要使用。</p>
+<p>其他選擇：</p>
+<ul>
+<li><a href="https://github.com/open-telemetry/opentelemetry-collector">OpenTelemetry Collector</a></li>
+<li><a href="https://www.jaegertracing.io/docs/latest/deployment/">Jaeger Agent</a></li>
+</ul>
+<p>選擇原因：最初 OpenTelemetry Collector 裝了之後不知道為什麼一直收不到資料，懶得除錯就換了 Grafana Agent。結果發現換了也不行，除錯後發現設定有誤，現在看來用 OpenTelemetry Collector 也是沒問題。</p>
+<h3 id="Grafana-Tempo"><a href="#Grafana-Tempo" class="headerlink" title="Grafana Tempo"></a>Grafana Tempo</h3><p>Grafana 旗下的一款分散式 tracing 後端工具，主要負責搜尋、儲存資料，內建 TempoDB。這裡面的設定比較複雜，如果以嘗試的角度來用，先以範例的設定檔來配置就好。目前只知道它的資料儲存會先在 <code>wal</code> 建立一份，到一定大小或時間後會搬到 <code>wal/data</code> 裡，同時會寫一份到指定路徑中儲存。裡面的資料到一定的時間後會被壓縮，以節省空間。</p>
+<h3 id="Grafana"><a href="#Grafana" class="headerlink" title="Grafana"></a>Grafana</h3><p>視覺化工具，設定資料來源後就可以搜尋資料和建立報表。需要學習怎麼建立報表和搜尋的語法，內容也是很多，簡單用的話可以先不學語法和建報表，用裡面搜尋後的結果報表就足夠了，但有些功能還是 beta 版。內建的報表像是各服務的關聯圖（包含流量、時間）、指定時間範圍內的平均回應時間，當然還有最重要的服務追蹤。</p>
+<h2 id="待學技能"><a href="#待學技能" class="headerlink" title="待學技能"></a>待學技能</h2><p>看了這麼多，應該會知道裡面需要學什麼，簡直像掉進了無底洞一樣，快逃啊…</p>
+<ul>
+<li>OpenTelemetry</li>
+<li>System.Diagnostics 埋點</li>
+<li>Tempo 資料儲存的方式</li>
+<li>Grafana 查詢語法</li>
+<li>Grafana 製作報表</li>
+<li>Agent, Tempo, Grafana 的設定</li>
+</ul>
+<h2 id="懶得看我的文章"><a href="#懶得看我的文章" class="headerlink" title="懶得看我的文章"></a>懶得看我的文章</h2><p>那就直接去看我 GitHub 的 Repository 吧：<a href="https://github.com/zamhsu/GrafanaTempo">zamhsu&#x2F;GrafanaTempo</a></p>
+<h2 id="相關資料"><a href="#相關資料" class="headerlink" title="相關資料"></a>相關資料</h2><ul>
+<li><a href="https://opentelemetry.io/">Opentelemetry</a></li>
+<li><a href="https://grafana.com/docs/agent/latest/">Grafana Agent</a></li>
+<li><a href="https://grafana.com/oss/tempo/">Grafana Tempo</a></li>
+<li><a href="https://grafana.com/grafana/">Grafana</a></li>
+<li><a href="https://learn.microsoft.com/zh-tw/dotnet/api/system.diagnostics">System.Diagnostics</a></li>
+<li><a href="https://github.com/grafana/tempo/tree/main/example">Grafana Tempo Example - Github</a></li>
+</ul>
+]]></content>
+      <categories>
+        <category>APM</category>
+      </categories>
+      <tags>
+        <tag>APM</tag>
+        <tag>Grafana Tempo</tag>
+        <tag>教學</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>自架 Grafana Tempo (2) 配置 Agent, Tempo, Grafana</title>
     <url>/APM/%E8%87%AA%E6%9E%B6Grafana-Tempo-2/</url>
     <content><![CDATA[<p>上一篇已經簡單介紹了這幾個服務的功能，這篇就使用 docker compose 來架設這幾個服務，並且修改一些小地方以符合我們想要的設定。</p>
@@ -319,73 +294,139 @@
       </tags>
   </entry>
   <entry>
-    <title>CRON 表達式</title>
-    <url>/Schedule/cron%E8%A1%A8%E9%81%94%E5%BC%8F/</url>
-    <content><![CDATA[<p>一種排程的時間設定表達式，可以用在 CRON, Hangfire, Coravel。</p>
-<p>最近工作需要用到 Hangfire 來作為工作排程器，而裡面關於定期執行工作（recurring）的時間設定是使用 cron expression。對於只用過 Windows 內建工作排程器的我來說可以說是相當陌生，因此來學學怎麼這種表達式的設定方式。</p>
-<h2 id="說明"><a href="#說明" class="headerlink" title="說明"></a>說明</h2><blockquote>
-<p>工具型軟體 <strong>cron</strong> 是一款類Unix的作業系統下的基於時間的任務管理系統。用戶們可以通過 <strong>cron</strong><br>在固定時間、日期、間隔下，運行定期任務（可以是命令和腳本）。</p>
-</blockquote>
-<p>來源：<a href="https://zh.wikipedia.org/zh-tw/Cron">Cron-維基百科</a></p>
-<p>這個表達式其實內含「每次」這個概念，設定的值都是實際執行的日期和時間。</p>
-<p>表達式： <code>* * * * *</code></p>
-<p>每個之間要有空格</p>
-<table>
-<thead>
-<tr>
-<th>欄位</th>
-<th>分鐘</th>
-<th>小時</th>
-<th>日</th>
-<th>月</th>
-<th>星期</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>範圍</td>
-<td>0-59</td>
-<td>0-23</td>
-<td>1-31</td>
-<td>1-12或JAN-DEC</td>
-<td>0-6或SUN-SAT</td>
-</tr>
-</tbody></table>
-<p>除了直接輸入數字外，還可以搭配一些符號使用</p>
-<ol>
-<li><code>*</code> ：欄位的所有值。例如分鐘欄位輸入<code>*</code>，代表每分鐘（0-59）都執行。</li>
-<li><code>,</code> ：多個指定值。例如小時欄位輸入<code>9,18</code>，代表9點和18點執行。</li>
-<li><code>-</code> ：指定範圍。例如日欄位輸入<code>15-20</code>，代表一個月裡的15日至20日都執行。</li>
-<li><code>/</code> ：指定增量，<code>開始值/每次增加的量</code>。例如分鐘欄位輸入<code>1/10</code>，代表從1開始，每次10分鐘才再次執行。</li>
-</ol>
-<h2 id="練習"><a href="#練習" class="headerlink" title="練習"></a>練習</h2><ol>
-<li>每天08:00：<code>0 8 * * *</code></li>
-<li>每週一至週五22:30：<code>30 22 * * 1-5</code></li>
-<li>每週末5分鐘一次：<code>*/5 * * * 0,6</code></li>
-<li>每個雙數月1日的00:00：<code>0 0 1 */2 *</code></li>
-<li>每月的15日03:00：<code>0 3 15 * *</code></li>
-</ol>
-<p>可以到這裡驗證和練習 <a href="https://crontab.guru/">https://crontab.guru/</a></p>
-<h2 id="參考"><a href="#參考" class="headerlink" title="參考"></a>參考</h2><ul>
-<li><a href="https://zh.wikipedia.org/zh-tw/Cron">Cron-維基百科</a></li>
-<li><a href="https://docs.aws.amazon.com/zh_tw/lambda/latest/dg/services-cloudwatchevents-expressions.html">AWS使用 Rate 或 Cron 排定表達式</a></li>
-<li><a href="https://crontab.guru/">crontab guru</a></li>
+    <title>使用 Docker 安裝 Elasticsearch 和 Kibana</title>
+    <url>/Elasticsearch/%E4%BD%BF%E7%94%A8Docker%E5%AE%89%E8%A3%9DElasticsearch%E5%92%8CKibana/</url>
+    <content><![CDATA[<p>這次來試玩一下傳說中的 Elasticsearch，主要是想要把網站記錄的 Log 存到這裡面來，再設定一些 UI 來顯示，就不用每次查網站的 Log 都要進資料庫用 SQL 查。</p>
+<p>Elasticsearch 有雲端版和自己架設，雲端要付費，自架免費。對於喜歡亂玩又沒什麼錢的我，當然選擇自己架設。</p>
+<p>主要以 single-node cluster 為主，版本為 8.0.0</p>
+<h2 id="方法一：各-image-逐個建立"><a href="#方法一：各-image-逐個建立" class="headerlink" title="方法一：各 image 逐個建立"></a>方法一：各 image 逐個建立</h2><p>建議搭配 volumn（範例中未使用）</p>
+<h3 id="1-Docker-建立專用-network"><a href="#1-Docker-建立專用-network" class="headerlink" title="1. Docker 建立專用 network"></a>1. Docker 建立專用 network</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">docker network create elastic</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-安裝-Elasticsearch"><a href="#2-安裝-Elasticsearch" class="headerlink" title="2. 安裝 Elasticsearch"></a>2. 安裝 Elasticsearch</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">docker pull docker.elastic.co/elasticsearch/elasticsearch:8.1.0</span><br><span class="line">docker run -e ES_JAVA_OPTS=&quot;-Xms1g -Xmx1g&quot; --name es-node01 --net elastic -p 9200:9200 -p 9300:9300 -t docker.elastic.co/elasticsearch/elasticsearch:8.1.0</span><br></pre></td></tr></table></figure>
+
+<p>備註：<br>設定 JVM 使用記憶體的大小<br><code>-e ES_JAVA_OPTS=&quot;-Xms1g -Xmx1g&quot;</code><br>最大使用 1G，最小使用 1G</p>
+<p><a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/advanced-configuration.html#set-jvm-heap-size">https://www.elastic.co/guide/en/elasticsearch/reference/current/advanced-configuration.html#set-jvm-heap-size</a></p>
+<p>port 9200 為對外使用，9300 為內部 node 溝通使用</p>
+<p>裝好後會有帳號、密碼、enroll token（有效30分鐘）等資料，可先複製起來</p>
+<h3 id="3-安裝-Kibana"><a href="#3-安裝-Kibana" class="headerlink" title="3. 安裝 Kibana"></a>3. 安裝 Kibana</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">docker pull docker.elastic.co/kibana/kibana:8.1.0</span><br><span class="line">docker run --name kib-01 --net elastic -p 5601:5601 docker.elastic.co/kibana/kibana:8.1.0</span><br></pre></td></tr></table></figure>
+
+<h3 id="4-開啟-Kibana"><a href="#4-開啟-Kibana" class="headerlink" title="4. 開啟 Kibana"></a>4. 開啟 Kibana</h3><p>輸入 <a href="http://localhost:5601/">http://localhost:5601</a> 開啟 Kibana，首次開啟需要使用上面的 enroll token 綁定 Elasticsearch，然後輸入剛剛的帳號和密碼</p>
+<h3 id="5-完成"><a href="#5-完成" class="headerlink" title="5. 完成"></a>5. 完成</h3><p>可以愉快地玩耍了</p>
+<h2 id="方法二：使用-docker-compose"><a href="#方法二：使用-docker-compose" class="headerlink" title="方法二：使用 docker-compose"></a>方法二：使用 docker-compose</h2><p>有搭配volume</p>
+<h3 id="1-建立-env-檔"><a href="#1-建立-env-檔" class="headerlink" title="1. 建立 .env 檔"></a>1. 建立 .env 檔</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># Password for the &#x27;elastic&#x27; user (at least 6 characters)</span><br><span class="line">ELASTIC_PASSWORD=</span><br><span class="line"></span><br><span class="line"># Password for the &#x27;kibana_system&#x27; user (at least 6 characters)</span><br><span class="line">KIBANA_PASSWORD=</span><br><span class="line"></span><br><span class="line"># Version of Elastic products</span><br><span class="line">STACK_VERSION=8.0.0</span><br><span class="line"></span><br><span class="line"># Set the cluster name</span><br><span class="line">CLUSTER_NAME=docker-cluster</span><br><span class="line"></span><br><span class="line"># Set to &#x27;basic&#x27; or &#x27;trial&#x27; to automatically start the 30-day trial</span><br><span class="line">LICENSE=basic</span><br><span class="line">#LICENSE=trial</span><br><span class="line"></span><br><span class="line"># Port to expose Elasticsearch HTTP API to the host</span><br><span class="line">ES_PORT=9200</span><br><span class="line">#ES_PORT=127.0.0.1:9200</span><br><span class="line"></span><br><span class="line"># Port to expose Kibana to the host</span><br><span class="line">KIBANA_PORT=5601</span><br><span class="line">#KIBANA_PORT=80</span><br><span class="line"></span><br><span class="line"># Increase or decrease based on the available host memory (in bytes)</span><br><span class="line">MEM_LIMIT=1073741824</span><br><span class="line"></span><br><span class="line"># Project namespace (defaults to the current folder name if not set)</span><br><span class="line">#COMPOSE_PROJECT_NAME=myproject</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-建立-docker-compose-yml"><a href="#2-建立-docker-compose-yml" class="headerlink" title="2. 建立 docker-compose.yml"></a>2. 建立 docker-compose.yml</h3><p>此處會建立<br>三個 container：<br>setup：建立憑證用，建立好之後會關閉<br>es01：Elasticsearch 1號（只建立一個節點）<br>kibana：Kibana</p>
+<p>一個 network：<br>elastic-default</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">version:</span> <span class="string">&quot;2.2&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="attr">services:</span></span><br><span class="line">  <span class="attr">setup:</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">docker.elastic.co/elasticsearch/elasticsearch:$&#123;STACK_VERSION&#125;</span></span><br><span class="line">    <span class="attr">volumes:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">certs:/usr/share/elasticsearch/config/certs</span></span><br><span class="line">    <span class="attr">user:</span> <span class="string">&quot;0&quot;</span></span><br><span class="line">    <span class="attr">command:</span> <span class="string">&gt;</span></span><br><span class="line"><span class="string">      bash -c &#x27;</span></span><br><span class="line"><span class="string">        if [ x$&#123;ELASTIC_PASSWORD&#125; == x ]; then</span></span><br><span class="line"><span class="string">          echo &quot;Set the ELASTIC_PASSWORD environment variable in the .env file&quot;;</span></span><br><span class="line"><span class="string">          exit 1;</span></span><br><span class="line"><span class="string">        elif [ x$&#123;KIBANA_PASSWORD&#125; == x ]; then</span></span><br><span class="line"><span class="string">          echo &quot;Set the KIBANA_PASSWORD environment variable in the .env file&quot;;</span></span><br><span class="line"><span class="string">          exit 1;</span></span><br><span class="line"><span class="string">        fi;</span></span><br><span class="line"><span class="string">        if [ ! -f certs/ca.zip ]; then</span></span><br><span class="line"><span class="string">          echo &quot;Creating CA&quot;;</span></span><br><span class="line"><span class="string">          bin/elasticsearch-certutil ca --silent --pem -out config/certs/ca.zip;</span></span><br><span class="line"><span class="string">          unzip config/certs/ca.zip -d config/certs;</span></span><br><span class="line"><span class="string">        fi;</span></span><br><span class="line"><span class="string">        if [ ! -f certs/certs.zip ]; then</span></span><br><span class="line"><span class="string">          echo &quot;Creating certs&quot;;</span></span><br><span class="line"><span class="string">          echo -ne \</span></span><br><span class="line"><span class="string">          &quot;instances:\n&quot;\</span></span><br><span class="line"><span class="string">          &quot;  - name: es01\n&quot;\</span></span><br><span class="line"><span class="string">          &quot;    dns:\n&quot;\</span></span><br><span class="line"><span class="string">          &quot;      - es01\n&quot;\</span></span><br><span class="line"><span class="string">          &quot;      - localhost\n&quot;\</span></span><br><span class="line"><span class="string">          &quot;    ip:\n&quot;\</span></span><br><span class="line"><span class="string">          &quot;      - 127.0.0.1\n&quot;\</span></span><br><span class="line"><span class="string">          &gt; config/certs/instances.yml;</span></span><br><span class="line"><span class="string">          bin/elasticsearch-certutil cert --silent --pem -out config/certs/certs.zip --in config/certs/instances.yml --ca-cert config/certs/ca/ca.crt --ca-key config/certs/ca/ca.key;</span></span><br><span class="line"><span class="string">          unzip config/certs/certs.zip -d config/certs;</span></span><br><span class="line"><span class="string">        fi;</span></span><br><span class="line"><span class="string">        echo &quot;Setting file permissions&quot;</span></span><br><span class="line"><span class="string">        chown -R root:root config/certs;</span></span><br><span class="line"><span class="string">        find . -type d -exec chmod 750 \&#123;\&#125; \;;</span></span><br><span class="line"><span class="string">        find . -type f -exec chmod 640 \&#123;\&#125; \;;</span></span><br><span class="line"><span class="string">        echo &quot;Waiting for Elasticsearch availability&quot;;</span></span><br><span class="line"><span class="string">        until curl -s --cacert config/certs/ca/ca.crt &lt;https://es01:9200&gt; | grep -q &quot;missing authentication credentials&quot;; do sleep 30; done;</span></span><br><span class="line"><span class="string">        echo &quot;Setting kibana_system password&quot;;</span></span><br><span class="line"><span class="string">        until curl -s -X POST --cacert config/certs/ca/ca.crt -u elastic:$&#123;ELASTIC_PASSWORD&#125; -H &quot;Content-Type: application/json&quot; &lt;https://es01:9200/_security/user/kibana_system/_password&gt; -d &quot;&#123;\&quot;password\&quot;:\&quot;$&#123;KIBANA_PASSWORD&#125;\&quot;&#125;&quot; | grep -q &quot;^&#123;&#125;&quot;; do sleep 10; done;</span></span><br><span class="line"><span class="string">        echo &quot;All done!&quot;;</span></span><br><span class="line"><span class="string">      &#x27;</span></span><br><span class="line"><span class="string"></span>    <span class="attr">healthcheck:</span></span><br><span class="line">      <span class="attr">test:</span> [<span class="string">&quot;CMD-SHELL&quot;</span>, <span class="string">&quot;[ -f config/certs/es01/es01.crt ]&quot;</span>]</span><br><span class="line">      <span class="attr">interval:</span> <span class="string">1s</span></span><br><span class="line">      <span class="attr">timeout:</span> <span class="string">5s</span></span><br><span class="line">      <span class="attr">retries:</span> <span class="number">120</span></span><br><span class="line"></span><br><span class="line">  <span class="attr">es01:</span></span><br><span class="line">    <span class="attr">depends_on:</span></span><br><span class="line">      <span class="attr">setup:</span></span><br><span class="line">        <span class="attr">condition:</span> <span class="string">service_healthy</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">docker.elastic.co/elasticsearch/elasticsearch:$&#123;STACK_VERSION&#125;</span></span><br><span class="line">    <span class="attr">volumes:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">certs:/usr/share/elasticsearch/config/certs</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">esdata01:/usr/share/elasticsearch/data</span></span><br><span class="line">    <span class="attr">ports:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">$&#123;ES_PORT&#125;:9200</span></span><br><span class="line">    <span class="attr">environment:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">node.name=es01</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">cluster.name=$&#123;CLUSTER_NAME&#125;</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">cluster.initial_master_nodes=es01</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">ELASTIC_PASSWORD=$&#123;ELASTIC_PASSWORD&#125;</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">bootstrap.memory_lock=true</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">xpack.security.enabled=true</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">xpack.security.http.ssl.enabled=true</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">xpack.security.http.ssl.key=certs/es01/es01.key</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">xpack.security.http.ssl.certificate=certs/es01/es01.crt</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">xpack.security.http.ssl.certificate_authorities=certs/ca/ca.crt</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">xpack.security.http.ssl.verification_mode=certificate</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">xpack.security.transport.ssl.enabled=true</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">xpack.security.transport.ssl.key=certs/es01/es01.key</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">xpack.security.transport.ssl.certificate=certs/es01/es01.crt</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">xpack.security.transport.ssl.certificate_authorities=certs/ca/ca.crt</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">xpack.security.transport.ssl.verification_mode=certificate</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">xpack.license.self_generated.type=$&#123;LICENSE&#125;</span></span><br><span class="line">    <span class="attr">mem_limit:</span> <span class="string">$&#123;MEM_LIMIT&#125;</span></span><br><span class="line">    <span class="attr">ulimits:</span></span><br><span class="line">      <span class="attr">memlock:</span></span><br><span class="line">        <span class="attr">soft:</span> <span class="number">-1</span></span><br><span class="line">        <span class="attr">hard:</span> <span class="number">-1</span></span><br><span class="line">    <span class="attr">healthcheck:</span></span><br><span class="line">      <span class="attr">test:</span></span><br><span class="line">        [</span><br><span class="line">          <span class="string">&quot;CMD-SHELL&quot;</span>,</span><br><span class="line">          <span class="string">&quot;curl -s --cacert config/certs/ca/ca.crt &lt;https://localhost:9200&gt; | grep -q &#x27;missing authentication credentials&#x27;&quot;</span>,</span><br><span class="line">        ]</span><br><span class="line">      <span class="attr">interval:</span> <span class="string">10s</span></span><br><span class="line">      <span class="attr">timeout:</span> <span class="string">10s</span></span><br><span class="line">      <span class="attr">retries:</span> <span class="number">120</span></span><br><span class="line"></span><br><span class="line">  <span class="attr">kibana:</span></span><br><span class="line">    <span class="attr">depends_on:</span></span><br><span class="line">      <span class="attr">es01:</span></span><br><span class="line">        <span class="attr">condition:</span> <span class="string">service_healthy</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">docker.elastic.co/kibana/kibana:$&#123;STACK_VERSION&#125;</span></span><br><span class="line">    <span class="attr">volumes:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">certs:/usr/share/kibana/config/certs</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">kibanadata:/usr/share/kibana/data</span></span><br><span class="line">    <span class="attr">ports:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">$&#123;KIBANA_PORT&#125;:5601</span></span><br><span class="line">    <span class="attr">environment:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">SERVERNAME=kibana</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">ELASTICSEARCH_HOSTS=https://es01:9200</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">ELASTICSEARCH_USERNAME=kibana_system</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">ELASTICSEARCH_PASSWORD=$&#123;KIBANA_PASSWORD&#125;</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES=config/certs/ca/ca.crt</span></span><br><span class="line">    <span class="attr">mem_limit:</span> <span class="string">$&#123;MEM_LIMIT&#125;</span></span><br><span class="line">    <span class="attr">healthcheck:</span></span><br><span class="line">      <span class="attr">test:</span></span><br><span class="line">        [</span><br><span class="line">          <span class="string">&quot;CMD-SHELL&quot;</span>,</span><br><span class="line">          <span class="string">&quot;curl -s -I &lt;http://localhost:5601&gt; | grep -q &#x27;HTTP/1.1 302 Found&#x27;&quot;</span>,</span><br><span class="line">        ]</span><br><span class="line">      <span class="attr">interval:</span> <span class="string">10s</span></span><br><span class="line">      <span class="attr">timeout:</span> <span class="string">10s</span></span><br><span class="line">      <span class="attr">retries:</span> <span class="number">120</span></span><br><span class="line"></span><br><span class="line"><span class="attr">volumes:</span></span><br><span class="line">  <span class="attr">certs:</span></span><br><span class="line">    <span class="attr">driver:</span> <span class="string">local</span></span><br><span class="line">  <span class="attr">esdata01:</span></span><br><span class="line">    <span class="attr">driver:</span> <span class="string">local</span></span><br><span class="line">  <span class="attr">kibanadata:</span></span><br><span class="line">    <span class="attr">driver:</span> <span class="string">local</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="3-開始執行"><a href="#3-開始執行" class="headerlink" title="3. 開始執行"></a>3. 開始執行</h3><p>將 .env 和 docker-compose.yml 放在同一個資料夾，然後到該資料夾執行指令</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">docker-compose up -d</span><br></pre></td></tr></table></figure>
+
+<h3 id="4-完成"><a href="#4-完成" class="headerlink" title="4. 完成"></a>4. 完成</h3><p>可以愉快地玩耍了</p>
+<h2 id="注意事項"><a href="#注意事項" class="headerlink" title="注意事項"></a>注意事項</h2><p>如果遇到 <code>max virtual memory areas vm.max_map_count [65530] is too low, increase to at least [262144]</code> 的錯誤，代表 kernel 中 <code>vm.max_map_count</code> 的設定需要調整為至少 <code>262144</code>。</p>
+<p>調整方法<br>Windows Docker Desktop WSL 2：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">wsl -d docker-desktop</span><br><span class="line">sysctl -w vm.max_map_count=262144</span><br></pre></td></tr></table></figure>
+
+<p>macOS Docker Desktop：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">docker-machine ssh</span><br><span class="line">sudo sysctl -w vm.max_map_count=262144</span><br></pre></td></tr></table></figure>
+
+<h2 id="參考資料"><a href="#參考資料" class="headerlink" title="參考資料"></a>參考資料</h2><ul>
+<li><a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html">Install Elasticsearch with Docker</a></li>
+<li><a href="https://www.elastic.co/guide/en/kibana/current/docker.html">Install Kibana with Docker</a></li>
 </ul>
 ]]></content>
       <categories>
-        <category>排程</category>
+        <category>Elasticsearch</category>
       </categories>
       <tags>
-        <tag>排程</tag>
+        <tag>教學</tag>
+        <tag>Elasticsearch</tag>
       </tags>
   </entry>
   <entry>
-    <title>自架部落格(3) 換個跟別人一樣的NexT主題</title>
+    <title>遷移 Docker 資料</title>
+    <url>/Docker/%E9%81%B7%E7%A7%BBDocker%E8%B3%87%E6%96%99/</url>
+    <content><![CDATA[<h2 id="起因"><a href="#起因" class="headerlink" title="起因"></a>起因</h2><p>Windows 裡使用 WSL 2 的 Docker 資料預設在 C 槽，不知不覺間就被塞爆了，我們來將它移到其他槽。</p>
+<p>先輸入 <code>wsl -l -v</code> 指令來看一下會有什麼：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">&gt; wsl -l -v</span><br><span class="line">  NAME                   STATE           VERSION</span><br><span class="line">* docker-desktop         Stopped         2</span><br><span class="line">  docker-desktop-data    Stopped         2</span><br></pre></td></tr></table></figure>
+
+<p>docker-desktop：docker 的系統和資料<br>docker-desktop-data：各 container, image（這個最重要，當然 volume 也是）</p>
+<p>後續我們先關閉 Docker，停止運行那些東東、匯出備份，最後在新的位置還原就可以了。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># 終止運行</span><br><span class="line">&gt; wsl -t docker-desktop</span><br><span class="line">&gt; wsl -t docker-desktop-data</span><br><span class="line"></span><br><span class="line"># 匯出備份</span><br><span class="line">&gt; wsl --export docker-desktop D:\wsl\docker-desktop-20230101.tar</span><br><span class="line">&gt; wsl --export docker-desktop-data D:\wsl\docker-desktop-data-20230101.tar</span><br><span class="line"></span><br><span class="line"># 註銷</span><br><span class="line">&gt; wsl --unregister docker-desktop</span><br><span class="line">&gt; wsl --unregister docker-desktop-data</span><br><span class="line"></span><br><span class="line"># 從備份匯入</span><br><span class="line">&gt; wsl --import docker-desktop D:\wsl\docker-desktop D:\wsl\docker-desktop-20230101.tar --version 2</span><br><span class="line">&gt; wsl --import docker-desktop-data D:\wsl\docker-desktop-data D:\wsl\docker-desktop-data-20230101.tar --version 2</span><br><span class="line"></span><br><span class="line"># 完成</span><br></pre></td></tr></table></figure>
+
+<p>匯出的備份檔可以留著，以防出意外還可以還原回來。這是親身經歷過，之前嘗試安裝 Elastic APM，結果 Docker 當機，重開 Docker 後整個 Docker 就壞了，docker-desktop 內的虛擬硬碟直接消失。幸好 docker-desktop-data 和 volume 還在，保住資料，用這個辦法將現有資料掛回去。</p>
+<h2 id="參考"><a href="#參考" class="headerlink" title="參考"></a>參考</h2><ul>
+<li><a href="https://blog.csdn.net/weifengdq/article/details/121776188">WSL2迁移与硬盘读写测试</a></li>
+<li><a href="https://learn.microsoft.com/zh-tw/windows/wsl/basic-commands">WSL 的基本命令 | Microsoft Learn</a></li>
+</ul>
+]]></content>
+      <categories>
+        <category>Docker</category>
+      </categories>
+      <tags>
+        <tag>Docker</tag>
+        <tag>WSL</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>自架部落格(1) 想自己架部落格？先裝個 Hexo 吧！</title>
+    <url>/Hexo/%E4%BD%BF%E7%94%A8Hexo%E5%9C%A8GitHub-Pages%E4%B8%8A%E5%BB%BA%E7%AB%8B%E9%83%A8%E8%90%BD%E6%A0%BC-1/</url>
+    <content><![CDATA[<p>身為這個部落格的第一篇文章，當然就是來記錄一下建置的步驟。</p>
+<p>至於為什麼選 Hexo，其實就只是懶而已，懶得自己刻UI、懶得踩雷。UI、分類、產出靜態網站內容什麼的功能 Hexo 都幫你處理好，只要專注與寫作就好。</p>
+<p>當然也有看過其他的部落格套件，像是<a href="https://jekyllrb.com/">JekyII</a>, <a href="https://gohugo.io/">Hugo</a>，但是發現網路上 Hexo 的教學很多，那就不踩雷了，跟著他們做就好。寫部落格最重要的就是內容（雖然我的內容也不怎麼樣），其他都是其次。</p>
+<p>將介紹如何安裝和預覽。</p>
+<h2 id="主要環境"><a href="#主要環境" class="headerlink" title="主要環境"></a>主要環境</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">OS： Windows 10 專業版</span><br><span class="line">Node.js： 14.17.6</span><br></pre></td></tr></table></figure>
+
+<h2 id="安裝Hexo"><a href="#安裝Hexo" class="headerlink" title="安裝Hexo"></a>安裝Hexo</h2><p>依據<a href="https://hexo.io/zh-tw/docs/#%E5%AE%89%E8%A3%9D%E9%9C%80%E6%B1%82">Hexo官網</a>的說明，需要</p>
+<ul>
+<li>Node.js 建議 10.0 或以上的版本</li>
+<li>git</li>
+</ul>
+<p>這些都安裝好了之後，就可以透過 npm 來安裝，打開終端機，然後輸入：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">npm install -g hexo-cli</span><br></pre></td></tr></table></figure>
+
+<p>之後就會開始安裝 Hexo。我安裝的是當時的最新版<code>6.2.0</code>。</p>
+<h2 id="建立專案"><a href="#建立專案" class="headerlink" title="建立專案"></a>建立專案</h2><h3 id="首次建立專案"><a href="#首次建立專案" class="headerlink" title="首次建立專案"></a>首次建立專案</h3><p>使用終端機到你想要儲存這個專案的位置，輸入指令：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">hexo init &lt;folder&gt;</span><br><span class="line">cd &lt;folder&gt;</span><br><span class="line">npm install</span><br></pre></td></tr></table></figure>
+
+<p><code>&lt;folder&gt;</code>就是 Hexo 專案的資料夾名稱，Hexo 會在目前的目錄用這個名稱再建一個新的資料夾，把專案存到這裡面。沒有輸入的話就會在當前的資料夾內建立專案。</p>
+<p><img src="https://i.imgur.com/Tk8iAIt.jpeg" alt="圖1：以 src 為例"></p>
+<h3 id="資料結構說明"><a href="#資料結構說明" class="headerlink" title="資料結構說明"></a>資料結構說明</h3><p>安裝完成後，裡面會有這些檔案：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">.</span><br><span class="line">├── _config.yml</span><br><span class="line">├── package.json</span><br><span class="line">├── scaffolds</span><br><span class="line">├── source</span><br><span class="line">|   ├── _drafts</span><br><span class="line">|   └── _posts</span><br><span class="line">└── themes</span><br></pre></td></tr></table></figure>
+
+<p><code>_config.yml</code>：Hexo 的配置檔</p>
+<p><code>package.json</code>：npm 的配置檔，基本上可以不用理會</p>
+<p><code>scaffolds</code>：範本資料夾，建立新文章時可依照指定的範本建立檔案</p>
+<p><code>source</code>：存放原始檔案的地方，也就是文章存放的地方</p>
+<p><code>themes</code>：存放主題的資料夾</p>
+<h2 id="預覽"><a href="#預覽" class="headerlink" title="預覽"></a>預覽</h2><p>建立好之後，當然來預覽一下。</p>
+<p>終端機到專案目錄底下，輸入以下指令</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">hexo server</span><br><span class="line">或</span><br><span class="line">hexo s</span><br></pre></td></tr></table></figure>
+
+<p>之後就會啟動伺服器，預設會是 <code>http://localhost:4000</code> ，在瀏覽器上輸入這個網址就會看到。使用者個指令除了可以看到部落格的樣子外，還可以修改文章且儲存後，直接預覽變更後的樣子（修改 config 除外）。</p>
+<p><img src="https://i.imgur.com/zEBvgVU.jpeg" alt="圖2：預覽指令"></p>
+<p><img src="https://i.imgur.com/H64VaMo.jpeg" alt="圖3：建置完成"></p>
+<p>到這裡就大功告成，恭喜安裝 Hexo 並啟動成功。</p>
+<h2 id="參考"><a href="#參考" class="headerlink" title="參考"></a>參考</h2><ul>
+<li><a href="https://hexo.io/zh-tw/docs/">Hexo文件</a></li>
+</ul>
+]]></content>
+      <categories>
+        <category>Hexo</category>
+      </categories>
+      <tags>
+        <tag>教學</tag>
+        <tag>Hexo</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>自架部落格(3) 換個跟別人一樣的 NexT 主題</title>
     <url>/Hexo/%E4%BD%BF%E7%94%A8Hexo%E5%9C%A8GitHub-Pages%E4%B8%8A%E5%BB%BA%E7%AB%8B%E9%83%A8%E8%90%BD%E6%A0%BC-3/</url>
     <content><![CDATA[<p>Hexo 的主題其實也不少，也有很多有個性的主題，各位可以到 Hexo 的 <a href="https://hexo.io/themes/">Themes</a> 或是 Google 找找。這次我採用的是比較多人用的 <a href="https://github.com/next-theme/hexo-theme-next">NexT</a>。主要原因就是看起來比較乾淨、有分類，最重要的是網路上有很多相關的教學（我就懶）。這個主題用的人很多，很容易就會看到一樣主題的，不過寫部落格主要還是文章內容，樣式就看個人吧。</p>
 <h2 id="如何安裝"><a href="#如何安裝" class="headerlink" title="如何安裝"></a>如何安裝</h2><p>NexT有提供2種方式安裝</p>
 <ol>
-<li>Hexo 5.0 或以上，可以使用npm安裝</li>
-<li>git clone他的專案</li>
+<li>Hexo 5.0 或以上，可以使用 npm 安裝</li>
+<li>git clone 他的專案</li>
 </ol>
 <p>我採用 npm 的方式安裝，因為我的是 Hexo 6.2.0，而且後續要升級版本也方便很多。</p>
 <h3 id="npm的安裝方式（推薦）"><a href="#npm的安裝方式（推薦）" class="headerlink" title="npm的安裝方式（推薦）"></a>npm的安裝方式（推薦）</h3><p>到專案位置，輸入以下指令：</p>
@@ -403,6 +444,10 @@
 <figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># Extensions</span></span><br><span class="line"><span class="comment">## Plugins: https://hexo.io/plugins/</span></span><br><span class="line"><span class="comment">## Themes: https://hexo.io/themes/</span></span><br><span class="line"><span class="attr">theme:</span> <span class="string">next</span></span><br></pre></td></tr></table></figure>
 
 <p>啟動看看主題的樣子，順便測試是否安裝成功</p>
+<p>指令：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">hexo server</span><br></pre></td></tr></table></figure>
+
+
 <p><img src="https://i.imgur.com/XP6QR2V.png" alt="圖1：啟動 Hexo server 後的樣子"></p>
 <p><img src="https://i.imgur.com/TVUZMUg.png" alt="圖2：更換成功，顯示 NexT 預設的主題樣式"></p>
 <h2 id="配置檔位置異動"><a href="#配置檔位置異動" class="headerlink" title="配置檔位置異動"></a>配置檔位置異動</h2><p>安裝好主題之後，如果想要修改主題提供的配置要怎麼辦呢？</p>
@@ -521,105 +566,6 @@
 <li><a href="https://theme-next.js.org/docs/theme-settings/">NexT Theme Settings</a></li>
 <li><a href="https://ithelp.ithome.com.tw/articles/10269050">Day 6：設定你的 Hexo 佈景主題：Next（上）</a></li>
 <li><a href="https://ithelp.ithome.com.tw/articles/10269747">Day 7：設定你的 Hexo 佈景主題：Next（下）</a></li>
-</ul>
-]]></content>
-      <categories>
-        <category>Hexo</category>
-      </categories>
-      <tags>
-        <tag>教學</tag>
-        <tag>Hexo</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>自架部落格(1) 想自己架部落格？先裝個 Hexo 吧！</title>
-    <url>/Hexo/%E4%BD%BF%E7%94%A8Hexo%E5%9C%A8GitHub-Pages%E4%B8%8A%E5%BB%BA%E7%AB%8B%E9%83%A8%E8%90%BD%E6%A0%BC-1/</url>
-    <content><![CDATA[<p>身為這個部落格的第一篇文章，當然就是來記錄一下建置的步驟。</p>
-<p>至於為什麼選 Hexo，其實就只是懶而已，懶得自己刻UI、懶得踩雷。UI、分類、產出靜態網站內容什麼的功能 Hexo 都幫你處理好，只要專注與寫作就好。</p>
-<p>當然也有看過其他的部落格套件，像是<a href="https://jekyllrb.com/">JekyII</a>, <a href="https://gohugo.io/">Hugo</a>，但是發現網路上 Hexo 的教學很多，那就不踩雷了，跟著他們做就好。寫部落格最重要的就是內容（雖然我的內容也不怎麼樣），其他都是其次。</p>
-<p>將介紹如何安裝和預覽。</p>
-<h2 id="主要環境"><a href="#主要環境" class="headerlink" title="主要環境"></a>主要環境</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">OS： Windows 10 專業版</span><br><span class="line">Node.js： 14.17.6</span><br></pre></td></tr></table></figure>
-
-<h2 id="安裝Hexo"><a href="#安裝Hexo" class="headerlink" title="安裝Hexo"></a>安裝Hexo</h2><p>依據<a href="https://hexo.io/zh-tw/docs/#%E5%AE%89%E8%A3%9D%E9%9C%80%E6%B1%82">Hexo官網</a>的說明，需要</p>
-<ul>
-<li>Node.js 建議 10.0 或以上的版本</li>
-<li>git</li>
-</ul>
-<p>這些都安裝好了之後，就可以透過 npm 來安裝，打開終端機，然後輸入：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">npm install -g hexo-cli</span><br></pre></td></tr></table></figure>
-
-<p>之後就會開始安裝 Hexo。我安裝的是當時的最新版<code>6.2.0</code>。</p>
-<h2 id="建立專案"><a href="#建立專案" class="headerlink" title="建立專案"></a>建立專案</h2><h3 id="首次建立專案"><a href="#首次建立專案" class="headerlink" title="首次建立專案"></a>首次建立專案</h3><p>使用終端機到你想要儲存這個專案的位置，輸入指令：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">hexo init &lt;folder&gt;</span><br><span class="line">cd &lt;folder&gt;</span><br><span class="line">npm install</span><br></pre></td></tr></table></figure>
-
-<p><code>&lt;folder&gt;</code>就是 Hexo 專案的資料夾名稱，Hexo 會在目前的目錄用這個名稱再建一個新的資料夾，把專案存到這裡面。沒有輸入的話就會在當前的資料夾內建立專案。</p>
-<p><img src="https://i.imgur.com/Tk8iAIt.jpeg" alt="圖1：以 src 為例"></p>
-<h3 id="資料結構說明"><a href="#資料結構說明" class="headerlink" title="資料結構說明"></a>資料結構說明</h3><p>安裝完成後，裡面會有這些檔案：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">.</span><br><span class="line">├── _config.yml</span><br><span class="line">├── package.json</span><br><span class="line">├── scaffolds</span><br><span class="line">├── source</span><br><span class="line">|   ├── _drafts</span><br><span class="line">|   └── _posts</span><br><span class="line">└── themes</span><br></pre></td></tr></table></figure>
-
-<p><code>_config.yml</code>：Hexo 的配置檔</p>
-<p><code>package.json</code>：npm 的配置檔，基本上可以不用理會</p>
-<p><code>scaffolds</code>：範本資料夾，建立新文章時可依照指定的範本建立檔案</p>
-<p><code>source</code>：存放原始檔案的地方，也就是文章存放的地方</p>
-<p><code>themes</code>：存放主題的資料夾</p>
-<h2 id="預覽"><a href="#預覽" class="headerlink" title="預覽"></a>預覽</h2><p>建立好之後，當然來預覽一下。</p>
-<p>終端機到專案目錄底下，輸入以下指令</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">hexo server</span><br><span class="line">或</span><br><span class="line">hexo s</span><br></pre></td></tr></table></figure>
-
-<p>之後就會啟動伺服器，預設會是 <code>http://localhost:4000</code> ，在瀏覽器上輸入這個網址就會看到。使用者個指令除了可以看到部落格的樣子外，還可以修改文章且儲存後，直接預覽變更後的樣子（修改 config 除外）。</p>
-<p><img src="https://i.imgur.com/zEBvgVU.jpeg" alt="圖2：預覽指令"></p>
-<p><img src="https://i.imgur.com/H64VaMo.jpeg" alt="圖3：建置完成"></p>
-<p>到這裡就大功告成，恭喜安裝 Hexo 並啟動成功。</p>
-<h2 id="參考"><a href="#參考" class="headerlink" title="參考"></a>參考</h2><ul>
-<li><a href="https://hexo.io/zh-tw/docs/">Hexo文件</a></li>
-</ul>
-]]></content>
-      <categories>
-        <category>Hexo</category>
-      </categories>
-      <tags>
-        <tag>教學</tag>
-        <tag>Hexo</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>自架部落格(5) 寫一篇文章</title>
-    <url>/Hexo/%E4%BD%BF%E7%94%A8Hexo%E5%9C%A8GitHub-Pages%E4%B8%8A%E5%BB%BA%E7%AB%8B%E9%83%A8%E8%90%BD%E6%A0%BC-5/</url>
-    <content><![CDATA[<p>寫一篇文章剛開始主要就是注意 front-matter 的設定，其他就是用 Markdown 寫文章了。</p>
-<p>Markdown 的工具有很多，例如直接使用 Visual Studio Code、HackMD 等。像我就使用 Notion，不用打語法，修改樣式時搭配快捷鍵，匯出時選 Markdown，然後再稍微調整一下就好，方便好用。</p>
-<h2 id="建立文章"><a href="#建立文章" class="headerlink" title="建立文章"></a>建立文章</h2><h3 id="指令"><a href="#指令" class="headerlink" title="指令"></a>指令</h3><p>要建立一篇文章的檔案，可以輸入指令依照範本產生</p>
-<p><code>layout</code>：這個是填入範本的名稱，不填的話預設是 <code>post</code>，位置在專案目錄下的 <code>scaffolds</code>。當然你也可以客製化自己的範本，會一些節省時間。這個可以在 <code>_config.yml</code> 的 <code>default_layout</code> 裡指定預設的範本。</p>
-<p><code>title</code>：標題名稱</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">hexo new [layout] &lt;title&gt;</span><br></pre></td></tr></table></figure>
-
-<p>建立好之後就會在 <code>source/_posts</code> 中產生一個同 title 的 <code>.md</code> 檔案，裡面會有依照 post 範本產生的 <code>front-matter</code></p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">---</span><br><span class="line">title: 剛剛輸入的標題</span><br><span class="line">date: 產生檔案的時間，格式：yyyy:MM:dd HH:mm:ss (2022-07-03 15:42:25)</span><br><span class="line">tags:</span><br><span class="line">---</span><br></pre></td></tr></table></figure>
-
-<h3 id="front-matter-設定"><a href="#front-matter-設定" class="headerlink" title="front-matter 設定"></a>front-matter 設定</h3><p>front-matter 其實是 YAML 或 JSON 在檔案開頭的區塊，用來設定文章的一些設定值。</p>
-<p>這裡列出一些常用的設置，其實全部的設置也不多。</p>
-<p><code>title</code>：標題</p>
-<p><code>data</code>：建立日期</p>
-<p><code>description</code>：描述、簡介，這個和文章列表顯示的內容有關。加了這個之後，就會在文章列表的標題下面顯示這裡的內容。當然你也可以在文章內使用 <code>&lt;!— more —&gt;</code> 這個語法來直接顯示標記前的內容，但是進入文章後網址會有 <code>https://example.com/yourtitle#more</code>，而且畫面會從這個標記開始顯示。</p>
-<p><code>categories</code>：文章的分類，有兩種分法</p>
-<p>第一種：同一個層級。</p>
-<p>-Sports<br>-Basketball</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">categories: </span><br><span class="line">- Sports</span><br><span class="line">- Basketball</span><br></pre></td></tr></table></figure>
-
-<p>第二種：一個分類底下有多個分類。</p>
-<p>-Sports<br>　-Baseball</p>
-<p>-MLB<br>　-American League<br>　　-Boston Red Sox</p>
-<p>-MLB<br>　-American League<br>　　-New York Yankees</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">categories: </span><br><span class="line">- [Sports, Baseball]</span><br><span class="line">- [MLB, American League, Boston Red Sox]</span><br><span class="line">- [MLB, American League, New York Yankees]</span><br></pre></td></tr></table></figure>
-
-<p><code>tags</code>：標籤。可以設定多個。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">tags:</span><br><span class="line">- Sports</span><br><span class="line">- Baseball</span><br><span class="line">- MLB</span><br></pre></td></tr></table></figure>
-
-<p><code>comments</code>：是否允許留言，預設 true。</p>
-<p>前面的 NexT 主題設定中，我們在 menu 中加入了 tags 和 categories，這時候我們也要在文章中加入才有效果。</p>
-<h2 id="參考"><a href="#參考" class="headerlink" title="參考"></a>參考</h2><ul>
-<li><a href="https://israynotarray.com/hexo/20201004/3689515060/#%E9%96%B1%E8%AE%80%E5%85%A8%E6%96%87-More">(21) 試著學 Hexo - NexT 主題篇 - NexT 還有哪些設定？</a></li>
-<li><a href="https://hexo.io/docs/writing">Hexo Writing</a></li>
-<li><a href="https://hexo.io/docs/front-matter">Hexo Front-matter</a></li>
 </ul>
 ]]></content>
       <categories>
@@ -831,6 +777,54 @@
       </tags>
   </entry>
   <entry>
+    <title>自架部落格(5) 寫一篇文章</title>
+    <url>/Hexo/%E4%BD%BF%E7%94%A8Hexo%E5%9C%A8GitHub-Pages%E4%B8%8A%E5%BB%BA%E7%AB%8B%E9%83%A8%E8%90%BD%E6%A0%BC-5/</url>
+    <content><![CDATA[<p>寫一篇文章剛開始主要就是注意 front-matter 的設定，其他就是用 Markdown 寫文章了。</p>
+<p>Markdown 的工具有很多，例如直接使用 Visual Studio Code、HackMD 等。像我就使用 Notion，不用打語法，修改樣式時搭配快捷鍵，匯出時選 Markdown，然後再稍微調整一下就好，方便好用。</p>
+<h2 id="建立文章"><a href="#建立文章" class="headerlink" title="建立文章"></a>建立文章</h2><h3 id="指令"><a href="#指令" class="headerlink" title="指令"></a>指令</h3><p>要建立一篇文章的檔案，可以輸入指令依照範本產生</p>
+<p><code>layout</code>：這個是填入範本的名稱，不填的話預設是 <code>post</code>，位置在專案目錄下的 <code>scaffolds</code>。當然你也可以客製化自己的範本，會一些節省時間。這個可以在 <code>_config.yml</code> 的 <code>default_layout</code> 裡指定預設的範本。</p>
+<p><code>title</code>：標題名稱</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">hexo new [layout] &lt;title&gt;</span><br></pre></td></tr></table></figure>
+
+<p>建立好之後就會在 <code>source/_posts</code> 中產生一個同 title 的 <code>.md</code> 檔案，裡面會有依照 post 範本產生的 <code>front-matter</code></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">---</span><br><span class="line">title: 剛剛輸入的標題</span><br><span class="line">date: 產生檔案的時間，格式：yyyy:MM:dd HH:mm:ss (2022-07-03 15:42:25)</span><br><span class="line">tags:</span><br><span class="line">---</span><br></pre></td></tr></table></figure>
+
+<h3 id="front-matter-設定"><a href="#front-matter-設定" class="headerlink" title="front-matter 設定"></a>front-matter 設定</h3><p>front-matter 其實是 YAML 或 JSON 在檔案開頭的區塊，用來設定文章的一些設定值。</p>
+<p>這裡列出一些常用的設置，其實全部的設置也不多。</p>
+<p><code>title</code>：標題</p>
+<p><code>data</code>：建立日期</p>
+<p><code>description</code>：描述、簡介，這個和文章列表顯示的內容有關。加了這個之後，就會在文章列表的標題下面顯示這裡的內容。當然你也可以在文章內使用 <code>&lt;!— more —&gt;</code> 這個語法來直接顯示標記前的內容，但是進入文章後網址會有 <code>https://example.com/yourtitle#more</code>，而且畫面會從這個標記開始顯示。</p>
+<p><code>categories</code>：文章的分類，有兩種分法</p>
+<p>第一種：同一個層級。</p>
+<p>-Sports<br>-Basketball</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">categories: </span><br><span class="line">- Sports</span><br><span class="line">- Basketball</span><br></pre></td></tr></table></figure>
+
+<p>第二種：一個分類底下有多個分類。</p>
+<p>-Sports<br>　-Baseball</p>
+<p>-MLB<br>　-American League<br>　　-Boston Red Sox</p>
+<p>-MLB<br>　-American League<br>　　-New York Yankees</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">categories: </span><br><span class="line">- [Sports, Baseball]</span><br><span class="line">- [MLB, American League, Boston Red Sox]</span><br><span class="line">- [MLB, American League, New York Yankees]</span><br></pre></td></tr></table></figure>
+
+<p><code>tags</code>：標籤。可以設定多個。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">tags:</span><br><span class="line">- Sports</span><br><span class="line">- Baseball</span><br><span class="line">- MLB</span><br></pre></td></tr></table></figure>
+
+<p><code>comments</code>：是否允許留言，預設 true。</p>
+<p>前面的 NexT 主題設定中，我們在 menu 中加入了 tags 和 categories，這時候我們也要在文章中加入才有效果。</p>
+<h2 id="參考"><a href="#參考" class="headerlink" title="參考"></a>參考</h2><ul>
+<li><a href="https://israynotarray.com/hexo/20201004/3689515060/#%E9%96%B1%E8%AE%80%E5%85%A8%E6%96%87-More">(21) 試著學 Hexo - NexT 主題篇 - NexT 還有哪些設定？</a></li>
+<li><a href="https://hexo.io/docs/writing">Hexo Writing</a></li>
+<li><a href="https://hexo.io/docs/front-matter">Hexo Front-matter</a></li>
+</ul>
+]]></content>
+      <categories>
+        <category>Hexo</category>
+      </categories>
+      <tags>
+        <tag>教學</tag>
+        <tag>Hexo</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>自架部落格(6) 發佈到 GitHub Pages 上</title>
     <url>/Hexo/%E4%BD%BF%E7%94%A8Hexo%E5%9C%A8GitHub-Pages%E4%B8%8A%E5%BB%BA%E7%AB%8B%E9%83%A8%E8%90%BD%E6%A0%BC-6/</url>
     <content><![CDATA[<p>發佈到 GitHub Pages 其實很簡單，而且還可以順便看看 GitHub Action 是在做什麼。</p>
@@ -894,6 +888,461 @@
       </tags>
   </entry>
   <entry>
+    <title>批判性思考</title>
+    <url>/SoftSkill/%E6%89%B9%E5%88%A4%E6%80%A7%E6%80%9D%E8%80%83/</url>
+    <content><![CDATA[<h1 id="批判性思考"><a href="#批判性思考" class="headerlink" title="批判性思考"></a>批判性思考</h1><p>依據 「思辨，從問對問題開始」 一書所簡單整理，並加上一些個人看法。</p>
+<ul>
+<li>英文書名：Asking the Right Questions: A Guide to Critical Thinking</li>
+<li>作者：M. Neil Browne , Stuart M. Keeley</li>
+<li>中文書名會因為改版而更換，用英文書名搜尋比較準確</li>
+<li><del>中文書名有點騙，看起來跟雞湯或空洞勵志的書一樣，英文書名就很明確是寫批判性思考</del></li>
+</ul>
+<h2 id="這是什麼"><a href="#這是什麼" class="headerlink" title="這是什麼"></a>這是什麼</h2><ul>
+<li>用來分析、評估、解釋、推理以及反思那些我們接收到的資訊</li>
+<li>查證說法，找出真正的答案</li>
+</ul>
+<h2 id="為什麼需要"><a href="#為什麼需要" class="headerlink" title="為什麼需要"></a>為什麼需要</h2><ul>
+<li>在資訊爆炸的時代，幫助分析評估、去蕪存菁、歸納分類，建構出屬於自己的解答</li>
+<li>避免被牽著鼻子走，專家說的也不是一定正確</li>
+<li>幫助獨立思考</li>
+<li>持續糾正和調整自己的觀點</li>
+</ul>
+<h2 id="弱義和強義批判思考"><a href="#弱義和強義批判思考" class="headerlink" title="弱義和強義批判思考"></a>弱義和強義批判思考</h2><p>依據國際批判思考權威理查·保羅（Richard Paul）所定義。</p>
+<h3 id="弱義"><a href="#弱義" class="headerlink" title="弱義"></a>弱義</h3><ul>
+<li>定義：運用批判技巧防衛你既有的信念</li>
+<li>無意求真或求善</li>
+<li>目的是為了抗拒和消滅與你不同的意見及推論</li>
+<li>以壓制和戰勝異議者作為批判思考的目標</li>
+<li>缺乏建設性意見</li>
+</ul>
+<h3 id="強義"><a href="#強義" class="headerlink" title="強義"></a>強義</h3><ul>
+<li>定義：運用相同的技巧，去評估所有的論點和信念，尤其是自身的論點和信念。</li>
+<li>需要對所有的申論提出批判性問題，包含自己的申論</li>
+<li>強迫自己以批判性的態度來觀察自身原始的觀點，避免自欺和從眾的行為</li>
+<li>不是要強迫放棄自己的觀點，有時候反而可以強化</li>
+</ul>
+<h2 id="可協助批判性思考的問題"><a href="#可協助批判性思考的問題" class="headerlink" title="可協助批判性思考的問題"></a>可協助批判性思考的問題</h2><ul>
+<li>議題和結論是什麼？</li>
+<li>理由是什麼？</li>
+<li>有無曖昧不明的語言？</li>
+<li>有無價值觀與描述性假設？</li>
+<li>推論過程有無謬誤？</li>
+<li>證據是否可信？</li>
+<li>是不是還有其他原因？</li>
+<li>統計數字是否可信？</li>
+<li>哪些重要資訊被消失？</li>
+<li>有沒有更適合的結論？</li>
+</ul>
+<h2 id="應有行為"><a href="#應有行為" class="headerlink" title="應有行為"></a>應有行為</h2><p>運用批判性思考前應該要有的行為：</p>
+<ul>
+<li>吸收大量的資料，透過這些資料來提供多元觀點和全面性的假設</li>
+<li>以理由和證據作為決策依據</li>
+<li>以開放的心胸了解他人的觀點，但是採取質疑的態度去驗證觀點是否合理可信</li>
+<li>對於任何說法的真實性，提醒對方應該要尋求並尊重多元觀點</li>
+</ul>
+<h2 id="不要走火入魔"><a href="#不要走火入魔" class="headerlink" title="不要走火入魔"></a>不要走火入魔</h2><ul>
+<li>不是所有事情都需要批判</li>
+<li>批判性思考不是抓語意漏洞</li>
+<li>在內心自省批判或利用新聞報導作為練習</li>
+<li>為了批判而批判，小心沒有朋友</li>
+</ul>
+<h2 id="延伸閱讀"><a href="#延伸閱讀" class="headerlink" title="延伸閱讀"></a>延伸閱讀</h2><ul>
+<li>快思慢想（Thinking, Fast and Slow）- Daniel Kahneman</li>
+<li>思考的祕密 - 傅皓政</li>
+<li><a href="https://ocw.aca.ntu.edu.tw/ntu-ocw/ocw/cou/108S205">邏輯（台大開放式課程）- 傅皓政</a></li>
+</ul>
+]]></content>
+      <categories>
+        <category>軟實力</category>
+      </categories>
+      <tags>
+        <tag>軟實力</tag>
+        <tag>思考</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>xUnit Class Fixture</title>
+    <url>/UnitTest/xUnitClassFixture/</url>
+    <content><![CDATA[<p>簡單介紹一下 xUnit 中的 Class Fixture。主要就是繼承 <code>IClassFixture&lt;T&gt;</code> 、建構式注入。</p>
+<h2 id="生命週期"><a href="#生命週期" class="headerlink" title="生命週期"></a>生命週期</h2><ul>
+<li>初始化：有用到這個 fixture 的測試類別載入後</li>
+<li>清除：類別內所有測試都執行完後</li>
+</ul>
+<h2 id="建立-Class-Fixture-類別"><a href="#建立-Class-Fixture-類別" class="headerlink" title="建立 Class Fixture 類別"></a>建立 Class Fixture 類別</h2><p>此類別其實就只是普通的類別，只需要注意在建構式和 Dispose 撰寫初始化和清除的程式。如果有需要，裡面也可以提供一些屬性讓外部使用。</p>
+<figure class="highlight csharp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">CommonClassFixture</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">public</span> IUnitOfWork UnitOfWork &#123; <span class="keyword">get</span>; <span class="keyword">private</span> <span class="keyword">set</span>; &#125;</span><br><span class="line">    <span class="keyword">public</span> IMapper Mapper &#123; <span class="keyword">get</span>; <span class="keyword">private</span> <span class="keyword">set</span>; &#125;</span><br><span class="line">    <span class="keyword">public</span> IFixture Fixture &#123; <span class="keyword">get</span>; <span class="keyword">private</span> <span class="keyword">set</span>; &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">CommonClassFixture</span>()</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">this</span>.UnitOfWork = Substitute.For&lt;IUnitOfWork&gt;();</span><br><span class="line">        <span class="keyword">var</span> config = <span class="keyword">new</span> MapperConfiguration(cfg =&gt;</span><br><span class="line">        &#123;</span><br><span class="line">            cfg.AddProfile&lt;ServicesProfile&gt;();</span><br><span class="line">        &#125;);</span><br><span class="line">        <span class="keyword">this</span>.Mapper = <span class="keyword">new</span> Mapper(config);</span><br><span class="line">        <span class="keyword">this</span>.Fixture = <span class="keyword">new</span> Fixture();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="使用方式"><a href="#使用方式" class="headerlink" title="使用方式"></a>使用方式</h2><p>必須繼承 <code>IClassFixture&lt;T&gt;</code> 才能使用 class 層級的 fixture，而且可以同時繼承多個。</p>
+<p>以下是單純使用 Class Fixture 的範例：</p>
+<figure class="highlight csharp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">MemberServiceTests</span> : <span class="title">IClassFixture</span>&lt;<span class="title">CommonClassFixture</span>&gt;</span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">// 測試方法...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>以下是會用到 Class Fixture 內部公開屬性的範例：</p>
+<figure class="highlight csharp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">MemberServiceTests</span> : <span class="title">IClassFixture</span>&lt;<span class="title">CommonClassFixture</span>&gt;</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">readonly</span> CommonClassFixture _commonFixture;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">readonly</span> IAppLogger&lt;MemberEntity&gt; _logger;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">readonly</span> AdminMemberService _sut;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">MemberServiceTests</span>(<span class="params">CommonClassFixture commonFixture</span>)</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">this</span>._commonFixture = commonFixture;</span><br><span class="line">        <span class="keyword">this</span>._logger = Substitute.For&lt;IAppLogger&lt;AdminMember&gt;&gt;();</span><br><span class="line">        <span class="keyword">this</span>._sut = <span class="keyword">new</span> MemberService(<span class="keyword">this</span>._commonFixture.UnitOfWork, <span class="keyword">this</span>._commonFixture.Mapper, <span class="keyword">this</span>._logger);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 測試方法...</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">SampleTestMethod</span>()</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">// arrange</span></span><br><span class="line">        <span class="keyword">var</span> id = <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">var</span> member = <span class="keyword">this</span>._commonFixture.fixture.Build&lt;MemberEntity&gt;()</span><br><span class="line">            .With(q =&gt; q.Id, id)</span><br><span class="line">            .With(q =&gt; q.Status, <span class="number">1</span>)</span><br><span class="line">            .Create();</span><br><span class="line">            </span><br><span class="line">        <span class="comment">// 以下省略</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="參考"><a href="#參考" class="headerlink" title="參考"></a>參考</h2><ul>
+<li><a href="https://xunit.net/docs/shared-context">Shared Context between Tests &gt; xUnit.net</a></li>
+</ul>
+]]></content>
+      <categories>
+        <category>單元測試</category>
+      </categories>
+      <tags>
+        <tag>單元測試</tag>
+        <tag>xUnit</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>xUnit Assembly Fixture</title>
+    <url>/UnitTest/xUnitAssemblyFixture/</url>
+    <content><![CDATA[<p>生命週期貫穿整個測試的 fixture。</p>
+<p>注意：此為 v3 的功能，v2 需要使用其他套件輔助或是使用官方範例裡的寫法。</p>
+<p><a href="https://github.com/xunit/samples.xunit/tree/main/AssemblyFixtureExample">https://github.com/xunit/samples.xunit/tree/main/AssemblyFixtureExample</a></p>
+<h2 id="生命週期"><a href="#生命週期" class="headerlink" title="生命週期"></a>生命週期</h2><ul>
+<li>初始化：組件載入後</li>
+<li>清除：組件卸載前</li>
+</ul>
+<h2 id="建立-Assembly-Fixture-類別"><a href="#建立-Assembly-Fixture-類別" class="headerlink" title="建立 Assembly Fixture 類別"></a>建立 Assembly Fixture 類別</h2><p>寫法和觀念就和 Class Fixture 一樣，其實這個也可以用在 Class Fixture。</p>
+<figure class="highlight csharp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">DatabaseAssemblyFixture</span> : <span class="title">IDisposable</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">DatabaseAssemblyFixture</span>()</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">// Docker 啟動 container 和建立資料庫</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Dispose 同 [AssemblyCleanup]</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">Dispose</span>()</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">// Docker 刪除 container</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">PrintMssqlVersion</span>(<span class="params"><span class="built_in">string</span> conn</span>)</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">using</span> <span class="keyword">var</span> connection = <span class="keyword">new</span> SqlConnection(conn);</span><br><span class="line">        <span class="keyword">using</span> <span class="keyword">var</span> command = <span class="keyword">new</span> SqlCommand(<span class="string">&quot;SELECT @@VERSION&quot;</span>, connection);</span><br><span class="line">        connection.Open();</span><br><span class="line"></span><br><span class="line">        <span class="keyword">var</span> reader = command.ExecuteReader();</span><br><span class="line">        reader.Read();</span><br><span class="line"></span><br><span class="line">        Console.WriteLine(<span class="string">$&quot;MSSQL Version: <span class="subst">&#123;reader.GetString(<span class="number">0</span>)&#125;</span>&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="使用方式"><a href="#使用方式" class="headerlink" title="使用方式"></a>使用方式</h2><p>加入 assembly attribute</p>
+<p>方法一：新增一個 <code>AssemblyInfo.cs</code>，在裡面加入(建議)</p>
+<figure class="highlight csharp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">using</span> RepositoryTests.Fixtures;</span><br><span class="line"></span><br><span class="line">[<span class="meta">assembly: AssemblyFixture(typeof(DatabaseAssemblyFixture))</span>]</span><br></pre></td></tr></table></figure>
+
+<p>方法二：在測試類別的 namespace 上面加入</p>
+<figure class="highlight csharp"><table><tr><td class="code"><pre><span class="line">[<span class="meta">assembly: AssemblyFixture(typeof(DatabaseAssemblyFixture))</span>]</span><br><span class="line"></span><br><span class="line"><span class="keyword">namespace</span> <span class="title">RepositoryTests.Implement</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">class</span> <span class="title">MemberRepositoryTests</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">private</span> <span class="keyword">readonly</span> DatabaseAssemblyFixture _db;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">MemberRepositoryTests</span>(<span class="params">DatabaseAssemblyFixture db</span>)</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">this</span>._db = db;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 測試方法...</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="參考"><a href="#參考" class="headerlink" title="參考"></a>參考</h2><ul>
+<li><a href="https://xunit.net/docs/shared-context">Shared Context between Tests &gt; xUnit.net</a></li>
+</ul>
+]]></content>
+      <categories>
+        <category>單元測試</category>
+      </categories>
+      <tags>
+        <tag>單元測試</tag>
+        <tag>xUnit</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>xUnit Collection Fixture</title>
+    <url>/UnitTest/xUnitCollectionFixture/</url>
+    <content><![CDATA[<p>這個 fixture 的功能類似 Class Fixture，也是 class 層級，但是它的生命週期是在所有有用到這個 fixture 的測試中，最先執行的測試前建立，然後在所有有用到這個 fixture 的測試都結束後清除，會比 class 層級還長。</p>
+<h2 id="生命週期"><a href="#生命週期" class="headerlink" title="生命週期"></a>生命週期</h2><ul>
+<li>初始化：所有有用到這個 fixture 的測試中第一個測試類別載入後</li>
+<li>清除：所有有用到這個 fixture 的測試都執行完後</li>
+</ul>
+<h2 id="建立-Collection-Fixture-類別"><a href="#建立-Collection-Fixture-類別" class="headerlink" title="建立 Collection Fixture 類別"></a>建立 Collection Fixture 類別</h2><p>建立好 fixture 類別後，再建立一個類別來專門集合所需的 fixture。這個類別需要繼承 <code>ICollectionFixture&lt;TFixture&gt;</code>，且可以繼承多個，還要使用 <code>[CollectionDefinition(&quot;集合名稱&quot;)]</code> 來定義這個集合的名稱。</p>
+<figure class="highlight csharp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">MapperFixture</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">MapperFixture</span>()</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">var</span> config = <span class="keyword">new</span> MapperConfiguration(cfg =&gt;</span><br><span class="line">        &#123;</span><br><span class="line">            cfg.AddProfile&lt;ServicesProfile&gt;();</span><br><span class="line">        &#125;);</span><br><span class="line">        <span class="keyword">this</span>.Mapper = <span class="keyword">new</span> Mapper(config);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">internal</span> IMapper Mapper &#123; <span class="keyword">get</span>; <span class="keyword">private</span> <span class="keyword">set</span>; &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 設定此集合的名稱 (必要)</span></span><br><span class="line">[<span class="meta">CollectionDefinition(nameof(CommonCollectionFixture)</span>]</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">CommonCollectionFixture</span> : <span class="title">ICollectionFixture</span>&lt;<span class="title">MapperFixture</span>&gt;</span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">// 可繼承多個 ICollectionFixture&lt;TFixture&gt; 來組合成一個集合</span></span><br><span class="line">    <span class="comment">// 此處不用寫任何程式碼，主要為設定此集合有什麼 fixture</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="使用方式"><a href="#使用方式" class="headerlink" title="使用方式"></a>使用方式</h2><p>運用到的測試類別要加入 <code>[Collection(&quot;集合名稱&quot;)]</code> 來指定使用哪個集合</p>
+<figure class="highlight csharp"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 使用 Collection Fixture (必要)</span></span><br><span class="line">[<span class="meta">Collection(nameof(CommonCollectionFixture))</span>]</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">MemberServiceTests</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">readonly</span> MapperFixture _mapperFixture;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">MemberServiceTests</span>(<span class="params">MapperFixture mapperFixture</span>)</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">this</span>._mapperFixture = mapperFixture;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 測試方法...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="證明生命週期比-Class-Fixture-長"><a href="#證明生命週期比-Class-Fixture-長" class="headerlink" title="證明生命週期比 Class Fixture 長"></a>證明生命週期比 Class Fixture 長</h2><figure class="highlight csharp"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 使用 Collection Fixture (必要)</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">MyFixture</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">MyFixture</span>()</span></span><br><span class="line">    &#123;</span><br><span class="line">        ExceuteCount += <span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">internal</span> <span class="keyword">static</span> <span class="built_in">int</span> ExceuteCount &#123; <span class="keyword">get</span>; <span class="keyword">private</span> <span class="keyword">set</span>; &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 設定此集合的名稱 (必要)</span></span><br><span class="line">[<span class="meta">CollectionDefinition(nameof(MyCollection))</span>]</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">MyCollection</span> : <span class="title">ICollectionFixture</span>&lt;<span class="title">MyFixture</span>&gt;</span><br><span class="line">&#123;</span><br><span class="line">    </span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">[<span class="meta">Collection(nameof(MyCollection))</span>]</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">TestClassA</span></span><br><span class="line">&#123;</span><br><span class="line">    [<span class="meta">Fact</span>]</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> TestFixture的數字應該是<span class="number">1</span>()</span><br><span class="line">    &#123;</span><br><span class="line">        Assert.True(MyFixture.ExceuteCount.Equals(<span class="number">1</span>));</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">[<span class="meta">Collection(nameof(MyCollection))</span>]</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">TestClassB</span></span><br><span class="line">&#123;</span><br><span class="line">    [<span class="meta">Fact</span>]</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> TestFixture的數字應該是<span class="number">1</span>()</span><br><span class="line">    &#123;</span><br><span class="line">        Assert.True(MyFixture.ExceuteCount.Equals(<span class="number">1</span>));</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="參考"><a href="#參考" class="headerlink" title="參考"></a>參考</h2><ul>
+<li><a href="https://xunit.net/docs/shared-context">Shared Context between Tests &gt; xUnit.net</a></li>
+</ul>
+]]></content>
+      <categories>
+        <category>單元測試</category>
+      </categories>
+      <tags>
+        <tag>單元測試</tag>
+        <tag>xUnit</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>xUnit v2 簡介</title>
+    <url>/UnitTest/xUnitv2%E7%B0%A1%E4%BB%8B/</url>
+    <content><![CDATA[<p>核心觀念和主流的測試工具一樣，主要差在 Initialize 和 Cleanup 不同，xUnit 主要靠建構式和實作 <code>IDisposable</code> 來處理，而且有 <code>IClassFixture</code> 和 <code>ICollectionFixture</code> 來提供多種組合，增加了彈性。目前 v2 不支援 Assembly 層級，但是有其他套件，不想用可以等 v3。</p>
+<h2 id="目錄"><a href="#目錄" class="headerlink" title="目錄"></a>目錄</h2><p>Attribute：</p>
+<ul>
+<li><a href="%E5%9F%BA%E7%A4%8E%E7%9F%A5%E8%AD%98.md">基礎知識</a></li>
+</ul>
+<p>各層級 Fixture 生命週期的說明</p>
+<ul>
+<li><a href="xUnit%E5%90%84%E5%B1%A4%E7%B4%9AFixture%E7%9A%84%E7%94%9F%E5%91%BD%E9%80%B1%E6%9C%9F.md">xUnit 各層級 Fixture 的生命週期</a></li>
+</ul>
+<p>Fixture：</p>
+<ul>
+<li><a href="AssemblyFixture.md">Assembly Level Fixture</a></li>
+<li><a href="ClassFixture.md">Class Level Fixture</a></li>
+<li><a href="CollectionFixture.md">Collection Fixture</a></li>
+</ul>
+<h2 id="已知和-MSTest-的差異"><a href="#已知和-MSTest-的差異" class="headerlink" title="已知和 MSTest 的差異"></a>已知和 MSTest 的差異</h2><p>主要和 MSTest 常用的寫法對比。</p>
+<p>官方也有給詳細的差異對照表，詳細可以看 <a href="https://xunit.net/docs/comparisons">Comparing xUnit.net to other frameworks</a>。</p>
+<h3 id="Method-Level"><a href="#Method-Level" class="headerlink" title="Method Level"></a>Method Level</h3><table>
+<thead>
+<tr>
+<th>xUnit</th>
+<th>MSTest</th>
+<th>備註</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>x</td>
+<td>[TestClass]</td>
+<td>xUnit 不需要這個</td>
+</tr>
+<tr>
+<td>建構式</td>
+<td>[TestInitialize]</td>
+<td>xUnit 認為不好追蹤和除錯測試的程式碼，詳細請看 <a href="https://xunit.net/docs/comparisons#note2">Attribute Notes, Note 2</a></td>
+</tr>
+<tr>
+<td>Dispose</td>
+<td>[TestCleanup]</td>
+<td>原因同上，xUnit 要繼承 <code>IDisposable</code></td>
+</tr>
+<tr>
+<td>[Fact]</td>
+<td>[TestMethod]</td>
+<td>靠這個偵測測試方法</td>
+</tr>
+<tr>
+<td>[Theory]</td>
+<td>[TestMethod]</td>
+<td>靠這個偵測測試方法。要用類似 MSTest 的 <code>DataRow</code> 功能時，<code>Fact</code> 必須改成 <code>Theory</code>。可以帶 <code>DisplayName</code> 在測試結果顯示此名稱</td>
+</tr>
+<tr>
+<td>[InlineData]</td>
+<td>[DataRow]</td>
+<td><code>InlineData</code> 沒有 <code>DisplayName</code>，都是看 <code>Theory</code> 的<code>DisplayName</code></td>
+</tr>
+<tr>
+<td>[MemberData]</td>
+<td>[DynamicData]</td>
+<td><code>MemberData</code> 類似於 <code>InlineData</code>，但是是獨立出一個必須是 public 且 static 的方法，型別使用 object。attribute 內使用 <code>nameof</code> (裡面參數是 string memberName)</td>
+</tr>
+<tr>
+<td>[ClassData]</td>
+<td>[CustomDataSource]</td>
+<td><code>ClassData</code> 類似於 <code>InlineData</code>，建一個獨立的類別，但是這個類別必須繼承 <code>IEnumerable</code>。attribute 內使用 <code>typeof</code></td>
+</tr>
+<tr>
+<td>x</td>
+<td>[Owner]</td>
+<td></td>
+</tr>
+<tr>
+<td>x</td>
+<td>[TestCategory]</td>
+<td></td>
+</tr>
+<tr>
+<td>x</td>
+<td>[TestProperty]</td>
+<td></td>
+</tr>
+<tr>
+<td>x</td>
+<td>[Timeout]</td>
+<td></td>
+</tr>
+</tbody></table>
+<p>其他注意事項</p>
+<ol>
+<li>想要判斷陣列是否為空集合的時候，可能會想要使用 <code>Assert.Equal(0, actual.Count());</code>，但是官方不建議，IDE 也會提示。建議使用 <code>Empty</code> (<code>Assert.Empty(actual);</code>)。</li>
+</ol>
+<h3 id="Class-Level"><a href="#Class-Level" class="headerlink" title="Class Level"></a>Class Level</h3><p>獨立出一個類別來撰寫，然後在測試的類別裡繼承 <code>IClassFixture&lt;T&gt;</code>，變成可以同時繼承多個，和 MSTest 寫在測試方法內不同。</p>
+<table>
+<thead>
+<tr>
+<th>xUnit</th>
+<th>MSTest</th>
+<th>備註</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>x</td>
+<td>[TestClass]</td>
+<td>xUnit 不需要這個</td>
+</tr>
+<tr>
+<td>建構式</td>
+<td>[ClassInitialize]</td>
+<td>xUnit 認為不好追蹤和除錯測試的程式碼，詳細請看 <a href="https://xunit.net/docs/comparisons#note2">Attribute Notes, Note 2</a></td>
+</tr>
+<tr>
+<td>Dispose</td>
+<td>[ClassCleanup]</td>
+<td>原因同上，xUnit 要繼承 <code>IDisposable</code></td>
+</tr>
+</tbody></table>
+<h3 id="Assembly-Level"><a href="#Assembly-Level" class="headerlink" title="Assembly Level"></a>Assembly Level</h3><p>v2 版作者不支援也不打算做，但是有給<a href="https://github.com/xunit/samples.xunit/tree/main/AssemblyFixtureExample">範例</a>，請看<a href="https://github.com/xunit/xunit/issues/431">原因</a>。也有很多第三方套件可以用，例如 <a href="https://github.com/tomaszeman/Xunit.Extensions.Ordering#assemblyFixture">Xunit.Extensions.Ordering</a> , <a href="https://github.com/JDCain/Xunit.Extensions.AssemblyFixture">Xunit.Extensions.AssemblyFixture</a>。</p>
+<p>v3 版作者加進去了，但是風格不同，目前是使用 attribute，而不是 <code>IAssemblyFixture&lt;T&gt;</code> 這種。</p>
+<table>
+<thead>
+<tr>
+<th>xUnit</th>
+<th>MSTest</th>
+<th>備註</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>x</td>
+<td>[TestClass]</td>
+<td>xUnit 不需要這個</td>
+</tr>
+<tr>
+<td>建構式</td>
+<td>[AssemblyInitialize]</td>
+<td>xUnit 認為不好追蹤和除錯測試的程式碼，詳細請看 <a href="https://xunit.net/docs/comparisons#note2">Attribute Notes, Note 2</a></td>
+</tr>
+<tr>
+<td>Dispose</td>
+<td>[AssemblyCleanup]</td>
+<td>原因同上，xUnit 要繼承 <code>IDisposable</code></td>
+</tr>
+</tbody></table>
+<p>執行測試的範例：</p>
+<p>到單元測試專案的目錄下，執行 <code>dotnet run</code>。</p>
+<h2 id="其他參考資料"><a href="#其他參考資料" class="headerlink" title="其他參考資料"></a>其他參考資料</h2><ul>
+<li><a href="https://xunit.net/docs/shared-context">Shared Context between Tests &gt; xUnit.net</a></li>
+<li><a href="https://andrewlock.net/creating-parameterised-tests-in-xunit-with-inlinedata-classdata-and-memberdata/">Creating parameterised tests in xUnit with [InlineData], [ClassData], and [MemberData]</a></li>
+<li><a href="https://blog.yowko.com/mstest-nunit-xunit/#mstest-nunit-3-xunit-net-2-0-%E6%AF%94%E8%BC%83">MSTest,NUnit 3,xUnit.net 2.0 比較 - Yowko’s Notes</a></li>
+<li><a href="https://github.com/dotnet/runtime/blob/main/src/libraries/System.Collections/tests/Generic/HashSet/HashSet.Generic.Tests.cs">System.Collections HashSet 的測試</a></li>
+<li><a href="https://github.com/xunit/samples.xunit">xUnit 官方範例</a></li>
+</ul>
+]]></content>
+      <categories>
+        <category>單元測試</category>
+      </categories>
+      <tags>
+        <tag>單元測試</tag>
+        <tag>xUnit</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>xUnit 基礎觀念</title>
+    <url>/UnitTest/xUnit%E5%9F%BA%E7%A4%8E%E8%A7%80%E5%BF%B5/</url>
+    <content><![CDATA[<p>簡單說明 xUnit 的一些基礎觀念與用法，還加上對應到 MSTest 的功能。如果是從 MSTest 轉過來，可能會需要一些時間來適應。</p>
+<h2 id="測試類別"><a href="#測試類別" class="headerlink" title="測試類別"></a>測試類別</h2><p>生命週期：</p>
+<ul>
+<li>初始化：每個測試開始前</li>
+<li>清除：每個測試結束後</li>
+</ul>
+<p>和一般的測試框架不同，xUnit 採用建構式和實作 <code>IDispose</code> 來達成初始化和清除</p>
+<p>對應 MSTest：[XxxInitialize], [XxxCleanup]</p>
+<figure class="highlight csharp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">ProductServiceTests</span> : <span class="title">IDisposable</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">readonly</span> IMapper _mapper;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">readonly</span> IProductRepository _productRepository;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">readonly</span> ProductService _sut;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">ProductServiceTests</span>()</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">this</span>._mapper = TestHook.MapperConfigurationProvider.CreateMapper();</span><br><span class="line">        <span class="keyword">this</span>._productRepository = Substitute.For&lt;IProductRepository&gt;();</span><br><span class="line">        <span class="keyword">this</span>._sut = <span class="keyword">new</span> ProductService(<span class="keyword">this</span>._productRepository, <span class="keyword">this</span>._mapper);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">Dispose</span>()</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">// 想要清除的東西</span></span><br><span class="line">        <span class="comment">// 不需要可以不用繼承 IDisposable</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 測試方法...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="測試方法"><a href="#測試方法" class="headerlink" title="測試方法"></a>測試方法</h2><h3 id="Fact"><a href="#Fact" class="headerlink" title="[Fact]"></a>[Fact]</h3><p>對應 MSTest：[TestMethod]</p>
+<figure class="highlight csharp"><table><tr><td class="code"><pre><span class="line">[<span class="meta">Fact</span>]</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> GetById_輸入id_資料庫有資料_應回傳ProductDto資料()</span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">// arrange</span></span><br><span class="line">    <span class="keyword">var</span> id = <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">var</span> fixture = <span class="keyword">new</span> Fixture();</span><br><span class="line">    <span class="keyword">var</span> product = fixture.Build&lt;ProductEntity&gt;()</span><br><span class="line">        .With(q =&gt; q.Id, id)</span><br><span class="line">        .With(q =&gt; q.Status, <span class="number">1</span>)</span><br><span class="line">        .Create();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">this</span>._productRepository.GetById(Arg.Any&lt;<span class="built_in">int</span>&gt;()).Returns(product);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// act</span></span><br><span class="line">    <span class="keyword">var</span> actual = <span class="keyword">this</span>._sut.GetById(id);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// assert</span></span><br><span class="line">    Assert.Equal(id, actual.Id);</span><br><span class="line">    Assert.NotNull(actual);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="Theory-InlineData"><a href="#Theory-InlineData" class="headerlink" title="[Theory], [InlineData]"></a>[Theory], [InlineData]</h3><p>資料的使用範圍：此方法內</p>
+<p>可理解為內部資料</p>
+<p>對應 MSTest：[TestMethod], [DataRow]</p>
+<figure class="highlight csharp"><table><tr><td class="code"><pre><span class="line">[<span class="meta">Theory(DisplayName = <span class="string">&quot;GetRange_InlineData_不合規格的值&quot;</span>)</span>]</span><br><span class="line">[<span class="meta">InlineData(<span class="string">&quot;from&quot;</span>, -1, 10)</span>]</span><br><span class="line">[<span class="meta">InlineData(<span class="string">&quot;from&quot;</span>, 0, 10)</span>]</span><br><span class="line">[<span class="meta">InlineData(<span class="string">&quot;size&quot;</span>, 1, -1)</span>]</span><br><span class="line">[<span class="meta">InlineData(<span class="string">&quot;size&quot;</span>, 1, 0)</span>]</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> GetRange_InlineData_輸入引數的內容為不合規格的值_應拋出ArgumentOutOfRangeException(<span class="built_in">string</span> nameOfErrorArgument, <span class="built_in">int</span> <span class="keyword">from</span>, <span class="built_in">int</span> size)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">// InlineData 同 DataRow，但是無法每一筆資料指定自己的 DisplayName，只能在Theory統一指定 DisplayName</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// act</span></span><br><span class="line">    <span class="keyword">var</span> exception = Assert.Throws&lt;ArgumentOutOfRangeException&gt;(() =&gt; <span class="keyword">this</span>._sut.GetRange(<span class="keyword">from</span>, size));</span><br><span class="line"></span><br><span class="line">    <span class="comment">// assert</span></span><br><span class="line">    Assert.Contains(nameOfErrorArgument, exception.Message);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="Theory-MemberData"><a href="#Theory-MemberData" class="headerlink" title="[Theory], [MemberData]"></a>[Theory], [MemberData]</h3><p>可玩性極高，可以在同一類別內建立多個靜態方法，或是在另一個類別裡建立，彈性比 <code>ClassData</code> 還高。注意必須要回傳 <code>IEnumerable&lt;object[]&gt;</code></p>
+<p>資料的使用範圍：同一類別內、不限 (可跨類別、專案等)</p>
+<p>可理解為成員資料，來自於類別內的成員</p>
+<p>對應 MSTest：[TestMethod], [DynamicData]</p>
+<ul>
+<li><p>同一類別內 (範圍：同一類別)</p>
+<figure class="highlight csharp"><table><tr><td class="code"><pre><span class="line">[<span class="meta">Theory(DisplayName = <span class="string">&quot;GetRange_同類別MemberData_不合規格的值&quot;</span>)</span>]</span><br><span class="line">[<span class="meta">MemberData(nameof(PageDataMemberData))</span>]</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> GetRange_MemberData_同類別輸入引數的內容為不合規格的值_應拋出ArgumentOutOfRangeException(<span class="built_in">string</span> nameOfErrorArgument, <span class="built_in">int</span> <span class="keyword">from</span>, <span class="built_in">int</span> size)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">// 資料來源為獨立出一個必須是 public 且 static 的方法，必須要回傳 IEnumerable&lt;object[]&gt;</span></span><br><span class="line">    <span class="comment">// 資料的使用範圍：此類別內</span></span><br><span class="line">    <span class="comment">// attribute 內使用 nameof(string memberDataName)</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// act</span></span><br><span class="line">    <span class="keyword">var</span> exception = Assert.Throws&lt;ArgumentOutOfRangeException&gt;(() =&gt; <span class="keyword">this</span>._sut.GetRange(<span class="keyword">from</span>, size));</span><br><span class="line"></span><br><span class="line">    <span class="comment">// assert</span></span><br><span class="line">    Assert.Contains(nameOfErrorArgument, exception.Message);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> IEnumerable&lt;<span class="built_in">object</span>[]&gt; PageDataMemberData =&gt;</span><br><span class="line">    <span class="keyword">new</span> List&lt;<span class="built_in">object</span>[]&gt;</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; <span class="string">&quot;from&quot;</span>, <span class="number">-1</span>, <span class="number">10</span> &#125;,</span><br><span class="line">        <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; <span class="string">&quot;from&quot;</span>, <span class="number">0</span>, <span class="number">10</span> &#125;,</span><br><span class="line">        <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; <span class="string">&quot;size&quot;</span>, <span class="number">1</span>, <span class="number">-1</span> &#125;,</span><br><span class="line">        <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; <span class="string">&quot;size&quot;</span>, <span class="number">1</span>, <span class="number">0</span> &#125;</span><br><span class="line">    &#125;;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>不同類別內 (範圍：不限)</p>
+<figure class="highlight csharp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">ProductServiceTests</span> : <span class="title">IDisposable</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">// 省略...</span></span><br><span class="line"></span><br><span class="line">    [<span class="meta">Theory(DisplayName = <span class="string">&quot;GetRange_不同類別MemberData_不合規格的值&quot;</span>)</span>]</span><br><span class="line">    [<span class="meta">MemberData(nameof(PageTestMemberData.GetPageErrorData), MemberType = typeof(PageTestMemberData))</span>]</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> GetRange_不同類別MemberData_輸入引數的內容為不合規格的值_應拋出ArgumentOutOfRangeException(<span class="built_in">string</span> nameOfErrorArgument,</span><br><span class="line">        <span class="built_in">int</span> <span class="keyword">from</span>, <span class="built_in">int</span> size)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">// 資料來源為獨立出一個必須是 public 且 static 的方法，必須要回傳 IEnumerable&lt;object[]&gt;</span></span><br><span class="line">        <span class="comment">// 資料的使用範圍：不限 (可跨類別、專案等)</span></span><br><span class="line">        <span class="comment">// attribute 內使用 nameof(string memberDataName), MemberType = typeof(資料來源類別的名稱)</span></span><br><span class="line"></span><br><span class="line">        <span class="comment">// act</span></span><br><span class="line">        <span class="keyword">var</span> exception = Assert.Throws&lt;ArgumentOutOfRangeException&gt;(() =&gt; <span class="keyword">this</span>._sut.GetRange(<span class="keyword">from</span>, size));</span><br><span class="line"></span><br><span class="line">        <span class="comment">// assert</span></span><br><span class="line">        Assert.Contains(nameOfErrorArgument, exception.Message);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">PageTestMemberData</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> IEnumerable&lt;<span class="built_in">object</span>[]&gt; GetPageCorrectData()</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">yield</span> <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; <span class="string">&quot;from&quot;</span>, <span class="number">1</span>, <span class="number">10</span> &#125;;</span><br><span class="line">        <span class="keyword">yield</span> <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; <span class="string">&quot;from&quot;</span>, <span class="number">2</span>, <span class="number">10</span> &#125;;</span><br><span class="line">        <span class="keyword">yield</span> <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; <span class="string">&quot;size&quot;</span>, <span class="number">1</span>, <span class="number">1</span> &#125;;</span><br><span class="line">        <span class="keyword">yield</span> <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; <span class="string">&quot;size&quot;</span>, <span class="number">1</span>, <span class="number">2</span> &#125;;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> IEnumerable&lt;<span class="built_in">object</span>[]&gt; GetPageErrorData()</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">yield</span> <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; <span class="string">&quot;from&quot;</span>, <span class="number">-5</span>, <span class="number">10</span> &#125;;</span><br><span class="line">        <span class="keyword">yield</span> <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; <span class="string">&quot;from&quot;</span>, <span class="number">0</span>, <span class="number">10</span> &#125;;</span><br><span class="line">        <span class="keyword">yield</span> <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; <span class="string">&quot;size&quot;</span>, <span class="number">1</span>, <span class="number">-5</span> &#125;;</span><br><span class="line">        <span class="keyword">yield</span> <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; <span class="string">&quot;size&quot;</span>, <span class="number">1</span>, <span class="number">0</span> &#125;;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h3 id="Theory-ClassData"><a href="#Theory-ClassData" class="headerlink" title="[Theory], [ClassData]"></a>[Theory], [ClassData]</h3><p>資料的使用範圍：不限 (可跨類別、專案等)</p>
+<p>可理解為由一個專門提供資料的類別取得資料</p>
+<p>對應 MSTest：[TestMethod], [CustomDataSource]</p>
+<figure class="highlight csharp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">ProductServiceTests</span> : <span class="title">IDisposable</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">// 省略...</span></span><br><span class="line"></span><br><span class="line">    [<span class="meta">Theory(DisplayName = <span class="string">&quot;GetRange_ClassData_不合規格的值&quot;</span>)</span>]</span><br><span class="line">    [<span class="meta">ClassData(typeof(PageTestClassData))</span>]</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> GetRange_ClassData_輸入引數的內容為不合規格的值_應拋出ArgumentOutOfRangeException(<span class="built_in">string</span> nameOfErrorArgument, <span class="built_in">int</span> <span class="keyword">from</span>, <span class="built_in">int</span> size)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">// 資料來源為獨立的類別，但是這個類別必須繼承 IEnumerable</span></span><br><span class="line">        <span class="comment">// attribute 內使用 typeof</span></span><br><span class="line"></span><br><span class="line">        <span class="comment">// act</span></span><br><span class="line">        <span class="keyword">var</span> exception = Assert.Throws&lt;ArgumentOutOfRangeException&gt;(() =&gt; <span class="keyword">this</span>._sut.GetRange(<span class="keyword">from</span>, size));</span><br><span class="line"></span><br><span class="line">        <span class="comment">// assert</span></span><br><span class="line">        Assert.Contains(nameOfErrorArgument, exception.Message);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">PageTestClassData</span> : <span class="title">IEnumerable</span>&lt;<span class="title">object</span>[]&gt;</span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">// 用於 ClassData 的類別，必須要繼承 IEnumerable</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> IEnumerator&lt;<span class="built_in">object</span>[]&gt; GetEnumerator()</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">yield</span> <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; <span class="string">&quot;from&quot;</span>, <span class="number">-1</span>, <span class="number">10</span> &#125;;</span><br><span class="line">        <span class="keyword">yield</span> <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; <span class="string">&quot;from&quot;</span>, <span class="number">0</span>, <span class="number">10</span> &#125;;</span><br><span class="line">        <span class="keyword">yield</span> <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; <span class="string">&quot;size&quot;</span>, <span class="number">1</span>, <span class="number">-1</span> &#125;;</span><br><span class="line">        <span class="keyword">yield</span> <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; <span class="string">&quot;size&quot;</span>, <span class="number">1</span>, <span class="number">0</span> &#125;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    IEnumerator IEnumerable.GetEnumerator()</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">this</span>.GetEnumerator();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="注意事項"><a href="#注意事項" class="headerlink" title="注意事項"></a>注意事項</h3><ul>
+<li>想要判斷陣列是否為空集合的時候，可能會想要使用 <code>Assert.Equal(0, actual.Count());</code>，但是官方不建議，IDE 也會提示。建議使用 <code>Empty</code> (<code>Assert.Empty(actual);</code>)。</li>
+</ul>
+<h2 id="參考"><a href="#參考" class="headerlink" title="參考"></a>參考</h2><ul>
+<li><a href="https://xunit.net/docs/getting-started/v3/cmdline">Getting started with xUnit.net v3 (command line) &gt; xUnit.net</a></li>
+<li><a href="https://xunit.net/docs/shared-context">Shared Context between Tests &gt; xUnit.net</a></li>
+<li><a href="https://andrewlock.net/creating-parameterised-tests-in-xunit-with-inlinedata-classdata-and-memberdata/">Creating parameterised tests in xUnit with [InlineData], [ClassData], and [MemberData]</a></li>
+</ul>
+]]></content>
+      <categories>
+        <category>單元測試</category>
+      </categories>
+      <tags>
+        <tag>單元測試</tag>
+        <tag>xUnit</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>xUnit 各層級 Fixture 的生命週期</title>
+    <url>/UnitTest/xUnit%E5%90%84%E5%B1%A4%E7%B4%9AFixture%E7%9A%84%E7%94%9F%E5%91%BD%E9%80%B1%E6%9C%9F/</url>
+    <content><![CDATA[<p>簡單說說 fixture 這東西，裡面充滿意想不到的坑。沒親自實驗過，根本不知道原來裡面 fixture 的建立以及 dispose 的順序是不可控的。其實還是有一些方式來解決這個問題。</p>
+<h2 id="各層級-Fixture-的順序"><a href="#各層級-Fixture-的順序" class="headerlink" title="各層級 Fixture 的順序"></a>各層級 Fixture 的順序</h2><ul>
+<li>AssebblyFixture constructure<ul>
+<li>CollectionFixture 內部各 fixture 的 constructure<ul>
+<li>ClassFxiture constructure<ul>
+<li>TestClass constructure</li>
+<li>TestClass dispose</li>
+</ul>
+</li>
+<li>ClassFixture dispose</li>
+<li>ClassFxiture constructure<ul>
+<li>TestClass constructure</li>
+<li>TestClass dispose</li>
+</ul>
+</li>
+<li>ClassFixture dispose</li>
+</ul>
+</li>
+<li>CollectionFixture 內部各 fixture 的 dispose</li>
+</ul>
+</li>
+<li>AssemblyFixture dispose</li>
+</ul>
+<h2 id="Class-Fixture"><a href="#Class-Fixture" class="headerlink" title="Class Fixture"></a>Class Fixture</h2><p>無法控制裡面 fixture 的建立以及 dispose 的順序。如果需要控制，需要再用一個類別來封裝那幾個 fixture，手動控制順序。雖然原文只有寫建立物件，其實 dispose 的時候也是無法控制的。</p>
+<p>原文：  </p>
+<blockquote>
+<p>Note that you cannot control the order that fixture objects are created, and fixtures cannot take dependencies on other fixtures. If you have need to control creation order and&#x2F;or have dependencies between fixtures, you should create a class which encapsulates the other two fixtures, so that it can do the object creation itself.</p>
+</blockquote>
+<p>測試：</p>
+<p>2 個基本的 Class Fixture</p>
+<figure class="highlight csharp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">AFixture</span> : <span class="title">IDisposable</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="built_in">string</span> AFixtureStage &#123; <span class="keyword">get</span>; <span class="keyword">private</span> <span class="keyword">set</span>; &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">AFixture</span>()</span></span><br><span class="line">    &#123;</span><br><span class="line">        AFixtureStage = <span class="string">&quot;A Constructure&quot;</span>;</span><br><span class="line">        Console.WriteLine(<span class="string">&quot;A fixture Constructure.&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">Dispose</span>()</span></span><br><span class="line">    &#123;</span><br><span class="line">        AFixtureStage = <span class="string">&quot;A Dispose&quot;</span>;</span><br><span class="line">        Console.WriteLine(<span class="string">&quot;A fixture Dispose.&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">BFixture</span> : <span class="title">IDisposable</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="built_in">string</span> BFixtureStage &#123; <span class="keyword">get</span>; <span class="keyword">private</span> <span class="keyword">set</span>; &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">BFixture</span>()</span></span><br><span class="line">    &#123;</span><br><span class="line">        BFixtureStage = <span class="string">&quot;B Constructure&quot;</span>;</span><br><span class="line">        Console.WriteLine(<span class="string">&quot;B fixture Constructure.&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">Dispose</span>()</span></span><br><span class="line">    &#123;</span><br><span class="line">        BFixtureStage = <span class="string">&quot;B Constructure&quot;</span>;</span><br><span class="line">        Console.WriteLine(<span class="string">&quot;B fixture Dispose.&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>用 2 個 Class Fixture 在同一個 Class 裡</p>
+<figure class="highlight csharp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">MyClass</span> : <span class="title">ICalssFixture</span>&lt;<span class="title">AFixture</span>&gt;, <span class="title">IClassFixture</span>&lt;<span class="title">BFixture</span>&gt;</span><br><span class="line">&#123;</span><br><span class="line">    [<span class="meta">Fact</span>]</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">Test1</span>()</span></span><br><span class="line">    &#123;</span><br><span class="line">        Assert.True(<span class="literal">true</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>結果：</p>
+<ul>
+<li>AFxiture constructure</li>
+<li>BFxiture constructure<ul>
+<li>TestClass constructure</li>
+<li>TestClass dispose</li>
+</ul>
+</li>
+<li>AFixture dispose</li>
+<li>BFixture dispose</li>
+</ul>
+<p>如果想要變成這樣：</p>
+<ul>
+<li>AFxiture constructure</li>
+<li>BFxiture constructure<ul>
+<li>TestClass constructure</li>
+<li>TestClass dispose</li>
+</ul>
+</li>
+<li>BFixture dispose</li>
+<li>AFixture dispose</li>
+</ul>
+<p>再加一個類別來控制即可</p>
+<figure class="highlight csharp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">ABClassFixture</span> : <span class="title">IDisposable</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">public</span> AFixture AFixture &#123; <span class="keyword">get</span>; <span class="keyword">private</span> <span class="keyword">set</span>; &#125;</span><br><span class="line">    <span class="keyword">public</span> BFixture BFixture &#123; <span class="keyword">get</span>; <span class="keyword">private</span> <span class="keyword">set</span>; &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">ABClassFixture</span>()</span></span><br><span class="line">    &#123;</span><br><span class="line">        AFixture = <span class="keyword">new</span> AFixture();</span><br><span class="line">        BFixture = <span class="keyword">new</span> BFixture();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">Dispose</span>()</span></span><br><span class="line">    &#123;</span><br><span class="line">        BFixture.Dispose();</span><br><span class="line">        AFixture.Dispose();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>直接使用剛剛建立的類別</p>
+<figure class="highlight csharp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">MyClass</span> : <span class="title">IClassFixture</span>&lt;<span class="title">ABClassFixture</span>&gt;</span><br><span class="line">&#123;</span><br><span class="line">    [<span class="meta">Fact</span>]</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">Test1</span>()</span></span><br><span class="line">    &#123;</span><br><span class="line">        Assert.True(<span class="literal">true</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Collection-Fixture"><a href="#Collection-Fixture" class="headerlink" title="Collection Fixture"></a>Collection Fixture</h2><p>Collection Fixture 建立和釋放物件的順序也是和 Class Fixture 一樣不可控制。如果想要控制順序，需要再仔細考慮一下是否適用，畢竟裡面沒有建構式和 dispose，這是集合多個 Class Fixture 的功能，且生命週期比 Class Fixture 長。</p>
+]]></content>
+      <categories>
+        <category>單元測試</category>
+      </categories>
+      <tags>
+        <tag>單元測試</tag>
+        <tag>xUnit</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>在單元測試使用指定 appsettings.json 或 IOptions</title>
     <url>/UnitTest/%E5%9C%A8%E5%96%AE%E5%85%83%E6%B8%AC%E8%A9%A6%E4%BD%BF%E7%94%A8%E6%8C%87%E5%AE%9Aappsettings-json%E6%88%96IOptions/</url>
     <content><![CDATA[<p>有時候寫到 WebService 的單元測試時，需要注入 IConfiguration 時該怎麼處理？<br>想要使用單元測試專用的 appsettings.json 要怎麼讀取？<br>甚至要注入 IOptions 時又要怎麼處理？<br>這篇文章就來告訴你該怎麼做。</p>
@@ -936,53 +1385,63 @@
       </tags>
   </entry>
   <entry>
-    <title>使用 Docker 安裝 Elasticsearch 和 Kibana</title>
-    <url>/Elasticsearch/%E4%BD%BF%E7%94%A8Docker%E5%AE%89%E8%A3%9DElasticsearch%E5%92%8CKibana/</url>
-    <content><![CDATA[<p>這次來試玩一下傳說中的 Elasticsearch，主要是想要把網站記錄的 Log 存到這裡面來，再設定一些 UI 來顯示，就不用每次查網站的 Log 都要進資料庫用 SQL 查。</p>
-<p>Elasticsearch 有雲端版和自己架設，雲端要付費，自架免費。對於喜歡亂玩又沒什麼錢的我，當然選擇自己架設。</p>
-<p>主要以 single-node cluster 為主，版本為 8.0.0</p>
-<h2 id="方法一：各-image-逐個建立"><a href="#方法一：各-image-逐個建立" class="headerlink" title="方法一：各 image 逐個建立"></a>方法一：各 image 逐個建立</h2><p>建議搭配 volumn（範例中未使用）</p>
-<h3 id="1-Docker-建立專用-network"><a href="#1-Docker-建立專用-network" class="headerlink" title="1. Docker 建立專用 network"></a>1. Docker 建立專用 network</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">docker network create elastic</span><br></pre></td></tr></table></figure>
-
-<h3 id="2-安裝-Elasticsearch"><a href="#2-安裝-Elasticsearch" class="headerlink" title="2. 安裝 Elasticsearch"></a>2. 安裝 Elasticsearch</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">docker pull docker.elastic.co/elasticsearch/elasticsearch:8.1.0</span><br><span class="line">docker run -e ES_JAVA_OPTS=&quot;-Xms1g -Xmx1g&quot; --name es-node01 --net elastic -p 9200:9200 -p 9300:9300 -t docker.elastic.co/elasticsearch/elasticsearch:8.1.0</span><br></pre></td></tr></table></figure>
-
-<p>備註：<br>設定 JVM 使用記憶體的大小<br><code>-e ES_JAVA_OPTS=&quot;-Xms1g -Xmx1g&quot;</code><br>最大使用 1G，最小使用 1G</p>
-<p><a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/advanced-configuration.html#set-jvm-heap-size">https://www.elastic.co/guide/en/elasticsearch/reference/current/advanced-configuration.html#set-jvm-heap-size</a></p>
-<p>port 9200 為對外使用，9300 為內部 node 溝通使用</p>
-<p>裝好後會有帳號、密碼、enroll token（有效30分鐘）等資料，可先複製起來</p>
-<h3 id="3-安裝-Kibana"><a href="#3-安裝-Kibana" class="headerlink" title="3. 安裝 Kibana"></a>3. 安裝 Kibana</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">docker pull docker.elastic.co/kibana/kibana:8.1.0</span><br><span class="line">docker run --name kib-01 --net elastic -p 5601:5601 docker.elastic.co/kibana/kibana:8.1.0</span><br></pre></td></tr></table></figure>
-
-<h3 id="4-開啟-Kibana"><a href="#4-開啟-Kibana" class="headerlink" title="4. 開啟 Kibana"></a>4. 開啟 Kibana</h3><p>輸入 <a href="http://localhost:5601/">http://localhost:5601</a> 開啟 Kibana，首次開啟需要使用上面的 enroll token 綁定 Elasticsearch，然後輸入剛剛的帳號和密碼</p>
-<h3 id="5-完成"><a href="#5-完成" class="headerlink" title="5. 完成"></a>5. 完成</h3><p>可以愉快地玩耍了</p>
-<h2 id="方法二：使用-docker-compose"><a href="#方法二：使用-docker-compose" class="headerlink" title="方法二：使用 docker-compose"></a>方法二：使用 docker-compose</h2><p>有搭配volume</p>
-<h3 id="1-建立-env-檔"><a href="#1-建立-env-檔" class="headerlink" title="1. 建立 .env 檔"></a>1. 建立 .env 檔</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># Password for the &#x27;elastic&#x27; user (at least 6 characters)</span><br><span class="line">ELASTIC_PASSWORD=</span><br><span class="line"></span><br><span class="line"># Password for the &#x27;kibana_system&#x27; user (at least 6 characters)</span><br><span class="line">KIBANA_PASSWORD=</span><br><span class="line"></span><br><span class="line"># Version of Elastic products</span><br><span class="line">STACK_VERSION=8.0.0</span><br><span class="line"></span><br><span class="line"># Set the cluster name</span><br><span class="line">CLUSTER_NAME=docker-cluster</span><br><span class="line"></span><br><span class="line"># Set to &#x27;basic&#x27; or &#x27;trial&#x27; to automatically start the 30-day trial</span><br><span class="line">LICENSE=basic</span><br><span class="line">#LICENSE=trial</span><br><span class="line"></span><br><span class="line"># Port to expose Elasticsearch HTTP API to the host</span><br><span class="line">ES_PORT=9200</span><br><span class="line">#ES_PORT=127.0.0.1:9200</span><br><span class="line"></span><br><span class="line"># Port to expose Kibana to the host</span><br><span class="line">KIBANA_PORT=5601</span><br><span class="line">#KIBANA_PORT=80</span><br><span class="line"></span><br><span class="line"># Increase or decrease based on the available host memory (in bytes)</span><br><span class="line">MEM_LIMIT=1073741824</span><br><span class="line"></span><br><span class="line"># Project namespace (defaults to the current folder name if not set)</span><br><span class="line">#COMPOSE_PROJECT_NAME=myproject</span><br></pre></td></tr></table></figure>
-
-<h3 id="2-建立-docker-compose-yml"><a href="#2-建立-docker-compose-yml" class="headerlink" title="2. 建立 docker-compose.yml"></a>2. 建立 docker-compose.yml</h3><p>此處會建立<br>三個 container：<br>setup：建立憑證用，建立好之後會關閉<br>es01：Elasticsearch 1號（只建立一個節點）<br>kibana：Kibana</p>
-<p>一個 network：<br>elastic-default</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">version:</span> <span class="string">&quot;2.2&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="attr">services:</span></span><br><span class="line">  <span class="attr">setup:</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">docker.elastic.co/elasticsearch/elasticsearch:$&#123;STACK_VERSION&#125;</span></span><br><span class="line">    <span class="attr">volumes:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">certs:/usr/share/elasticsearch/config/certs</span></span><br><span class="line">    <span class="attr">user:</span> <span class="string">&quot;0&quot;</span></span><br><span class="line">    <span class="attr">command:</span> <span class="string">&gt;</span></span><br><span class="line"><span class="string">      bash -c &#x27;</span></span><br><span class="line"><span class="string">        if [ x$&#123;ELASTIC_PASSWORD&#125; == x ]; then</span></span><br><span class="line"><span class="string">          echo &quot;Set the ELASTIC_PASSWORD environment variable in the .env file&quot;;</span></span><br><span class="line"><span class="string">          exit 1;</span></span><br><span class="line"><span class="string">        elif [ x$&#123;KIBANA_PASSWORD&#125; == x ]; then</span></span><br><span class="line"><span class="string">          echo &quot;Set the KIBANA_PASSWORD environment variable in the .env file&quot;;</span></span><br><span class="line"><span class="string">          exit 1;</span></span><br><span class="line"><span class="string">        fi;</span></span><br><span class="line"><span class="string">        if [ ! -f certs/ca.zip ]; then</span></span><br><span class="line"><span class="string">          echo &quot;Creating CA&quot;;</span></span><br><span class="line"><span class="string">          bin/elasticsearch-certutil ca --silent --pem -out config/certs/ca.zip;</span></span><br><span class="line"><span class="string">          unzip config/certs/ca.zip -d config/certs;</span></span><br><span class="line"><span class="string">        fi;</span></span><br><span class="line"><span class="string">        if [ ! -f certs/certs.zip ]; then</span></span><br><span class="line"><span class="string">          echo &quot;Creating certs&quot;;</span></span><br><span class="line"><span class="string">          echo -ne \</span></span><br><span class="line"><span class="string">          &quot;instances:\n&quot;\</span></span><br><span class="line"><span class="string">          &quot;  - name: es01\n&quot;\</span></span><br><span class="line"><span class="string">          &quot;    dns:\n&quot;\</span></span><br><span class="line"><span class="string">          &quot;      - es01\n&quot;\</span></span><br><span class="line"><span class="string">          &quot;      - localhost\n&quot;\</span></span><br><span class="line"><span class="string">          &quot;    ip:\n&quot;\</span></span><br><span class="line"><span class="string">          &quot;      - 127.0.0.1\n&quot;\</span></span><br><span class="line"><span class="string">          &gt; config/certs/instances.yml;</span></span><br><span class="line"><span class="string">          bin/elasticsearch-certutil cert --silent --pem -out config/certs/certs.zip --in config/certs/instances.yml --ca-cert config/certs/ca/ca.crt --ca-key config/certs/ca/ca.key;</span></span><br><span class="line"><span class="string">          unzip config/certs/certs.zip -d config/certs;</span></span><br><span class="line"><span class="string">        fi;</span></span><br><span class="line"><span class="string">        echo &quot;Setting file permissions&quot;</span></span><br><span class="line"><span class="string">        chown -R root:root config/certs;</span></span><br><span class="line"><span class="string">        find . -type d -exec chmod 750 \&#123;\&#125; \;;</span></span><br><span class="line"><span class="string">        find . -type f -exec chmod 640 \&#123;\&#125; \;;</span></span><br><span class="line"><span class="string">        echo &quot;Waiting for Elasticsearch availability&quot;;</span></span><br><span class="line"><span class="string">        until curl -s --cacert config/certs/ca/ca.crt &lt;https://es01:9200&gt; | grep -q &quot;missing authentication credentials&quot;; do sleep 30; done;</span></span><br><span class="line"><span class="string">        echo &quot;Setting kibana_system password&quot;;</span></span><br><span class="line"><span class="string">        until curl -s -X POST --cacert config/certs/ca/ca.crt -u elastic:$&#123;ELASTIC_PASSWORD&#125; -H &quot;Content-Type: application/json&quot; &lt;https://es01:9200/_security/user/kibana_system/_password&gt; -d &quot;&#123;\&quot;password\&quot;:\&quot;$&#123;KIBANA_PASSWORD&#125;\&quot;&#125;&quot; | grep -q &quot;^&#123;&#125;&quot;; do sleep 10; done;</span></span><br><span class="line"><span class="string">        echo &quot;All done!&quot;;</span></span><br><span class="line"><span class="string">      &#x27;</span></span><br><span class="line"><span class="string"></span>    <span class="attr">healthcheck:</span></span><br><span class="line">      <span class="attr">test:</span> [<span class="string">&quot;CMD-SHELL&quot;</span>, <span class="string">&quot;[ -f config/certs/es01/es01.crt ]&quot;</span>]</span><br><span class="line">      <span class="attr">interval:</span> <span class="string">1s</span></span><br><span class="line">      <span class="attr">timeout:</span> <span class="string">5s</span></span><br><span class="line">      <span class="attr">retries:</span> <span class="number">120</span></span><br><span class="line"></span><br><span class="line">  <span class="attr">es01:</span></span><br><span class="line">    <span class="attr">depends_on:</span></span><br><span class="line">      <span class="attr">setup:</span></span><br><span class="line">        <span class="attr">condition:</span> <span class="string">service_healthy</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">docker.elastic.co/elasticsearch/elasticsearch:$&#123;STACK_VERSION&#125;</span></span><br><span class="line">    <span class="attr">volumes:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">certs:/usr/share/elasticsearch/config/certs</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">esdata01:/usr/share/elasticsearch/data</span></span><br><span class="line">    <span class="attr">ports:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">$&#123;ES_PORT&#125;:9200</span></span><br><span class="line">    <span class="attr">environment:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">node.name=es01</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">cluster.name=$&#123;CLUSTER_NAME&#125;</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">cluster.initial_master_nodes=es01</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">ELASTIC_PASSWORD=$&#123;ELASTIC_PASSWORD&#125;</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">bootstrap.memory_lock=true</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">xpack.security.enabled=true</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">xpack.security.http.ssl.enabled=true</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">xpack.security.http.ssl.key=certs/es01/es01.key</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">xpack.security.http.ssl.certificate=certs/es01/es01.crt</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">xpack.security.http.ssl.certificate_authorities=certs/ca/ca.crt</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">xpack.security.http.ssl.verification_mode=certificate</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">xpack.security.transport.ssl.enabled=true</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">xpack.security.transport.ssl.key=certs/es01/es01.key</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">xpack.security.transport.ssl.certificate=certs/es01/es01.crt</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">xpack.security.transport.ssl.certificate_authorities=certs/ca/ca.crt</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">xpack.security.transport.ssl.verification_mode=certificate</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">xpack.license.self_generated.type=$&#123;LICENSE&#125;</span></span><br><span class="line">    <span class="attr">mem_limit:</span> <span class="string">$&#123;MEM_LIMIT&#125;</span></span><br><span class="line">    <span class="attr">ulimits:</span></span><br><span class="line">      <span class="attr">memlock:</span></span><br><span class="line">        <span class="attr">soft:</span> <span class="number">-1</span></span><br><span class="line">        <span class="attr">hard:</span> <span class="number">-1</span></span><br><span class="line">    <span class="attr">healthcheck:</span></span><br><span class="line">      <span class="attr">test:</span></span><br><span class="line">        [</span><br><span class="line">          <span class="string">&quot;CMD-SHELL&quot;</span>,</span><br><span class="line">          <span class="string">&quot;curl -s --cacert config/certs/ca/ca.crt &lt;https://localhost:9200&gt; | grep -q &#x27;missing authentication credentials&#x27;&quot;</span>,</span><br><span class="line">        ]</span><br><span class="line">      <span class="attr">interval:</span> <span class="string">10s</span></span><br><span class="line">      <span class="attr">timeout:</span> <span class="string">10s</span></span><br><span class="line">      <span class="attr">retries:</span> <span class="number">120</span></span><br><span class="line"></span><br><span class="line">  <span class="attr">kibana:</span></span><br><span class="line">    <span class="attr">depends_on:</span></span><br><span class="line">      <span class="attr">es01:</span></span><br><span class="line">        <span class="attr">condition:</span> <span class="string">service_healthy</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">docker.elastic.co/kibana/kibana:$&#123;STACK_VERSION&#125;</span></span><br><span class="line">    <span class="attr">volumes:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">certs:/usr/share/kibana/config/certs</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">kibanadata:/usr/share/kibana/data</span></span><br><span class="line">    <span class="attr">ports:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">$&#123;KIBANA_PORT&#125;:5601</span></span><br><span class="line">    <span class="attr">environment:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">SERVERNAME=kibana</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">ELASTICSEARCH_HOSTS=https://es01:9200</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">ELASTICSEARCH_USERNAME=kibana_system</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">ELASTICSEARCH_PASSWORD=$&#123;KIBANA_PASSWORD&#125;</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES=config/certs/ca/ca.crt</span></span><br><span class="line">    <span class="attr">mem_limit:</span> <span class="string">$&#123;MEM_LIMIT&#125;</span></span><br><span class="line">    <span class="attr">healthcheck:</span></span><br><span class="line">      <span class="attr">test:</span></span><br><span class="line">        [</span><br><span class="line">          <span class="string">&quot;CMD-SHELL&quot;</span>,</span><br><span class="line">          <span class="string">&quot;curl -s -I &lt;http://localhost:5601&gt; | grep -q &#x27;HTTP/1.1 302 Found&#x27;&quot;</span>,</span><br><span class="line">        ]</span><br><span class="line">      <span class="attr">interval:</span> <span class="string">10s</span></span><br><span class="line">      <span class="attr">timeout:</span> <span class="string">10s</span></span><br><span class="line">      <span class="attr">retries:</span> <span class="number">120</span></span><br><span class="line"></span><br><span class="line"><span class="attr">volumes:</span></span><br><span class="line">  <span class="attr">certs:</span></span><br><span class="line">    <span class="attr">driver:</span> <span class="string">local</span></span><br><span class="line">  <span class="attr">esdata01:</span></span><br><span class="line">    <span class="attr">driver:</span> <span class="string">local</span></span><br><span class="line">  <span class="attr">kibanadata:</span></span><br><span class="line">    <span class="attr">driver:</span> <span class="string">local</span></span><br></pre></td></tr></table></figure>
-
-<h3 id="3-開始執行"><a href="#3-開始執行" class="headerlink" title="3. 開始執行"></a>3. 開始執行</h3><p>將 .env 和 docker-compose.yml 放在同一個資料夾，然後到該資料夾執行指令</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">docker-compose up -d</span><br></pre></td></tr></table></figure>
-
-<h3 id="4-完成"><a href="#4-完成" class="headerlink" title="4. 完成"></a>4. 完成</h3><p>可以愉快地玩耍了</p>
-<h2 id="注意事項"><a href="#注意事項" class="headerlink" title="注意事項"></a>注意事項</h2><p>如果遇到 <code>max virtual memory areas vm.max_map_count [65530] is too low, increase to at least [262144]</code> 的錯誤，代表 kernel 中 <code>vm.max_map_count</code> 的設定需要調整為至少 <code>262144</code>。</p>
-<p>調整方法<br>Windows Docker Desktop WSL 2：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">wsl -d docker-desktop</span><br><span class="line">sysctl -w vm.max_map_count=262144</span><br></pre></td></tr></table></figure>
-
-<p>macOS Docker Desktop：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">docker-machine ssh</span><br><span class="line">sudo sysctl -w vm.max_map_count=262144</span><br></pre></td></tr></table></figure>
-
-<h2 id="參考資料"><a href="#參考資料" class="headerlink" title="參考資料"></a>參考資料</h2><ul>
-<li><a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html">Install Elasticsearch with Docker</a></li>
-<li><a href="https://www.elastic.co/guide/en/kibana/current/docker.html">Install Kibana with Docker</a></li>
+    <title>CRON 表達式</title>
+    <url>/Schedule/cron%E8%A1%A8%E9%81%94%E5%BC%8F/</url>
+    <content><![CDATA[<p>一種排程的時間設定表達式，可以用在 CRON, Hangfire, Coravel。</p>
+<p>最近工作需要用到 Hangfire 來作為工作排程器，而裡面關於定期執行工作（recurring）的時間設定是使用 cron expression。對於只用過 Windows 內建工作排程器的我來說可以說是相當陌生，因此來學學怎麼這種表達式的設定方式。</p>
+<h2 id="說明"><a href="#說明" class="headerlink" title="說明"></a>說明</h2><blockquote>
+<p>工具型軟體 <strong>cron</strong> 是一款類Unix的作業系統下的基於時間的任務管理系統。用戶們可以通過 <strong>cron</strong><br>在固定時間、日期、間隔下，運行定期任務（可以是命令和腳本）。</p>
+</blockquote>
+<p>來源：<a href="https://zh.wikipedia.org/zh-tw/Cron">Cron-維基百科</a></p>
+<p>這個表達式其實內含「每次」這個概念，設定的值都是實際執行的日期和時間。</p>
+<p>表達式： <code>* * * * *</code></p>
+<p>每個之間要有空格</p>
+<table>
+<thead>
+<tr>
+<th>欄位</th>
+<th>分鐘</th>
+<th>小時</th>
+<th>日</th>
+<th>月</th>
+<th>星期</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>範圍</td>
+<td>0-59</td>
+<td>0-23</td>
+<td>1-31</td>
+<td>1-12或JAN-DEC</td>
+<td>0-6或SUN-SAT</td>
+</tr>
+</tbody></table>
+<p>除了直接輸入數字外，還可以搭配一些符號使用</p>
+<ol>
+<li><code>*</code> ：欄位的所有值。例如分鐘欄位輸入<code>*</code>，代表每分鐘（0-59）都執行。</li>
+<li><code>,</code> ：多個指定值。例如小時欄位輸入<code>9,18</code>，代表9點和18點執行。</li>
+<li><code>-</code> ：指定範圍。例如日欄位輸入<code>15-20</code>，代表一個月裡的15日至20日都執行。</li>
+<li><code>/</code> ：指定增量，<code>開始值/每次增加的量</code>。例如分鐘欄位輸入<code>1/10</code>，代表從1開始，每次10分鐘才再次執行。</li>
+</ol>
+<h2 id="練習"><a href="#練習" class="headerlink" title="練習"></a>練習</h2><ol>
+<li>每天08:00：<code>0 8 * * *</code></li>
+<li>每週一至週五22:30：<code>30 22 * * 1-5</code></li>
+<li>每週末5分鐘一次：<code>*/5 * * * 0,6</code></li>
+<li>每個雙數月1日的00:00：<code>0 0 1 */2 *</code></li>
+<li>每月的15日03:00：<code>0 3 15 * *</code></li>
+</ol>
+<p>可以到這裡驗證和練習 <a href="https://crontab.guru/">https://crontab.guru/</a></p>
+<h2 id="參考"><a href="#參考" class="headerlink" title="參考"></a>參考</h2><ul>
+<li><a href="https://zh.wikipedia.org/zh-tw/Cron">Cron-維基百科</a></li>
+<li><a href="https://docs.aws.amazon.com/zh_tw/lambda/latest/dg/services-cloudwatchevents-expressions.html">AWS使用 Rate 或 Cron 排定表達式</a></li>
+<li><a href="https://crontab.guru/">crontab guru</a></li>
 </ul>
 ]]></content>
       <categories>
-        <category>Elasticsearch</category>
+        <category>排程</category>
       </categories>
       <tags>
-        <tag>教學</tag>
-        <tag>Elasticsearch</tag>
+        <tag>排程</tag>
       </tags>
   </entry>
 </search>

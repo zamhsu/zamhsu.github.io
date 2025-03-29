@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 6.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/GrayCat_32_32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/GrayCat_16_16.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" integrity="sha256-DfWjNxDkM94fVBWx1H5BMMp0Zq7luBlV8QRcSES7s+0=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.css" integrity="sha256-Vzbj7sDDS/woiFS3uNKo8eIuni59rjyNGtXfstRzStA=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"zamhsu.github.io","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.12.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":{"enable":true,"style":null},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜尋...","empty":"我們無法找到任何有關 ${query} 的搜索結果","hits_time":"${hits} 找到 ${time} 個結果","hits":"找到 ${hits} 個結果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="簡單說明 xUnit 的一些基礎觀念與用法，如測試類別、測試方法等。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="xUnit 基礎觀念">
+<meta property="og:url" content="https://zamhsu.github.io/UnitTest/xUnit%E5%9F%BA%E7%A4%8E%E8%A7%80%E5%BF%B5/">
+<meta property="og:site_name" content="灰貓遊樂場">
+<meta property="og:description" content="簡單說明 xUnit 的一些基礎觀念與用法，如測試類別、測試方法等。">
+<meta property="og:locale" content="zh_TW">
+<meta property="article:published_time" content="2025-03-29T09:08:38.000Z">
+<meta property="article:modified_time" content="2025-03-29T10:44:03.307Z">
+<meta property="article:author" content="zamhsu">
+<meta property="article:tag" content="單元測試">
+<meta property="article:tag" content="xUnit">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://zamhsu.github.io/UnitTest/xUnit%E5%9F%BA%E7%A4%8E%E8%A7%80%E5%BF%B5/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-TW","comments":true,"permalink":"https://zamhsu.github.io/UnitTest/xUnit%E5%9F%BA%E7%A4%8E%E8%A7%80%E5%BF%B5/","path":"UnitTest/xUnit基礎觀念/","title":"xUnit 基礎觀念"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>xUnit 基礎觀念 | 灰貓遊樂場</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-0GCE5PM3VG"></script>
+  <script class="next-config" data-name="google_analytics" type="application/json">{"tracking_id":"G-0GCE5PM3VG","only_pageview":false}</script>
+  <script src="/js/third-party/analytics/google-analytics.js"></script>
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切換導航欄" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">灰貓遊樂場</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">蹦蹦跳跳頑皮小灰貓</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首頁</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>標籤</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分類</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>歸檔</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜尋
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜尋..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目錄
+        </li>
+        <li class="sidebar-nav-overview">
+          本站概要
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B8%AC%E8%A9%A6%E9%A1%9E%E5%88%A5"><span class="nav-number">1.</span> <span class="nav-text">測試類別</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B8%AC%E8%A9%A6%E6%96%B9%E6%B3%95"><span class="nav-number">2.</span> <span class="nav-text">測試方法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Fact"><span class="nav-number">2.1.</span> <span class="nav-text">[Fact]</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Theory-InlineData"><span class="nav-number">2.2.</span> <span class="nav-text">[Theory], [InlineData]</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Theory-MemberData"><span class="nav-number">2.3.</span> <span class="nav-text">[Theory], [MemberData]</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Theory-ClassData"><span class="nav-number">2.4.</span> <span class="nav-text">[Theory], [ClassData]</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B3%A8%E6%84%8F%E4%BA%8B%E9%A0%85"><span class="nav-number">2.5.</span> <span class="nav-text">注意事項</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%83%E8%80%83"><span class="nav-number">3.</span> <span class="nav-text">參考</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zamhsu"
+      src="/images/GrayCat.png">
+  <p class="site-author-name" itemprop="name">zamhsu</p>
+  <div class="site-description" itemprop="description">小灰貓四處玩樂的筆記</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">20</span>
+          <span class="site-state-item-name">文章</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">分類</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">標籤</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zamhsu" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zamhsu" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+  <div class="cc-license site-overview-item animated" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="https://cdnjs.cloudflare.com/ajax/libs/creativecommons-vocabulary/2020.11.3/assets/license_badges/big/by_nc_sa.svg" alt="Creative Commons"></a>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="回到頂端">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-TW">
+    <link itemprop="mainEntityOfPage" href="https://zamhsu.github.io/UnitTest/xUnit%E5%9F%BA%E7%A4%8E%E8%A7%80%E5%BF%B5/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/GrayCat.png">
+      <meta itemprop="name" content="zamhsu">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="灰貓遊樂場">
+      <meta itemprop="description" content="小灰貓四處玩樂的筆記">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="xUnit 基礎觀念 | 灰貓遊樂場">
+      <meta itemprop="description" content="簡單說明 xUnit 的一些基礎觀念與用法，如測試類別、測試方法等。">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          xUnit 基礎觀念
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">發表於</span>
+      
+
+      <time title="創建時間：2025-03-29 17:08:38 / 修改時間：18:44:03" itemprop="dateCreated datePublished" datetime="2025-03-29T17:08:38+08:00">2025-03-29</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分類於</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%96%AE%E5%85%83%E6%B8%AC%E8%A9%A6/" itemprop="url" rel="index"><span itemprop="name">單元測試</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+            <div class="post-description">簡單說明 xUnit 的一些基礎觀念與用法，如測試類別、測試方法等。</div>
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>簡單說明 xUnit 的一些基礎觀念與用法，還加上對應到 MSTest 的功能。如果是從 MSTest 轉過來，可能會需要一些時間來適應。</p>
+<h2 id="測試類別"><a href="#測試類別" class="headerlink" title="測試類別"></a>測試類別</h2><p>生命週期：</p>
+<ul>
+<li>初始化：每個測試開始前</li>
+<li>清除：每個測試結束後</li>
+</ul>
+<p>和一般的測試框架不同，xUnit 採用建構式和實作 <code>IDispose</code> 來達成初始化和清除</p>
+<p>對應 MSTest：[XxxInitialize], [XxxCleanup]</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">ProductServiceTests</span> : <span class="title">IDisposable</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">readonly</span> IMapper _mapper;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">readonly</span> IProductRepository _productRepository;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">readonly</span> ProductService _sut;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">ProductServiceTests</span>()</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">this</span>._mapper = TestHook.MapperConfigurationProvider.CreateMapper();</span><br><span class="line">        <span class="keyword">this</span>._productRepository = Substitute.For&lt;IProductRepository&gt;();</span><br><span class="line">        <span class="keyword">this</span>._sut = <span class="keyword">new</span> ProductService(<span class="keyword">this</span>._productRepository, <span class="keyword">this</span>._mapper);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">Dispose</span>()</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">// 想要清除的東西</span></span><br><span class="line">        <span class="comment">// 不需要可以不用繼承 IDisposable</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 測試方法...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="測試方法"><a href="#測試方法" class="headerlink" title="測試方法"></a>測試方法</h2><h3 id="Fact"><a href="#Fact" class="headerlink" title="[Fact]"></a>[Fact]</h3><p>對應 MSTest：[TestMethod]</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">[<span class="meta">Fact</span>]</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> GetById_輸入id_資料庫有資料_應回傳ProductDto資料()</span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">// arrange</span></span><br><span class="line">    <span class="keyword">var</span> id = <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">var</span> fixture = <span class="keyword">new</span> Fixture();</span><br><span class="line">    <span class="keyword">var</span> product = fixture.Build&lt;ProductEntity&gt;()</span><br><span class="line">        .With(q =&gt; q.Id, id)</span><br><span class="line">        .With(q =&gt; q.Status, <span class="number">1</span>)</span><br><span class="line">        .Create();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">this</span>._productRepository.GetById(Arg.Any&lt;<span class="built_in">int</span>&gt;()).Returns(product);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// act</span></span><br><span class="line">    <span class="keyword">var</span> actual = <span class="keyword">this</span>._sut.GetById(id);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// assert</span></span><br><span class="line">    Assert.Equal(id, actual.Id);</span><br><span class="line">    Assert.NotNull(actual);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="Theory-InlineData"><a href="#Theory-InlineData" class="headerlink" title="[Theory], [InlineData]"></a>[Theory], [InlineData]</h3><p>資料的使用範圍：此方法內</p>
+<p>可理解為內部資料</p>
+<p>對應 MSTest：[TestMethod], [DataRow]</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">[<span class="meta">Theory(DisplayName = <span class="string">&quot;GetRange_InlineData_不合規格的值&quot;</span>)</span>]</span><br><span class="line">[<span class="meta">InlineData(<span class="string">&quot;from&quot;</span>, -1, 10)</span>]</span><br><span class="line">[<span class="meta">InlineData(<span class="string">&quot;from&quot;</span>, 0, 10)</span>]</span><br><span class="line">[<span class="meta">InlineData(<span class="string">&quot;size&quot;</span>, 1, -1)</span>]</span><br><span class="line">[<span class="meta">InlineData(<span class="string">&quot;size&quot;</span>, 1, 0)</span>]</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> GetRange_InlineData_輸入引數的內容為不合規格的值_應拋出ArgumentOutOfRangeException(<span class="built_in">string</span> nameOfErrorArgument, <span class="built_in">int</span> <span class="keyword">from</span>, <span class="built_in">int</span> size)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">// InlineData 同 DataRow，但是無法每一筆資料指定自己的 DisplayName，只能在Theory統一指定 DisplayName</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// act</span></span><br><span class="line">    <span class="keyword">var</span> exception = Assert.Throws&lt;ArgumentOutOfRangeException&gt;(() =&gt; <span class="keyword">this</span>._sut.GetRange(<span class="keyword">from</span>, size));</span><br><span class="line"></span><br><span class="line">    <span class="comment">// assert</span></span><br><span class="line">    Assert.Contains(nameOfErrorArgument, exception.Message);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="Theory-MemberData"><a href="#Theory-MemberData" class="headerlink" title="[Theory], [MemberData]"></a>[Theory], [MemberData]</h3><p>可玩性極高，可以在同一類別內建立多個靜態方法，或是在另一個類別裡建立，彈性比 <code>ClassData</code> 還高。注意必須要回傳 <code>IEnumerable&lt;object[]&gt;</code></p>
+<p>資料的使用範圍：同一類別內、不限 (可跨類別、專案等)</p>
+<p>可理解為成員資料，來自於類別內的成員</p>
+<p>對應 MSTest：[TestMethod], [DynamicData]</p>
+<ul>
+<li><p>同一類別內 (範圍：同一類別)</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">[<span class="meta">Theory(DisplayName = <span class="string">&quot;GetRange_同類別MemberData_不合規格的值&quot;</span>)</span>]</span><br><span class="line">[<span class="meta">MemberData(nameof(PageDataMemberData))</span>]</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> GetRange_MemberData_同類別輸入引數的內容為不合規格的值_應拋出ArgumentOutOfRangeException(<span class="built_in">string</span> nameOfErrorArgument, <span class="built_in">int</span> <span class="keyword">from</span>, <span class="built_in">int</span> size)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">// 資料來源為獨立出一個必須是 public 且 static 的方法，必須要回傳 IEnumerable&lt;object[]&gt;</span></span><br><span class="line">    <span class="comment">// 資料的使用範圍：此類別內</span></span><br><span class="line">    <span class="comment">// attribute 內使用 nameof(string memberDataName)</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// act</span></span><br><span class="line">    <span class="keyword">var</span> exception = Assert.Throws&lt;ArgumentOutOfRangeException&gt;(() =&gt; <span class="keyword">this</span>._sut.GetRange(<span class="keyword">from</span>, size));</span><br><span class="line"></span><br><span class="line">    <span class="comment">// assert</span></span><br><span class="line">    Assert.Contains(nameOfErrorArgument, exception.Message);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> IEnumerable&lt;<span class="built_in">object</span>[]&gt; PageDataMemberData =&gt;</span><br><span class="line">    <span class="keyword">new</span> List&lt;<span class="built_in">object</span>[]&gt;</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; <span class="string">&quot;from&quot;</span>, <span class="number">-1</span>, <span class="number">10</span> &#125;,</span><br><span class="line">        <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; <span class="string">&quot;from&quot;</span>, <span class="number">0</span>, <span class="number">10</span> &#125;,</span><br><span class="line">        <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; <span class="string">&quot;size&quot;</span>, <span class="number">1</span>, <span class="number">-1</span> &#125;,</span><br><span class="line">        <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; <span class="string">&quot;size&quot;</span>, <span class="number">1</span>, <span class="number">0</span> &#125;</span><br><span class="line">    &#125;;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>不同類別內 (範圍：不限)</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">ProductServiceTests</span> : <span class="title">IDisposable</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">// 省略...</span></span><br><span class="line"></span><br><span class="line">    [<span class="meta">Theory(DisplayName = <span class="string">&quot;GetRange_不同類別MemberData_不合規格的值&quot;</span>)</span>]</span><br><span class="line">    [<span class="meta">MemberData(nameof(PageTestMemberData.GetPageErrorData), MemberType = typeof(PageTestMemberData))</span>]</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> GetRange_不同類別MemberData_輸入引數的內容為不合規格的值_應拋出ArgumentOutOfRangeException(<span class="built_in">string</span> nameOfErrorArgument,</span><br><span class="line">        <span class="built_in">int</span> <span class="keyword">from</span>, <span class="built_in">int</span> size)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">// 資料來源為獨立出一個必須是 public 且 static 的方法，必須要回傳 IEnumerable&lt;object[]&gt;</span></span><br><span class="line">        <span class="comment">// 資料的使用範圍：不限 (可跨類別、專案等)</span></span><br><span class="line">        <span class="comment">// attribute 內使用 nameof(string memberDataName), MemberType = typeof(資料來源類別的名稱)</span></span><br><span class="line"></span><br><span class="line">        <span class="comment">// act</span></span><br><span class="line">        <span class="keyword">var</span> exception = Assert.Throws&lt;ArgumentOutOfRangeException&gt;(() =&gt; <span class="keyword">this</span>._sut.GetRange(<span class="keyword">from</span>, size));</span><br><span class="line"></span><br><span class="line">        <span class="comment">// assert</span></span><br><span class="line">        Assert.Contains(nameOfErrorArgument, exception.Message);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">PageTestMemberData</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> IEnumerable&lt;<span class="built_in">object</span>[]&gt; GetPageCorrectData()</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">yield</span> <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; <span class="string">&quot;from&quot;</span>, <span class="number">1</span>, <span class="number">10</span> &#125;;</span><br><span class="line">        <span class="keyword">yield</span> <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; <span class="string">&quot;from&quot;</span>, <span class="number">2</span>, <span class="number">10</span> &#125;;</span><br><span class="line">        <span class="keyword">yield</span> <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; <span class="string">&quot;size&quot;</span>, <span class="number">1</span>, <span class="number">1</span> &#125;;</span><br><span class="line">        <span class="keyword">yield</span> <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; <span class="string">&quot;size&quot;</span>, <span class="number">1</span>, <span class="number">2</span> &#125;;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> IEnumerable&lt;<span class="built_in">object</span>[]&gt; GetPageErrorData()</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">yield</span> <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; <span class="string">&quot;from&quot;</span>, <span class="number">-5</span>, <span class="number">10</span> &#125;;</span><br><span class="line">        <span class="keyword">yield</span> <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; <span class="string">&quot;from&quot;</span>, <span class="number">0</span>, <span class="number">10</span> &#125;;</span><br><span class="line">        <span class="keyword">yield</span> <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; <span class="string">&quot;size&quot;</span>, <span class="number">1</span>, <span class="number">-5</span> &#125;;</span><br><span class="line">        <span class="keyword">yield</span> <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; <span class="string">&quot;size&quot;</span>, <span class="number">1</span>, <span class="number">0</span> &#125;;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h3 id="Theory-ClassData"><a href="#Theory-ClassData" class="headerlink" title="[Theory], [ClassData]"></a>[Theory], [ClassData]</h3><p>資料的使用範圍：不限 (可跨類別、專案等)</p>
+<p>可理解為由一個專門提供資料的類別取得資料</p>
+<p>對應 MSTest：[TestMethod], [CustomDataSource]</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">ProductServiceTests</span> : <span class="title">IDisposable</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">// 省略...</span></span><br><span class="line"></span><br><span class="line">    [<span class="meta">Theory(DisplayName = <span class="string">&quot;GetRange_ClassData_不合規格的值&quot;</span>)</span>]</span><br><span class="line">    [<span class="meta">ClassData(typeof(PageTestClassData))</span>]</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> GetRange_ClassData_輸入引數的內容為不合規格的值_應拋出ArgumentOutOfRangeException(<span class="built_in">string</span> nameOfErrorArgument, <span class="built_in">int</span> <span class="keyword">from</span>, <span class="built_in">int</span> size)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">// 資料來源為獨立的類別，但是這個類別必須繼承 IEnumerable</span></span><br><span class="line">        <span class="comment">// attribute 內使用 typeof</span></span><br><span class="line"></span><br><span class="line">        <span class="comment">// act</span></span><br><span class="line">        <span class="keyword">var</span> exception = Assert.Throws&lt;ArgumentOutOfRangeException&gt;(() =&gt; <span class="keyword">this</span>._sut.GetRange(<span class="keyword">from</span>, size));</span><br><span class="line"></span><br><span class="line">        <span class="comment">// assert</span></span><br><span class="line">        Assert.Contains(nameOfErrorArgument, exception.Message);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">PageTestClassData</span> : <span class="title">IEnumerable</span>&lt;<span class="title">object</span>[]&gt;</span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">// 用於 ClassData 的類別，必須要繼承 IEnumerable</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> IEnumerator&lt;<span class="built_in">object</span>[]&gt; GetEnumerator()</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">yield</span> <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; <span class="string">&quot;from&quot;</span>, <span class="number">-1</span>, <span class="number">10</span> &#125;;</span><br><span class="line">        <span class="keyword">yield</span> <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; <span class="string">&quot;from&quot;</span>, <span class="number">0</span>, <span class="number">10</span> &#125;;</span><br><span class="line">        <span class="keyword">yield</span> <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; <span class="string">&quot;size&quot;</span>, <span class="number">1</span>, <span class="number">-1</span> &#125;;</span><br><span class="line">        <span class="keyword">yield</span> <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; <span class="string">&quot;size&quot;</span>, <span class="number">1</span>, <span class="number">0</span> &#125;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    IEnumerator IEnumerable.GetEnumerator()</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">this</span>.GetEnumerator();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="注意事項"><a href="#注意事項" class="headerlink" title="注意事項"></a>注意事項</h3><ul>
+<li>想要判斷陣列是否為空集合的時候，可能會想要使用 <code>Assert.Equal(0, actual.Count());</code>，但是官方不建議，IDE 也會提示。建議使用 <code>Empty</code> (<code>Assert.Empty(actual);</code>)。</li>
+</ul>
+<h2 id="參考"><a href="#參考" class="headerlink" title="參考"></a>參考</h2><ul>
+<li><a target="_blank" rel="noopener" href="https://xunit.net/docs/getting-started/v3/cmdline">Getting started with xUnit.net v3 (command line) &gt; xUnit.net</a></li>
+<li><a target="_blank" rel="noopener" href="https://xunit.net/docs/shared-context">Shared Context between Tests &gt; xUnit.net</a></li>
+<li><a target="_blank" rel="noopener" href="https://andrewlock.net/creating-parameterised-tests-in-xunit-with-inlinedata-classdata-and-memberdata/">Creating parameterised tests in xUnit with [InlineData], [ClassData], and [MemberData]</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          
+
+<div class="post-copyright">
+<ul>
+  <li class="post-copyright-author">
+      <strong>作者： </strong>zamhsu
+  </li>
+  <li class="post-copyright-link">
+      <strong>文章連結：</strong>
+      <a href="https://zamhsu.github.io/UnitTest/xUnit%E5%9F%BA%E7%A4%8E%E8%A7%80%E5%BF%B5/" title="xUnit 基礎觀念">https://zamhsu.github.io/UnitTest/xUnit基礎觀念/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版權聲明： </strong>本網誌所有文章除特別聲明外，均採用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 許可協議。轉載請註明出處！
+  </li>
+</ul>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/%E5%96%AE%E5%85%83%E6%B8%AC%E8%A9%A6/" rel="tag"># 單元測試</a>
+              <a href="/tags/xUnit/" rel="tag"># xUnit</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/UnitTest/xUnitv2%E7%B0%A1%E4%BB%8B/" rel="prev" title="xUnit v2 簡介">
+                  <i class="fa fa-chevron-left"></i> xUnit v2 簡介
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/UnitTest/xUnit%E5%90%84%E5%B1%A4%E7%B4%9AFixture%E7%9A%84%E7%94%9F%E5%91%BD%E9%80%B1%E6%9C%9F/" rel="next" title="xUnit 各層級 Fixture 的生命週期">
+                  xUnit 各層級 Fixture 的生命週期 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 2022 – 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zamhsu</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/pisces/" rel="noopener" target="_blank">NexT.Pisces</a> 強力驅動
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.js" integrity="sha256-yt2kYMy0w8AbtF89WXb2P1rfjcP/HTHLT7097U8Y5b8=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/next-boot.js"></script>
+
+  
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.0/search.js" integrity="sha256-vXZMYLEqsROAXkEw93GGIvaB2ab+QW6w3+1ahD9nXXA=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+  <script src="/js/third-party/fancybox.js"></script>
+
+
+  
+
+
+
+
+
+</body>
+</html>
