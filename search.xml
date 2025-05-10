@@ -294,28 +294,109 @@
       </tags>
   </entry>
   <entry>
-    <title>遷移 Docker 資料</title>
-    <url>/Docker/%E9%81%B7%E7%A7%BBDocker%E8%B3%87%E6%96%99/</url>
-    <content><![CDATA[<h2 id="起因"><a href="#起因" class="headerlink" title="起因"></a>起因</h2><p>Windows 裡使用 WSL 2 的 Docker 資料預設在 C 槽，不知不覺間就被塞爆了，我們來將它移到其他槽。</p>
-<p>先輸入 <code>wsl -l -v</code> 指令來看一下會有什麼：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">&gt; wsl -l -v</span><br><span class="line">  NAME                   STATE           VERSION</span><br><span class="line">* docker-desktop         Stopped         2</span><br><span class="line">  docker-desktop-data    Stopped         2</span><br></pre></td></tr></table></figure>
+    <title>FusionCache 快取套件介紹</title>
+    <url>/DotNet/FusionCache%E5%BF%AB%E5%8F%96%E5%A5%97%E4%BB%B6%E4%BB%8B%E7%B4%B9/</url>
+    <content><![CDATA[<p>近期同事介紹了 FusionCache 這個快取套件，試玩了一下發現裡面的功能非常完整，說明文件也很詳細。FusionCache 解決了很多使用多層快取時會遇到的問題，也比微軟在 .NET 9 新出的 HybridCache 完整和好用很多。</p>
+<p>FusionCache 除了提供基本的 in-memory 快取之外，還可以疊加更多層次的快取，例如 Redis, Memcached 等。還有提供各種 timeout 的處理、快取同步、重新連線、熔斷等功能，減少了各種連線問題的處理。</p>
+<p>FusionCache 的 GitHub：<br><a href="https://github.com/ZiggyCreatures/FusionCache">GitHub - ZiggyCreatures&#x2F;FusionCache: FusionCache is an easy to use, fast and robust hybrid cache with advanced resiliency features.</a></p>
+<p>這篇「Step by Step」的官方說明簡潔有力，直接說明了各功能的用途和效果，還提供了一些維持服務穩定的調整方向：<br><a href="https://github.com/ZiggyCreatures/FusionCache/blob/main/docs/StepByStep.md">FusionCache&#x2F;docs&#x2F;StepByStep.md at main · ZiggyCreatures&#x2F;FusionCache · GitHub</a></p>
+<p>這裡就挑「Step by Step」裡幾個有趣的功能簡單說明。</p>
+<h2 id="基本使用"><a href="#基本使用" class="headerlink" title="基本使用"></a>基本使用</h2><p>只要安裝 FusionCache 的套件，裡面實作了 <code>IMemoryCache</code>，使用 in-memory 的方式在本機建立快取。只要 DI 註冊、調整資料存取相關程式就能馬上使用，相當方便。</p>
+<p>必裝套件：</p>
+<ul>
+<li><code>ZiggyCreatures.FusionCache</code></li>
+</ul>
+<h3 id="直接使用"><a href="#直接使用" class="headerlink" title="直接使用"></a>直接使用</h3><figure class="highlight csharp"><table><tr><td class="code"><pre><span class="line">services.AddFusionCache();</span><br></pre></td></tr></table></figure>
 
-<p>docker-desktop：docker 的系統和資料<br>docker-desktop-data：各 container, image（這個最重要，當然 volume 也是）</p>
-<p>後續我們先關閉 Docker，停止運行那些東東、匯出備份，最後在新的位置還原就可以了。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># 終止運行</span><br><span class="line">&gt; wsl -t docker-desktop</span><br><span class="line">&gt; wsl -t docker-desktop-data</span><br><span class="line"></span><br><span class="line"># 匯出備份</span><br><span class="line">&gt; wsl --export docker-desktop D:\wsl\docker-desktop-20230101.tar</span><br><span class="line">&gt; wsl --export docker-desktop-data D:\wsl\docker-desktop-data-20230101.tar</span><br><span class="line"></span><br><span class="line"># 註銷</span><br><span class="line">&gt; wsl --unregister docker-desktop</span><br><span class="line">&gt; wsl --unregister docker-desktop-data</span><br><span class="line"></span><br><span class="line"># 從備份匯入</span><br><span class="line">&gt; wsl --import docker-desktop D:\wsl\docker-desktop D:\wsl\docker-desktop-20230101.tar --version 2</span><br><span class="line">&gt; wsl --import docker-desktop-data D:\wsl\docker-desktop-data D:\wsl\docker-desktop-data-20230101.tar --version 2</span><br><span class="line"></span><br><span class="line"># 完成</span><br></pre></td></tr></table></figure>
+<h3 id="自訂快取有效期"><a href="#自訂快取有效期" class="headerlink" title="自訂快取有效期"></a>自訂快取有效期</h3><p>設定說明：</p>
+<ul>
+<li><code>Duration</code>: In-memory cache 資料的有效期。</li>
+</ul>
+<figure class="highlight csharp"><table><tr><td class="code"><pre><span class="line">services.AddFusionCache()</span><br><span class="line">    .WithDefaultEntryOptions(<span class="keyword">new</span> FusionCacheEntryOptions &#123;</span><br><span class="line">        <span class="comment">// In-memory cache 的到期時間</span></span><br><span class="line">        Duration = TimeSpan.FromMinutes(<span class="number">1</span>)</span><br><span class="line">    &#125;)</span><br><span class="line">;</span><br></pre></td></tr></table></figure>
 
-<p>匯出的備份檔可以留著，以防出意外還可以還原回來。這是親身經歷過，之前嘗試安裝 Elastic APM，結果 Docker 當機，重開 Docker 後整個 Docker 就壞了，docker-desktop 內的虛擬硬碟直接消失。幸好 docker-desktop-data 和 volume 還在，保住資料，用這個辦法將現有資料掛回去。</p>
+<h3 id="調整資料存取的程式"><a href="#調整資料存取的程式" class="headerlink" title="調整資料存取的程式"></a>調整資料存取的程式</h3><figure class="highlight csharp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">ProductRepository</span> : <span class="title">IProductRepository</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">readonly</span> EcShopContext _context;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">readonly</span> IFusionCache _fusionCache;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">readonly</span> ILogger _logger;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">ProductRepository</span>(<span class="params">EcShopContext context, IFusionCache fusionCache, ILoggerFactory loggerFactory</span>)</span></span><br><span class="line">    &#123;</span><br><span class="line">        _context = context;</span><br><span class="line">        _fusionCache = fusionCache;</span><br><span class="line">        _logger = loggerFactory.CreateLogger&lt;ProductRepository&gt;();</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="built_in">string</span> <span class="title">GetCacheKey</span>(<span class="params"><span class="built_in">string</span> prefix, <span class="built_in">string</span> identifier = <span class="string">&quot;&quot;</span></span>)</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="string">$&quot;<span class="subst">&#123;prefix&#125;</span>:<span class="subst">&#123;identifier&#125;</span>&quot;</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Create</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">async</span> Task&lt;Product&gt; <span class="title">CreateAsync</span>(<span class="params">Product product</span>)</span></span><br><span class="line">    &#123;</span><br><span class="line">        _context.Product.Add(product);</span><br><span class="line">        <span class="keyword">await</span> _context.SaveChangesAsync();</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 建立快取</span></span><br><span class="line">        <span class="keyword">await</span> _fusionCache.SetAsync(</span><br><span class="line">            GetCacheKey(<span class="string">&quot;Product&quot;</span>, product.Id.ToString()),</span><br><span class="line">            product,</span><br><span class="line">            options =&gt;</span><br><span class="line">            &#123;</span><br><span class="line">                <span class="comment">// 客製化設定，用來方便測試，實務上並不會這樣設定，請勿照抄。</span></span><br><span class="line">                <span class="comment">// 這裡的設定只會針對這筆資料，會覆蓋 DI 內的設定。</span></span><br><span class="line">                options.DistributedCacheDuration = TimeSpan.FromMinutes(<span class="number">10</span>);</span><br><span class="line">                options.DistributedCacheSoftTimeout = TimeSpan.FromMilliseconds(<span class="number">10</span>);</span><br><span class="line">                options.DistributedCacheHardTimeout = TimeSpan.FromMilliseconds(<span class="number">500</span>);</span><br><span class="line">                options.Duration = TimeSpan.FromSeconds(<span class="number">5</span>);</span><br><span class="line">            &#125;</span><br><span class="line">        );</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">return</span> product;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// Read - By Id</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">async</span> Task&lt;Product&gt; <span class="title">GetByIdAsync</span>(<span class="params"><span class="built_in">int</span> id</span>)</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">var</span> product = <span class="keyword">await</span> _fusionCache.GetOrSetAsync(</span><br><span class="line">            GetCacheKey(<span class="string">&quot;Product&quot;</span>, id.ToString()),</span><br><span class="line">            <span class="keyword">async</span> ct =&gt; <span class="comment">// 這段就是 factory，先記得</span></span><br><span class="line">            &#123;</span><br><span class="line">                _logger.LogError(<span class="string">&quot;Getting product &#123;id&#125; from the database.&quot;</span>, id);</span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">await</span> _context.Product.FindAsync(id, ct);</span><br><span class="line">            &#125;,</span><br><span class="line">            options =&gt;</span><br><span class="line">            &#123;</span><br><span class="line">                <span class="comment">// 客製化設定，用來方便測試，實務上並不會這樣設定，請勿照抄。</span></span><br><span class="line">                <span class="comment">// 這裡的設定只會針對這筆資料，會覆蓋 DI 內的設定。</span></span><br><span class="line">                options.DistributedCacheDuration = TimeSpan.FromMinutes(<span class="number">10</span>);</span><br><span class="line">                options.DistributedCacheSoftTimeout = TimeSpan.FromMilliseconds(<span class="number">10</span>);</span><br><span class="line">                options.DistributedCacheHardTimeout = TimeSpan.FromMilliseconds(<span class="number">500</span>);</span><br><span class="line">                options.Duration = TimeSpan.FromSeconds(<span class="number">5</span>);</span><br><span class="line">            &#125;</span><br><span class="line">        );</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> product;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// Update</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">async</span> Task&lt;<span class="built_in">bool</span>&gt; <span class="title">UpdateAsync</span>(<span class="params">Product product</span>)</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">var</span> existing = <span class="keyword">await</span> _context.Product.FindAsync(product.Id);</span><br><span class="line">        <span class="keyword">if</span> (existing == <span class="literal">null</span>)</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">        _context.Entry(existing).CurrentValues.SetValues(product);</span><br><span class="line">        <span class="keyword">await</span> _context.SaveChangesAsync();</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 更新相關快取</span></span><br><span class="line">        <span class="keyword">await</span> _fusionCache.SetAsync(</span><br><span class="line">            GetCacheKey(<span class="string">&quot;Product&quot;</span>, product.Id.ToString()),</span><br><span class="line">            product,</span><br><span class="line">            options =&gt;</span><br><span class="line">            &#123;</span><br><span class="line">                <span class="comment">// 客製化設定，用來方便測試，實務上並不會這樣設定，請勿照抄。</span></span><br><span class="line">                <span class="comment">// 這裡的設定只會針對這筆資料，會覆蓋 DI 內的設定。</span></span><br><span class="line">                options.DistributedCacheDuration = TimeSpan.FromMinutes(<span class="number">10</span>);</span><br><span class="line">                options.DistributedCacheSoftTimeout = TimeSpan.FromMilliseconds(<span class="number">10</span>);</span><br><span class="line">                options.DistributedCacheHardTimeout = TimeSpan.FromMilliseconds(<span class="number">500</span>);</span><br><span class="line">                options.Duration = TimeSpan.FromSeconds(<span class="number">5</span>);</span><br><span class="line">            &#125;</span><br><span class="line">        );</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Delete</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">async</span> Task&lt;<span class="built_in">bool</span>&gt; <span class="title">DeleteAsync</span>(<span class="params"><span class="built_in">int</span> id</span>)</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">var</span> product = <span class="keyword">await</span> _context.Product.FindAsync(id);</span><br><span class="line">        <span class="keyword">if</span> (product == <span class="literal">null</span>) <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">        _context.Product.Remove(product);</span><br><span class="line">        <span class="keyword">await</span> _context.SaveChangesAsync();</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 刪除相關快取</span></span><br><span class="line">        <span class="keyword">await</span> _fusionCache.RemoveAsync(GetCacheKey(<span class="string">&quot;Product&quot;</span>, id.ToString()));</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Fail-Safe"><a href="#Fail-Safe" class="headerlink" title="Fail-Safe"></a>Fail-Safe</h2><p>當 factory (也就是 factory 裡面的實作，存取資料庫) 壞掉時，就會觸發這裡。當資料庫發生錯誤時，仍然可以持續提供服務，會去讀取已經過期的快取資料。搭配 <code>Factory Timeouts</code>，效果更佳，縮短 timeouts 時間，儘早回傳資料。</p>
+<p>設定說明：</p>
+<ul>
+<li><code>IsFailSafeEnabled</code>: 是否啟用。</li>
+<li><code>FailSafeMaxDuration</code>: 一個已經過期的快取資料，最多還可以被使用多久（從原本過期時間開始算）。</li>
+<li><code>FailSafeThrottleDuration</code>: 每次有請求來時，會讓這筆過期資料在這段時間內暫時當作還沒過期，可以繼續讀取，避免每次都嘗試連資料庫。</li>
+</ul>
+<figure class="highlight csharp"><table><tr><td class="code"><pre><span class="line">services.AddFusionCache()</span><br><span class="line">    .WithDefaultEntryOptions(<span class="keyword">new</span> FusionCacheEntryOptions &#123;</span><br><span class="line">        Duration = TimeSpan.FromMinutes(<span class="number">1</span>),</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// Fail-Safe 的設定</span></span><br><span class="line">        IsFailSafeEnabled = <span class="literal">true</span>,</span><br><span class="line">        FailSafeMaxDuration = TimeSpan.FromHours(<span class="number">2</span>),</span><br><span class="line">        FailSafeThrottleDuration = TimeSpan.FromSeconds(<span class="number">30</span>)</span><br><span class="line">    &#125;)</span><br><span class="line">;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Factory-Timeouts"><a href="#Factory-Timeouts" class="headerlink" title="Factory Timeouts"></a>Factory Timeouts</h2><p>當遇到 factory (也就是 factory 裡面的實作，存取資料庫) 的回傳時間比較久，甚至等滿了 timeout 時間才回傳資料庫壞掉。這時，使用 <code>Fatory Timeouts</code> 就可以設定較短的時間，縮短 timeout，繼續下一步進入到 <code>Fail-Safe</code>。</p>
+<p>設定說明：</p>
+<ul>
+<li><code>FactorySoftTimeout</code>: 軟性 timeout。超過這個時間後，FusionCache 會先放棄等待結果，但 factory 還是會在背景繼續執行。若在 hard timeout 之前能收到資料，還是會在背景建立快取。</li>
+<li><code>FactoryHardTimeout</code>: 硬性 timeout。超過這個時間後，FusionCache 會強制取消執行（例如透過 CancellationToken）。</li>
+</ul>
+<p>流程：</p>
+<ul>
+<li>先到 soft timeout 時 → FusionCache 嘗試用 fail-safe 或回傳 null，但 factory 還會繼續執行（可補快取）。</li>
+<li>再到 hard timeout 時 → 就會真的取消 factory 的執行。</li>
+</ul>
+<figure class="highlight csharp"><table><tr><td class="code"><pre><span class="line">services.AddFusionCache()</span><br><span class="line">    .WithDefaultEntryOptions(<span class="keyword">new</span> FusionCacheEntryOptions &#123;</span><br><span class="line">        Duration = TimeSpan.FromMinutes(<span class="number">1</span>),</span><br><span class="line">        </span><br><span class="line">        IsFailSafeEnabled = <span class="literal">true</span>,</span><br><span class="line">        FailSafeMaxDuration = TimeSpan.FromHours(<span class="number">2</span>),</span><br><span class="line">        FailSafeThrottleDuration = TimeSpan.FromSeconds(<span class="number">30</span>),</span><br><span class="line"></span><br><span class="line">        <span class="comment">// Factory timeout 的設定</span></span><br><span class="line">        FactorySoftTimeout = TimeSpan.FromMilliseconds(<span class="number">100</span>),</span><br><span class="line">        FactoryHardTimeout = TimeSpan.FromMilliseconds(<span class="number">1500</span>)</span><br><span class="line">    &#125;)</span><br><span class="line">;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Distributed-cache"><a href="#Distributed-cache" class="headerlink" title="Distributed cache"></a>Distributed cache</h2><p>單純使用 FusionCache 的話，只會使用 in-memory 的快取 (實作 <code>IMemoryCache</code>)，多節點的話還是需要個分散式快取。FusionCache 實作了 <code>IDistributedCache</code>，所以可以使用各種服務來儲存 (Redis, Memcached, MongoDB 等)。這裡以 Redis 作為範例。</p>
+<p><code>IMemoryCache</code> 和 <code>IDistributedCache</code> 可以看這裡：</p>
+<ul>
+<li><a href="https://learn.microsoft.com/zh-tw/aspnet/core/performance/caching/memory">ASP.NET Core 中的記憶體中快取 | Microsoft Learn</a></li>
+<li><a href="https://learn.microsoft.com/zh-tw/aspnet/core/performance/caching/distributed">ASP.NET Core 中的分散式快取 | Microsoft Learn</a></li>
+</ul>
+<h3 id="使用-Distributed-cache"><a href="#使用-Distributed-cache" class="headerlink" title="使用 Distributed cache"></a>使用 Distributed cache</h3><p>必裝套件：</p>
+<ul>
+<li><code>Microsoft.Extensions.Caching.StackExchangeRedis</code></li>
+</ul>
+<p>擇一安裝：</p>
+<ul>
+<li><code>ZiggyCreatures.FusionCache.Serialization.SystemTextJson</code></li>
+<li><code>ZiggyCreatures.FusionCache.Serialization.NewtonsoftJson</code></li>
+<li><code>ZiggyCreatures.FusionCache.Serialization.NeueccMessagePack</code></li>
+</ul>
+<p>上面的序列化套件依需求擇一安裝。這裡選 <code>MessagePack</code>，因為資料佔用空間小。除了上面那三種，還有這些（要搭配支援的分散式快取服務）：</p>
+<ul>
+<li><code>ZiggyCreatures.FusionCache.Serialization.CysharpMemoryPack</code></li>
+<li><code>ZiggyCreatures.FusionCache.Serialization.ServiceStackJson</code></li>
+<li><code>ZiggyCreatures.FusionCache.Serialization.ProtoBufNet</code></li>
+</ul>
+<figure class="highlight csharp"><table><tr><td class="code"><pre><span class="line">services.AddFusionCache()</span><br><span class="line">    .WithDefaultEntryOptions(<span class="keyword">new</span> FusionCacheEntryOptions &#123;</span><br><span class="line">        Duration = TimeSpan.FromMinutes(<span class="number">1</span>),</span><br><span class="line">    &#125;)</span><br><span class="line">    <span class="comment">// 使用 Message Pack 作為序列化工具</span></span><br><span class="line">    .WithSerializer(</span><br><span class="line">        <span class="keyword">new</span> FusionCacheNeueccMessagePackSerializer()</span><br><span class="line">    )</span><br><span class="line">    <span class="comment">// 使用 Redis 作為分散式快取的服務</span></span><br><span class="line">    .WithDistributedCache(</span><br><span class="line">        <span class="keyword">new</span> RedisCache(<span class="keyword">new</span> RedisCacheOptions() &#123; Configuration = <span class="string">&quot;CONNECTION STRING&quot;</span> &#125;)</span><br><span class="line">    )</span><br><span class="line">;</span><br></pre></td></tr></table></figure>
+
+<h3 id="Distributed-cache-的設定"><a href="#Distributed-cache-的設定" class="headerlink" title="Distributed cache 的設定"></a>Distributed cache 的設定</h3><p>設定說明：</p>
+<ul>
+<li><code>DistributedCacheCircuitBreakerDuration</code>: 斷路器的持續時間。如果分散式快取出現硬性錯誤 (如壞掉拋例外)，就會觸發啟動斷路器，在指定的時間內停止使用分散式快取。</li>
+<li><code>DistributedCacheSoftTimeout</code>: 軟性 timeout。超過這個時間後，FusionCache 會先放棄等待結果，進入下一步，但還是會在背景繼續執行。</li>
+<li><code>DistributedCacheHardTimeout</code>: 硬性 timeout。超過這時間後，會直接取消分散式快取操作（例如用 CancellationToken）。</li>
+<li><code>AllowBackgroundDistributedCacheOperations</code>: 允許在背景操作分散式快取，加快回應速度。讀取不會有影響，新增、修改、刪除才會影響。</li>
+</ul>
+<figure class="highlight csharp"><table><tr><td class="code"><pre><span class="line">services.AddFusionCache()</span><br><span class="line">    .WithOptions(options =&gt; &#123;</span><br><span class="line">        <span class="comment">// 分散式快取斷路器的設定</span></span><br><span class="line">        options.DistributedCacheCircuitBreakerDuration = TimeSpan.FromSeconds(<span class="number">2</span>);</span><br><span class="line">    &#125;)</span><br><span class="line">    .WithDefaultEntryOptions(<span class="keyword">new</span> FusionCacheEntryOptions &#123;</span><br><span class="line">        Duration = TimeSpan.FromMinutes(<span class="number">1</span>),</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 分散式快取的設定</span></span><br><span class="line">        DistributedCacheSoftTimeout = TimeSpan.FromSeconds(<span class="number">1</span>),</span><br><span class="line">        DistributedCacheHardTimeout = TimeSpan.FromSeconds(<span class="number">2</span>),</span><br><span class="line">        AllowBackgroundDistributedCacheOperations = <span class="literal">true</span></span><br><span class="line">    &#125;)</span><br><span class="line">    .WithSerializer(</span><br><span class="line">        <span class="keyword">new</span> FusionCacheNeueccMessagePackSerializer()</span><br><span class="line">    )</span><br><span class="line">    .WithDistributedCache(</span><br><span class="line">        <span class="keyword">new</span> RedisCache(<span class="keyword">new</span> RedisCacheOptions() &#123; Configuration = <span class="string">&quot;CONNECTION STRING&quot;</span> &#125;)</span><br><span class="line">    )</span><br><span class="line">;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Backplane"><a href="#Backplane" class="headerlink" title="Backplane"></a>Backplane</h2><p>有了分散式快取，多節點都可以使用了，但是要處理同步的問題。當 A 節點更新資料後，A 自己的記憶體快取更新了，可是其他節點不知道資料已經修改，各節點裡面的記憶體快取依舊是舊資料，這時就產生資料不一致的問題。所以需要主動通知其他節點要更新記憶體快取內的資料，不用等到快取記憶體過期才更新，加快資料更新的時間，消除資料不一致的問題。Backplane 就是在處理這件事的功能。</p>
+<p>這裡以使用 Redis 為例，FusionCache 背後的實作是利用 Redis 的 Pub&#x2F;Sub 功能來達成。</p>
+<p>必裝套件：</p>
+<ul>
+<li><code>ZiggyCreatures.FusionCache.Backplane.StackExchangeRedis</code></li>
+</ul>
+<figure class="highlight csharp"><table><tr><td class="code"><pre><span class="line">services.AddFusionCache()</span><br><span class="line">    .WithOptions(options =&gt; &#123;</span><br><span class="line">        options.DistributedCacheCircuitBreakerDuration = TimeSpan.FromSeconds(<span class="number">2</span>);</span><br><span class="line">    &#125;)</span><br><span class="line">    .WithDefaultEntryOptions(<span class="keyword">new</span> FusionCacheEntryOptions &#123;</span><br><span class="line">        Duration = TimeSpan.FromMinutes(<span class="number">1</span>),</span><br><span class="line"></span><br><span class="line">        DistributedCacheSoftTimeout = TimeSpan.FromSeconds(<span class="number">1</span>),</span><br><span class="line">        DistributedCacheHardTimeout = TimeSpan.FromSeconds(<span class="number">2</span>),</span><br><span class="line">        AllowBackgroundDistributedCacheOperations = <span class="literal">true</span>,</span><br><span class="line">    &#125;)</span><br><span class="line">    .WithSerializer(</span><br><span class="line">        <span class="keyword">new</span> FusionCacheNeueccMessagePackSerializer()</span><br><span class="line">    )</span><br><span class="line">    .WithDistributedCache(</span><br><span class="line">        <span class="keyword">new</span> RedisCache(<span class="keyword">new</span> RedisCacheOptions() &#123; Configuration = <span class="string">&quot;CONNECTION STRING&quot;</span> &#125;)</span><br><span class="line">    )</span><br><span class="line">    <span class="comment">// 使用 Redis 作為 Backplane</span></span><br><span class="line">    .WithBackplane(</span><br><span class="line">        <span class="keyword">new</span> RedisBackplane(<span class="keyword">new</span> RedisBackplaneOptions() &#123; Configuration = <span class="string">&quot;CONNECTION STRING&quot;</span> &#125;)</span><br><span class="line">    )</span><br><span class="line">;</span><br></pre></td></tr></table></figure>
+
+<h2 id="最後"><a href="#最後" class="headerlink" title="最後"></a>最後</h2><p>除了上述的功能之外，還有功能和套件的使用概念在官方文件中都有寫到，建議去裡面看看。對於快取的概念，其實也可以從裡面學到很多各種問題的處理方式。原本以為裡面的連線問題或重試會使用 Polly，結果並沒有使用，看來可以再仔細研究裡面的做法。</p>
 <h2 id="參考"><a href="#參考" class="headerlink" title="參考"></a>參考</h2><ul>
-<li><a href="https://blog.csdn.net/weifengdq/article/details/121776188">WSL2迁移与硬盘读写测试</a></li>
-<li><a href="https://learn.microsoft.com/zh-tw/windows/wsl/basic-commands">WSL 的基本命令 | Microsoft Learn</a></li>
+<li><a href="https://github.com/ZiggyCreatures/FusionCache/blob/main/docs/StepByStep.md">FusionCache&#x2F;docs&#x2F;StepByStep.md at main · ZiggyCreatures&#x2F;FusionCache · GitHub</a></li>
+</ul>
+<h2 id="延伸閱讀"><a href="#延伸閱讀" class="headerlink" title="延伸閱讀"></a>延伸閱讀</h2><ul>
+<li><a href="https://learn.microsoft.com/zh-tw/aspnet/core/performance/caching/memory">ASP.NET Core 中的記憶體中快取 | Microsoft Learn</a></li>
+<li><a href="https://learn.microsoft.com/zh-tw/aspnet/core/performance/caching/distributed">ASP.NET Core 中的分散式快取 | Microsoft Learn</a></li>
+<li><a href="https://learn.microsoft.com/zh-tw/aspnet/core/performance/caching/hybrid">ASP.NET Core 中的 HybridCache 程式庫 | Microsoft Learn</a></li>
+<li><a href="https://totoroliu.medium.com/redis-%E5%BF%AB%E5%8F%96%E9%9B%AA%E5%B4%A9-%E6%93%8A%E7%A9%BF-%E7%A9%BF%E9%80%8F-8bc02f09fe8f">redis - 快取雪崩、擊穿、穿透 - Po-Ching Liu - Medium</a></li>
+<li><a href="https://github.com/App-vNext/Polly">Polly - GitHub</a></li>
 </ul>
 ]]></content>
       <categories>
-        <category>Docker</category>
+        <category>ASP.NET Core</category>
       </categories>
       <tags>
-        <tag>Docker</tag>
-        <tag>WSL</tag>
+        <tag>ASP.NET Core</tag>
+        <tag>快取</tag>
       </tags>
   </entry>
   <entry>
@@ -366,6 +447,31 @@
       <tags>
         <tag>教學</tag>
         <tag>Elasticsearch</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>遷移 Docker 資料</title>
+    <url>/Docker/%E9%81%B7%E7%A7%BBDocker%E8%B3%87%E6%96%99/</url>
+    <content><![CDATA[<h2 id="起因"><a href="#起因" class="headerlink" title="起因"></a>起因</h2><p>Windows 裡使用 WSL 2 的 Docker 資料預設在 C 槽，不知不覺間就被塞爆了，我們來將它移到其他槽。</p>
+<p>先輸入 <code>wsl -l -v</code> 指令來看一下會有什麼：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">&gt; wsl -l -v</span><br><span class="line">  NAME                   STATE           VERSION</span><br><span class="line">* docker-desktop         Stopped         2</span><br><span class="line">  docker-desktop-data    Stopped         2</span><br></pre></td></tr></table></figure>
+
+<p>docker-desktop：docker 的系統和資料<br>docker-desktop-data：各 container, image（這個最重要，當然 volume 也是）</p>
+<p>後續我們先關閉 Docker，停止運行那些東東、匯出備份，最後在新的位置還原就可以了。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># 終止運行</span><br><span class="line">&gt; wsl -t docker-desktop</span><br><span class="line">&gt; wsl -t docker-desktop-data</span><br><span class="line"></span><br><span class="line"># 匯出備份</span><br><span class="line">&gt; wsl --export docker-desktop D:\wsl\docker-desktop-20230101.tar</span><br><span class="line">&gt; wsl --export docker-desktop-data D:\wsl\docker-desktop-data-20230101.tar</span><br><span class="line"></span><br><span class="line"># 註銷</span><br><span class="line">&gt; wsl --unregister docker-desktop</span><br><span class="line">&gt; wsl --unregister docker-desktop-data</span><br><span class="line"></span><br><span class="line"># 從備份匯入</span><br><span class="line">&gt; wsl --import docker-desktop D:\wsl\docker-desktop D:\wsl\docker-desktop-20230101.tar --version 2</span><br><span class="line">&gt; wsl --import docker-desktop-data D:\wsl\docker-desktop-data D:\wsl\docker-desktop-data-20230101.tar --version 2</span><br><span class="line"></span><br><span class="line"># 完成</span><br></pre></td></tr></table></figure>
+
+<p>匯出的備份檔可以留著，以防出意外還可以還原回來。這是親身經歷過，之前嘗試安裝 Elastic APM，結果 Docker 當機，重開 Docker 後整個 Docker 就壞了，docker-desktop 內的虛擬硬碟直接消失。幸好 docker-desktop-data 和 volume 還在，保住資料，用這個辦法將現有資料掛回去。</p>
+<h2 id="參考"><a href="#參考" class="headerlink" title="參考"></a>參考</h2><ul>
+<li><a href="https://blog.csdn.net/weifengdq/article/details/121776188">WSL2迁移与硬盘读写测试</a></li>
+<li><a href="https://learn.microsoft.com/zh-tw/windows/wsl/basic-commands">WSL 的基本命令 | Microsoft Learn</a></li>
+</ul>
+]]></content>
+      <categories>
+        <category>Docker</category>
+      </categories>
+      <tags>
+        <tag>Docker</tag>
+        <tag>WSL</tag>
       </tags>
   </entry>
   <entry>
@@ -426,79 +532,6 @@
       </categories>
       <tags>
         <tag>排程</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>批判性思考</title>
-    <url>/SoftSkill/%E6%89%B9%E5%88%A4%E6%80%A7%E6%80%9D%E8%80%83/</url>
-    <content><![CDATA[<h1 id="批判性思考"><a href="#批判性思考" class="headerlink" title="批判性思考"></a>批判性思考</h1><p>依據 「思辨，從問對問題開始」 一書所簡單整理，並加上一些個人看法。</p>
-<ul>
-<li>英文書名：Asking the Right Questions: A Guide to Critical Thinking</li>
-<li>作者：M. Neil Browne , Stuart M. Keeley</li>
-<li>中文書名會因為改版而更換，用英文書名搜尋比較準確</li>
-<li><del>中文書名有點騙，看起來跟雞湯或空洞勵志的書一樣，英文書名就很明確是寫批判性思考</del></li>
-</ul>
-<h2 id="這是什麼"><a href="#這是什麼" class="headerlink" title="這是什麼"></a>這是什麼</h2><ul>
-<li>用來分析、評估、解釋、推理以及反思那些我們接收到的資訊</li>
-<li>查證說法，找出真正的答案</li>
-</ul>
-<h2 id="為什麼需要"><a href="#為什麼需要" class="headerlink" title="為什麼需要"></a>為什麼需要</h2><ul>
-<li>在資訊爆炸的時代，幫助分析評估、去蕪存菁、歸納分類，建構出屬於自己的解答</li>
-<li>避免被牽著鼻子走，專家說的也不是一定正確</li>
-<li>幫助獨立思考</li>
-<li>持續糾正和調整自己的觀點</li>
-</ul>
-<h2 id="弱義和強義批判思考"><a href="#弱義和強義批判思考" class="headerlink" title="弱義和強義批判思考"></a>弱義和強義批判思考</h2><p>依據國際批判思考權威理查·保羅（Richard Paul）所定義。</p>
-<h3 id="弱義"><a href="#弱義" class="headerlink" title="弱義"></a>弱義</h3><ul>
-<li>定義：運用批判技巧防衛你既有的信念</li>
-<li>無意求真或求善</li>
-<li>目的是為了抗拒和消滅與你不同的意見及推論</li>
-<li>以壓制和戰勝異議者作為批判思考的目標</li>
-<li>缺乏建設性意見</li>
-</ul>
-<h3 id="強義"><a href="#強義" class="headerlink" title="強義"></a>強義</h3><ul>
-<li>定義：運用相同的技巧，去評估所有的論點和信念，尤其是自身的論點和信念。</li>
-<li>需要對所有的申論提出批判性問題，包含自己的申論</li>
-<li>強迫自己以批判性的態度來觀察自身原始的觀點，避免自欺和從眾的行為</li>
-<li>不是要強迫放棄自己的觀點，有時候反而可以強化</li>
-</ul>
-<h2 id="可協助批判性思考的問題"><a href="#可協助批判性思考的問題" class="headerlink" title="可協助批判性思考的問題"></a>可協助批判性思考的問題</h2><ul>
-<li>議題和結論是什麼？</li>
-<li>理由是什麼？</li>
-<li>有無曖昧不明的語言？</li>
-<li>有無價值觀與描述性假設？</li>
-<li>推論過程有無謬誤？</li>
-<li>證據是否可信？</li>
-<li>是不是還有其他原因？</li>
-<li>統計數字是否可信？</li>
-<li>哪些重要資訊被消失？</li>
-<li>有沒有更適合的結論？</li>
-</ul>
-<h2 id="應有行為"><a href="#應有行為" class="headerlink" title="應有行為"></a>應有行為</h2><p>運用批判性思考前應該要有的行為：</p>
-<ul>
-<li>吸收大量的資料，透過這些資料來提供多元觀點和全面性的假設</li>
-<li>以理由和證據作為決策依據</li>
-<li>以開放的心胸了解他人的觀點，但是採取質疑的態度去驗證觀點是否合理可信</li>
-<li>對於任何說法的真實性，提醒對方應該要尋求並尊重多元觀點</li>
-</ul>
-<h2 id="不要走火入魔"><a href="#不要走火入魔" class="headerlink" title="不要走火入魔"></a>不要走火入魔</h2><ul>
-<li>不是所有事情都需要批判</li>
-<li>批判性思考不是抓語意漏洞</li>
-<li>在內心自省批判或利用新聞報導作為練習</li>
-<li>為了批判而批判，小心沒有朋友</li>
-</ul>
-<h2 id="延伸閱讀"><a href="#延伸閱讀" class="headerlink" title="延伸閱讀"></a>延伸閱讀</h2><ul>
-<li>快思慢想（Thinking, Fast and Slow）- Daniel Kahneman</li>
-<li>思考的祕密 - 傅皓政</li>
-<li><a href="https://ocw.aca.ntu.edu.tw/ntu-ocw/ocw/cou/108S205">邏輯（台大開放式課程）- 傅皓政</a></li>
-</ul>
-]]></content>
-      <categories>
-        <category>軟實力</category>
-      </categories>
-      <tags>
-        <tag>軟實力</tag>
-        <tag>思考</tag>
       </tags>
   </entry>
   <entry>
@@ -1018,6 +1051,79 @@
       <tags>
         <tag>教學</tag>
         <tag>Hexo</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>批判性思考</title>
+    <url>/SoftSkill/%E6%89%B9%E5%88%A4%E6%80%A7%E6%80%9D%E8%80%83/</url>
+    <content><![CDATA[<h1 id="批判性思考"><a href="#批判性思考" class="headerlink" title="批判性思考"></a>批判性思考</h1><p>依據 「思辨，從問對問題開始」 一書所簡單整理，並加上一些個人看法。</p>
+<ul>
+<li>英文書名：Asking the Right Questions: A Guide to Critical Thinking</li>
+<li>作者：M. Neil Browne , Stuart M. Keeley</li>
+<li>中文書名會因為改版而更換，用英文書名搜尋比較準確</li>
+<li><del>中文書名有點騙，看起來跟雞湯或空洞勵志的書一樣，英文書名就很明確是寫批判性思考</del></li>
+</ul>
+<h2 id="這是什麼"><a href="#這是什麼" class="headerlink" title="這是什麼"></a>這是什麼</h2><ul>
+<li>用來分析、評估、解釋、推理以及反思那些我們接收到的資訊</li>
+<li>查證說法，找出真正的答案</li>
+</ul>
+<h2 id="為什麼需要"><a href="#為什麼需要" class="headerlink" title="為什麼需要"></a>為什麼需要</h2><ul>
+<li>在資訊爆炸的時代，幫助分析評估、去蕪存菁、歸納分類，建構出屬於自己的解答</li>
+<li>避免被牽著鼻子走，專家說的也不是一定正確</li>
+<li>幫助獨立思考</li>
+<li>持續糾正和調整自己的觀點</li>
+</ul>
+<h2 id="弱義和強義批判思考"><a href="#弱義和強義批判思考" class="headerlink" title="弱義和強義批判思考"></a>弱義和強義批判思考</h2><p>依據國際批判思考權威理查·保羅（Richard Paul）所定義。</p>
+<h3 id="弱義"><a href="#弱義" class="headerlink" title="弱義"></a>弱義</h3><ul>
+<li>定義：運用批判技巧防衛你既有的信念</li>
+<li>無意求真或求善</li>
+<li>目的是為了抗拒和消滅與你不同的意見及推論</li>
+<li>以壓制和戰勝異議者作為批判思考的目標</li>
+<li>缺乏建設性意見</li>
+</ul>
+<h3 id="強義"><a href="#強義" class="headerlink" title="強義"></a>強義</h3><ul>
+<li>定義：運用相同的技巧，去評估所有的論點和信念，尤其是自身的論點和信念。</li>
+<li>需要對所有的申論提出批判性問題，包含自己的申論</li>
+<li>強迫自己以批判性的態度來觀察自身原始的觀點，避免自欺和從眾的行為</li>
+<li>不是要強迫放棄自己的觀點，有時候反而可以強化</li>
+</ul>
+<h2 id="可協助批判性思考的問題"><a href="#可協助批判性思考的問題" class="headerlink" title="可協助批判性思考的問題"></a>可協助批判性思考的問題</h2><ul>
+<li>議題和結論是什麼？</li>
+<li>理由是什麼？</li>
+<li>有無曖昧不明的語言？</li>
+<li>有無價值觀與描述性假設？</li>
+<li>推論過程有無謬誤？</li>
+<li>證據是否可信？</li>
+<li>是不是還有其他原因？</li>
+<li>統計數字是否可信？</li>
+<li>哪些重要資訊被消失？</li>
+<li>有沒有更適合的結論？</li>
+</ul>
+<h2 id="應有行為"><a href="#應有行為" class="headerlink" title="應有行為"></a>應有行為</h2><p>運用批判性思考前應該要有的行為：</p>
+<ul>
+<li>吸收大量的資料，透過這些資料來提供多元觀點和全面性的假設</li>
+<li>以理由和證據作為決策依據</li>
+<li>以開放的心胸了解他人的觀點，但是採取質疑的態度去驗證觀點是否合理可信</li>
+<li>對於任何說法的真實性，提醒對方應該要尋求並尊重多元觀點</li>
+</ul>
+<h2 id="不要走火入魔"><a href="#不要走火入魔" class="headerlink" title="不要走火入魔"></a>不要走火入魔</h2><ul>
+<li>不是所有事情都需要批判</li>
+<li>批判性思考不是抓語意漏洞</li>
+<li>在內心自省批判或利用新聞報導作為練習</li>
+<li>為了批判而批判，小心沒有朋友</li>
+</ul>
+<h2 id="延伸閱讀"><a href="#延伸閱讀" class="headerlink" title="延伸閱讀"></a>延伸閱讀</h2><ul>
+<li>快思慢想（Thinking, Fast and Slow）- Daniel Kahneman</li>
+<li>思考的祕密 - 傅皓政</li>
+<li><a href="https://ocw.aca.ntu.edu.tw/ntu-ocw/ocw/cou/108S205">邏輯（台大開放式課程）- 傅皓政</a></li>
+</ul>
+]]></content>
+      <categories>
+        <category>軟實力</category>
+      </categories>
+      <tags>
+        <tag>軟實力</tag>
+        <tag>思考</tag>
       </tags>
   </entry>
   <entry>
